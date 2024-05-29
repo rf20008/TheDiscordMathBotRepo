@@ -11,17 +11,19 @@ Note: This language of this document is quite informal.
 
 
 ## 1: Definitions
-"us/we" means the people who develop/maintain The Discord Math Problem Bot (on the official instance, it's @rf20008)
-"trusted users": people who have the trusted user status in the bot. <br>
-"these Terms" refer to these Terms and Conditions. <br>
-"Discord's Terms and Conditions" (or "Discord's Terms") refer to Discord's terms and conditions. <br>
-"the bot" means The Discord Math Problem Bot. </br> 
-"I/me" means @rf20008 (but for *fork instances of the bot*, the pronoun" would not refer to @rf20008, but instead to the owner and runner of the fork. </br>
-"fork instances of the bot" refer to instances of my bot that I do not run. If someone forked my repository and ran a version of my bot from their computer, that instance would be considered a "fork instance of the bot". <br> 
-"guild administrators" means people who have the 'administrator' permission in the guild. <br>
-"you" refers to any user of this bot, or any entity that accesses any part of The Discord Math Problem Bot in such a way that these Terms apply, or both. <br>
-"NSFW" stands for *N*ot *S*afe *F*or *W*ork, and 
-"NSFL" stands for *N*ot *S*afe *F*or *L*ife.
+* "us/we" means the people who develop/maintain The Discord Math Problem Bot (on the official instance, it's @rf20008)
+* "trusted users": people who have the trusted user status in the bot. <br>
+* "these Terms" refer to these Terms and Conditions. <br>
+* "Discord's Terms and Conditions" (or "Discord's Terms") refer to Discord's terms and conditions. <br>
+* "the bot" means The Discord Math Problem Bot. </br> 
+* "I/me" means @rf20008 (but for *fork instances of the bot*, the pronoun" would not refer to @rf20008, but instead to the owner and runner of the fork. </br>
+* "instances of the bot" refer to individual installations or versions of The Discord Math Problem Bot that are deployed and operated independently by users. Each instance represents a unique iteration of the bot's functionality, tailored to the specific needs or preferences of the user or community managing it. Instances include both the original version of the bot developed by the creator, as well as any forked or modified versions created by users under the terms of the GPLv3 license.
+* "The main instance of my bot", or terms like that, refers to the instance of the bot that I run.
+* "fork instances of the bot" refer to instances of my bot that I do not run. If someone forked my repository and ran a version of my bot from their computer, that instance would be considered a "fork instance of the bot". In particular, the main instance of my bot is not a fork instance of the bot. <br>
+* "guild administrators" means people who have the 'administrator' permission in the guild. <br>
+* "you" refers to any user of this bot, or any entity that accesses any part of The Discord Math Problem Bot in such a way that these Terms apply, or both. <br>
+* "NSFW" stands for *N*ot *S*afe *F*or *W*ork. 
+* "NSFL" stands for *N*ot *S*afe *F*or *L*ife.
 ## 2: Rules/things I have the right to do.
 
 Trusted users (including me) reserve the right to deny-list users from the official instance of the bot for many reasons, including: 
@@ -116,7 +118,7 @@ If you do not follow the GPLv3, you must not copy my code and take it closed sou
 ## 10: Termination
 Note the tone change does not mean these following terms are less relevant or less applicable than normal! They still have **the same power** as the rest of these Terms!
 
-Let's review what could cause you to be terminated
+Let's review what could cause you to be terminated.
 ### 10.1: What could cause you to be terminated?
 Refer back to section 2. That section lists what could cause you to be deny-listed.
 
@@ -169,3 +171,41 @@ You are **still as free** as you were before to exercise your rights under the G
 In particular, you can still make pull requests and issues (until there's a contribution agreement), look at my code as usual, copy it, modify it, run it, distribute it, analyze it.
 
 However, you **must** follow the requirements of the GPLv3.
+
+
+## 11: Selling stuff
+Notwithstanding the relevant portions of the GPLv3 and applicable law, you must not sell things related to my bot.
+This means, for example, that you must not sell problems, solutions, answers, votes, quizzes, answer keys, statuses, or things like that.
+
+Also, even though these Terms do not explicitly disallow selling guild permissions, doing so is **extremely strongly *discouraged***, and may also be prohibited by Discord's Terms and Services (I didn't check).
+
+The following sections go into more detail about selling other things, and why that is prohibited.
+However, as a rule of thumb, you are not allowed to sell anything related to my bot, unless you're exercising your GPLv3 right to sell forks of the bot that you control and own.
+### 11.1: Selling trusted user status
+The following rule only applies to instances of my bot that are not fork instances of my bot:
+* You must not sell trusted user status at all. This is because trusted user status is a moderation rank.
+* You might be blacklisted for selling trusted user status.  Additionally, your trusted user status may be revoked.
+The rationale for this rule is that I want to prevent disruptions to my bot.
+
+### 11.2: Selling ownership is prohibited
+The following rule only applies to instances of my bot that are not fork instances of my bot: 
+* You must not sell ownership of my bot at any time. 
+* However, if you're not a developer of my bot and you don't own this bot, then you shouldn't even *have* ownership of my bot *in the first place*, *ever*.
+
+<br>
+The following section deserves its own section because I said so.
+
+#### 11.2.1: Rules on selling fork ownership
+The following rules apply *only to fork instances of my bot* that are *not* the main bot.
+* Please contribute to the OSS community. Therefore, it is *discouraged*, but *not banned*, to sell fork instances and make them private.
+* As my bot is licensed under the GPLv3, which is a copyleft license, you must license your forks under the GPLv3 or any later version. Also, if you sell a fork, you must guarantee that they license their fork under the GPLv3 or any later version, and that they never change it.
+* You still must provide the source code of your instance of your bot to any user upon request.
+* Finally, you must follow the GPLv3.
+
+### 11.3: You MUST NOT sell NSFW/NSFL content.
+These rules apply to all instances of my bot, except those instances where this rule is removed. (If you are forking this bot, **PLEASE, PLEASE, PLEASE, KEEP *AND* ENFORCE* this rule.) 
+You must not sell NSFW/NSFL content anywhere on my bot. You may (and probably will ) be banned for this upon discovery. 
+Also, you will probably be reported to Discord. 
+Finally, you must not even distribute NSFW or NSFL content on my bot, because you will be subject to the same punishments (a possible denylist and being reported to Discord).
+
+
