@@ -1,3 +1,4 @@
+There was a recent update (that is hopefully the most recent update) on June 4, 2024.
 # 0: Terms & Conditions
 Disclaimer: As of January 5, 2024, I am a high school student making this discord bot for fun. I am *not* a lawyer. If you want legal advice, please ask a real lawyer.
 
@@ -287,6 +288,7 @@ In most serious scenarios, the law would supersede this policy. I would still be
 ### 3.3: COPYRIGHT DISCLAIMER
 
 When you submit anything that The Discord Math Problem Bot needs to process (i.e: problems, quizzes, appeals, responses, solutions) to this bot, you (the user of the bot) give me (ay136416 / rf20008) a perpetual, royalty-free, worldwide, non-revocable, etc. license with enough rights to allow me to use this bot to process, store, show, etc. the problem in order for the bot to function properly. However, you don't necessarily transfer ownership to me, and you still get credit for this problem wherever the bot shows it.
+Also, the license you give me will survive the termination of this bot.
 
 ## 4: Selling stuff
 Notwithstanding the relevant portions of the GPLv3 and applicable law, you must not sell things related to my bot.
@@ -419,7 +421,6 @@ You are **still as free** as you were before to exercise your rights under the G
 In particular, you can still make pull requests and issues (until there's a contribution agreement), look at my code as usual, copy it, modify it, run it, distribute it, analyze it.
 
 However, you **must** follow the requirements of the GPLv3.
-
 
 
 

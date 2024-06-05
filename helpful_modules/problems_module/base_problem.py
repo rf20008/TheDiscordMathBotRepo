@@ -225,6 +225,7 @@ class BaseProblem(DictConvertible):
     @classmethod
     def from_dict(cls, _dict: dict, cache=None):
         """Convert a dictionary to a math problem. cache must be a valid MathProblemCache"""
+        #print(cls)
         assert isinstance(_dict, dict)
         assert _dict["guild_id"] is None or isinstance(_dict["guild_id"], int)
         problem = _dict
@@ -233,13 +234,13 @@ class BaseProblem(DictConvertible):
         problem = cls(
             question=problem["question"],
             answers=problem["answers"],
-            id=int(problem["id"]),
+            id=int(problem["problem_id"]),
             guild_id=problem["guild_id"],
             voters=problem["voters"],
             solvers=problem["solvers"],
             author=problem["author"],
             cache=cache,
-            **other_stuff,
+            **other_stuff["extra_stuff"],
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 
@@ -249,6 +250,7 @@ class BaseProblem(DictConvertible):
             "type": "MathProblem",
             "question": self.question,
             "id": str(self.id),
+            "problem_id": str(self.id),
             "guild_id": str(self.guild_id),
             "voters": self.voters,
             "solvers": self.solvers,
