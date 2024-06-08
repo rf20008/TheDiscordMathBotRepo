@@ -236,16 +236,20 @@ Finally, you must not even distribute NSFW or NSFL content on my bot, because yo
 * "you" refers to any user of this bot, or any entity that accesses any part of The Discord Math Problem Bot in such a way that these Terms apply, or both. <br>
 * "NSFW" stands for *N*ot *S*afe *F*or *W*ork. 
 * "NSFL" stands for *N*ot *S*afe *F*or *L*ife.
+* "personal private information" refers to information about a permission that is private, such as, but NOT LIMITED TO, home and email addresses, age, grade, card numbers, financial things, government issued ID numbers (and ID numbers in general), dates of birth, and phone numbers.
+* "Full informed voluntary consent" refers to consent that has been obtained voluntarily, that is without any coercion or any other kind of forcing, that is informed, that is, the entity you are seeking consent knows all the information, including the potential consequences, risks, rewards, and other things, and that is full (nothing has been left out). 
+* "Doxxing" refers to the act of spreading personal private information about someone without their full informed voluntary consent.
 ## 2: Rules/things I have the right to do.
 
 Trusted users (including me) reserve the right to deny-list users from the official instance of the bot for many reasons, including: 
 <ul>
-<li> Sending NSFW/NSFL content through problems </li>
+<li> Sending NSFW/NSFL content through problems (or through any other kind of communication channel on my bot) </li>
 <li> Submitting copyrighted problems that are reported (or that they find)</li>
 <li> Spamming the bot. The bot might ban you for spamming.</li>
 <li> Disrespecting/targeting/etc... people through problems.</li>
 <li> Exploiting bugs instead of reporting them. </li>
-<li> Using my bot to violate Discord's Terms of Service directly, or causing my bot to violate Discord's Terms of Service in such a way that is your fault</li></ul> 
+<li> Using my bot to violate Discord's Terms of Service directly, or causing my bot to violate Discord's Terms of Service in such a way that is your fault</li></ul>
+<li> Doxxing people through any kind of communication channel through my bot </li>
 <!---Note that the space prevents errors---> 
 Trusted users retain the right to use their own discretion about whether to ban a person. 
 Moreover, trusted users are not contractually required by these Terms to deny-list users who break either these Terms or Discord's Terms.
@@ -260,7 +264,22 @@ The trusted users/guild administrators (if the problem isn't global) also have t
 </ul> People with the authority to delete problems reserve the right to use their own discretion on whether to delete a problem or not. (This covers edge cases!) 
 I also do not have control over guild administrators (as they are not me). They can enforce their own rules on which problems are acceptable.
 
+### 2.1: A section about doxxing
+A general rule: You must not doxx anyone, including yourself, at any time! The **only** exception is when you achieve explicit written fully informed voluntary consent from the person you want to doxx.
+I advise the following: You should not even ask for consent to doxx someone, because it's extremely embarrassing and highly unethical.
+Also, when you ask for their consent, you must provide warnings such as the following:
+# 2.1.1: Warnings about doxxing you should provide
+* Beware: Doxxing is irreversible. It's very, very, very, very challenging to remove things from the Internet, and people might take screenshots, and do things. Deleting this might not be enough! YOUR DATA MIGHT STILL BE OUT THERE!!!!
+* Beware: When you are doxxed, your information is out there! People can do malicious things with it! They could go up to your house, they could spam your email, harrass you, impersonate you, or do similar evil things to you. (In no way am I condoning those activities.)
+* Beware: Depending on how you got the information, doxxing might be illegal! (Source: https://www.avg.com/en/signal/what-is-doxxing)
+* Beware: Doxxing can have a larger impact on the person who got doxxed's friends, family, and other close relationships.
+* Beware: Even if you obtain their consent before doxxing, you may still be punished.
+# 2.1.2: "I got doxxed! What can I do"?
+If you get doxxed, but not through my bot, then I can't help you. It is your responsibility to handle being doxxed (telling law enforcement authorities, blocking the person who doxxed you, reporting them, etc).
+If, however, it is through my bot, you should still pursue those activities (telling law enforcement, gathering evidence, blocking the person who doxxed you, reporting them, and things like that). Also, you should contact me ASAP. Be warned: I am still a high school student as of June 8, 2024. I do not know internet law. I might not see your message or respond to it, or be aware of it. I might not be able to help you. I might not be willing to help you (it's not that I have bad morals, but I might have homework to do, or other things.)
 
+Upon discovery, if you doxx someone, you will probably be immediately denylisted. Also, there are harsher consequences, including legal consequences, that you may be subject to.
+Also, you will probably be reported to Discord. I will not write more about this, because I am not a lawyer, and I do not know internet law. 
 ## 3: Disclaimers (because they don't belong in the Privacy Policy)
 
 ### 3.1: NOT-A-LAWYER-DISCLAIMER
@@ -288,7 +307,7 @@ In most serious scenarios, the law would supersede this policy. I would still be
 ### 3.3: COPYRIGHT DISCLAIMER
 
 When you submit anything that The Discord Math Problem Bot needs to process (i.e: problems, quizzes, appeals, responses, solutions) to this bot, you (the user of the bot) give me (ay136416 / rf20008) a perpetual, royalty-free, worldwide, non-revocable, etc. license with enough rights to allow me to use this bot to process, store, show, etc. the problem in order for the bot to function properly. However, you don't necessarily transfer ownership to me, and you still get credit for this problem wherever the bot shows it.
-Also, the license you give me will survive the termination of this bot.
+Also, the license you give me will survive the termination of this bot and/or your relationship with me.
 
 ## 4: Selling stuff
 Notwithstanding the relevant portions of the GPLv3 and applicable law, you must not sell things related to my bot.
@@ -325,6 +344,9 @@ You must not sell NSFW/NSFL content anywhere on my bot. You may (and probably wi
 Also, you will probably be reported to Discord. 
 Finally, you must not even distribute NSFW or NSFL content on my bot, because you will be subject to the same punishments (a possible denylist and being reported to Discord). There are harsher consequences, and you may be subject to them.
 
+
+### 4.4: Additional Monetization rules
+You must not monetize my bot without my explicit written permission that you must obtain beforehand (you cannot monetize my bot first, then ask me for permission later); this section does not override the other subsections of section 4, but it applies in addition to the other rules I set out.
 ## 5: When the law complicates stuff & Severability
 
 When the law complicates stuff & it invalidates parts of these Terms, only the smallest part that, when removed, makes the law not complicate **stuff and makes the rest of the Terms invalid, will be removed from the Terms.

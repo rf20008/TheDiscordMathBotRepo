@@ -1,6 +1,6 @@
 # Privacy policy
 ## Disclaimers and stuff
-Disclaimer: I am not a lawyer. I am only a student, as of January 4, 2024. If you want legal advice, please ask a real lawyer.
+Disclaimer: I am not a lawyer. I am only a high school student, as of January 4, 2024. If you want legal advice, please ask a real lawyer.
 Disclaimer 2: I did not consult any lawyers or get any legal advice while writing this privacy policy.
 
 Most of the content in this privacy policy should be self-explanatory. (Write to me if it isn't!)
@@ -13,13 +13,19 @@ The only data we'll store about you without your consent is whether you're black
 "me/I" means @rf20008 (however, when there are more maintainers, this will definitely change)
 
 
+
 ## Why I store your data
 
 Storing data you voluntarily submit to the bot, and data from the Discord API, is required for this bot to work.
 
 ## What data I store through this application
 
-Data I store through this application include data from the Discord API, problems submitted, quizzes submitted, quiz problems submitted, deletion votes to problems, quiz submissions submitted. We may also store quiz gradings (and comments). 
+Data I store through this application include data from the Discord API, problems submitted, quizzes submitted, quiz problems submitted, deletion votes to problems, quiz submissions submitted. We may also store quiz gradings (and comments).
+
+# Licenses you give me
+As mentioned in my terms of service, I mentioned that whenever you give me things I or my bot needs to process, you provide me and my bot a perpetual, survival, irrevokable, worldwide, royalty free, license with enough rights to do the things that I and my bot might need to do.
+However, you don't necessarily transfer ownership to me, and you still get credit for this problem wherever the bot shows it
+Also, the license you give me will survive the termination of this bot and/or your relationship with me.
 
 ## Disclosure of your data
 
