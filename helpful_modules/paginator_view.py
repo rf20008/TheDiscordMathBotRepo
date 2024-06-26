@@ -19,30 +19,83 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 import asyncio
 
 import disnake
-from .my_modals import MyModal
+#from .my_modals import MyModal
 from .custom_embeds import ErrorEmbed
 import os
-from .checks import always_succeeding_check_unwrapped
 from typing import List
-
+class PaginatorPageViewModal(disnake.ui.Modal):
+    paginator: "PaginatorView"
+    page_num_custom_id: str
+    original_inter: disnake.Interaction
+    def __init__(self, paginator, page_num_custom_id, original_inter, *args, **kwargs):
+        self.paginator = paginator
+        self.page_num_custom_id = page_num_custom_id
+        self.original_inter = original_inter
+        super().__init__(*args, **kwargs)
+    async def on_timeout(self: "PaginatorPageViewModal"):
+        await self.original_inter.send(
+            embed=ErrorEmbed(
+                "You didn't respond to the modal in time! You only have **15** seconds to respond."
+            ),
+            ephemeral=True,
+        )
+        raise asyncio.TimeoutError
+    async def callback(
+            self: "PaginatorPageViewModal", inter: disnake.ModalInteraction
+    ):
+        page_num = inter.text_values.get(self.page_num_custom_id, None)
+        if page_num is None:
+            await inter.send(
+                embed=ErrorEmbed("You did not enter anything"), ephemeral=True
+            )
+            return
+        try:
+            page_num = int(page_num)
+        except ValueError:
+            await inter.send(
+                embed=ErrorEmbed("You did not send an integer page number"),
+                ephemeral=True,
+            )
+            return
+        if page_num < 1 or page_num >= len(self.paginator.pages):
+            await inter.send(
+                embed=ErrorEmbed(
+                    f"Your page number is out of bounds. There are only {len(self.paginator.pages)} pages"
+                ),
+                ephemeral=True,
+            )
+            return
+        # yay! we can now go to that page
+        self.paginator.page_num = (
+                page_num - 1
+        )  # remember, lists are 0-indexed, but they will enter 1-indexed pages
+        #await inter.send("Hello!")
+        await inter.edit_original_message(
+            embed=self.paginator.create_embed(), view=self.paginator
+        )
+DEFAULT_BREAKING_CHARS = " .!?;,:;-\n\t"
 class PaginatorView(disnake.ui.View):
     user_id: int
     page_num: int
     pages: list[str]
+    special_color: disnake.Color
 
-    def __init__(self, user_id: int, pages: list[str], *args, **kwargs):
+    def __init__(self, user_id: int, pages: list[str], special_color: disnake.Color = None, *args, **kwargs):
+        if special_color is None:
+            special_color = disnake.Color.from_rgb(50,50,255)
+        self.special_color = special_color
         super().__init__(*args, **kwargs)
         self.user_id = user_id
         self.pages = pages
         self.page_num = 0
 
     @classmethod
-    def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, **kwargs) -> 'PaginatorView':
-        pages = cls.break_into_pages(text, max_page_length)
-        return cls(user_id, pages, **kwargs)
+    def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, breaking_chars: str = None, special_color: disnake.Color | None = None, **kwargs) -> 'PaginatorView':
+        pages = cls.break_into_pages(text, max_page_length, breaking_chars=(breaking_chars if breaking_chars else DEFAULT_BREAKING_CHARS))
+        return cls(user_id, pages, special_color)
 
     @staticmethod
-    def break_into_pages(text: str, max_page_length: int = 1500, *, breaking_chars: str = " .!?-,:;-\n\t") -> List[str]:
+    def break_into_pages(text: str, max_page_length: int = 1500, *, breaking_chars: str = DEFAULT_BREAKING_CHARS) -> List[str]:
         """
         Breaks a long text into smaller pages suitable for pagination.
 
@@ -149,13 +202,13 @@ class PaginatorView(disnake.ui.View):
         return disnake.Embed(
             title=f"Page {self.page_num+1} of {len(self.pages)}:",
             description=self.pages[self.page_num],
-            color=disnake.Color.from_rgb(50, 50, 255),
+            color=self.special_color,
         )
 
     @disnake.ui.button(label="Go to Page", style=disnake.ButtonStyle.green)
     async def go_to_page_button(
         self, button: disnake.ui.Button, inter: disnake.MessageInteraction
-    ) -> disnake.ui.Modal:
+    ) -> disnake.ui.Modal | None:
         if inter.author.id != self.user_id:
             await inter.send(
                 "You can not interact with this because it is not yours", ephemeral=True
@@ -168,56 +221,21 @@ class PaginatorView(disnake.ui.View):
             custom_id="page_num_ui_modal" + os.urandom(20).hex(),
         )
         page_num_custom_id = component.custom_id
-        async def on_timeout(_: disnake.ui.Modal):
-            await inter.send(
-                embed=ErrorEmbed(
-                    "You didn't respond to the modal in time! You only have **15** seconds to respond."
-                ),
-                ephemeral=True,
-            )
-            raise asyncio.TimeoutError
 
-        async def callback(
-            modal: disnake.ui.Modal, modal_inter: disnake.ModalInteraction
-        ):
-            page_num = modal_inter.text_values.get(page_num_custom_id, None)
-            if page_num is None:
-                await modal_inter.send(
-                    embed=ErrorEmbed("You did not enter anything"), ephemeral=True
-                )
-                return
-            try:
-                page_num = int(page_num)
-            except ValueError:
-                await modal_inter.send(
-                    embed=ErrorEmbed("You did not send an integer page number"),
-                    ephemeral=True,
-                )
-                return
-            if page_num < 1 or page_num >= len(self.pages):
-                await modal_inter.send(
-                    embed=ErrorEmbed(
-                        f"Your page number is out of bounds. There are only {len(self.pages)} pages"
-                    ),
-                    ephemeral=True,
-                )
-                return
-            # yay! we can now go to that page
-            self.page_num = (
-                page_num - 1
-            )  # remember, lists are 0-indexed, but they will enter 1-indexed pages
-            await modal_inter.edit_original_message(
-                embed=self.create_embed(), view=self
-            )
 
-        modal: disnake.ui.Modal = MyModal(
+
+
+        modal: disnake.ui.Modal = PaginatorPageViewModal(
+            paginator=self,
+            page_num_custom_id=page_num_custom_id,
+            original_inter=inter,
             title="What page do you want to go to?",
             components=[component],
             timeout=15.0,
-            on_timeout=on_timeout,
-            callback=callback,
-            check = always_succeeding_check_unwrapped
         )
+        #modal.on_timeout = on_timeout
+        #modal.callback = callback
+
         try:
             await inter.response.send_modal(modal)
             return modal # this helps me test because without this i can't test

@@ -48,9 +48,9 @@ def convert_row_to_problem(row: dict, cache = None):
     extra_stuff = row.get("extra_stuff", "{}")
     if isinstance(row["extra_stuff"], str):
         try:
-            row["extra_stuff"] = orjson.loads(row["extra_stuff"].replace("'", '"'))
+            extra_stuff = orjson.loads(extra_stuff.replace("'", '"'))
         except BaseException as err:
-            raise FormatException(f"The extra stuff, which is {row['extra_stuff']} is not valid json") from err
+            raise FormatException(f"The extra stuff, which is {extra_stuff} is not valid json") from err
     row["voters"] = pickle.loads(row["voters"])
     row["solvers"] = pickle.loads(row["solvers"])
     row["answers"] = pickle.loads(row["answers"])

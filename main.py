@@ -314,7 +314,13 @@ async def on_slash_command_error(inter, error):
     """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""
     # print the traceback to the file
     dict_args = await base_on_error(inter, error)
-
+    #print(dict_args)
+    try:
+        await inter.send(**dict_args)
+    except BaseException as be:
+        await log_error(be)
+        os._exit(1)
+    return
     try:
         if inter.response.is_done():
             await inter.followup.send(**dict_args)

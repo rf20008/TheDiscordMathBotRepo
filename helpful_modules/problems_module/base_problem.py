@@ -45,13 +45,15 @@ class BaseProblem(DictConvertible):
         id: int,
         author: int,
         answer: str = None,
+        problem_id: int | None = None,
         guild_id: typing.Optional[str] = None,
         voters: list = None,
         solvers: list = None,
         cache=None,
         answers: list = None,
         tolerance: float = None,
-        type: str = "BaseProblem"
+        type: str = "BaseProblem",
+        extra_stuff: dict = {}
     ):
         self.type = type
         if voters is None:
@@ -64,6 +66,12 @@ class BaseProblem(DictConvertible):
             raise TypeError("guild_id is not an string")
         if not isinstance(id, int):
             raise TypeError("id is not an integer")
+        if not isinstance(problem_id, int) and problem_id is not None:
+            raise TypeError("problem_id is not an integer")
+        if id != problem_id and problem_id is not None and id is not None:
+            raise ValueError("id and problem_id do not match")
+        if id is None:
+            id=problem_id
         if not isinstance(question, str):
             raise TypeError("question is not a string")
         if (
@@ -188,18 +196,26 @@ class BaseProblem(DictConvertible):
         )
         if self._cache is not None:
             await self._cache.update_problem(self.id, self)
-
+    @staticmethod
+    def try_to_convert_to_list(thing):
+        if isinstance(thing, bytes):
+            return pickle.loads(thing)
+        elif isinstance(thing, str):
+            return orjson.loads(thing)
+        else:
+            if not isinstance(thing, list):
+                raise TypeError(
+                    f"{thing} is not of an expected type, but is of type {thing.__class__.__name__}. By the way, its value is {thing}.")
+            return thing
     @classmethod
     def from_row(cls, row: dict, cache=None):
         """Convert a dictionary-ified row into a MathProblem"""
         if not isinstance(row, dict):
             raise TypeError("The problem has not been dictionary-ified")
         try:
-            answers = pickle.loads(
-                row["answers"]
-            )  # Load answers from bytes to a list (which should contain only pickleable objects)!
-            voters = pickle.loads(row["voters"])  # Do the same for voters and solvers
-            solvers = pickle.loads(row["solvers"])
+            answers = cls.try_to_convert_to_list(row["answers"])
+            voters = cls.try_to_convert_to_list(row["voters"]) # DO the same for voters and solvers
+            solvers = cls.try_to_convert_to_list(row["solvers"])
             our_row = dict()
             our_row.update(row)
             del our_row["problem_id"]
@@ -230,17 +246,26 @@ class BaseProblem(DictConvertible):
         assert _dict["guild_id"] is None or isinstance(_dict["guild_id"], int)
         problem = _dict
         # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
-        other_stuff = {key: value for key,value in problem.items() if key not in {"question", "answers", "id", "voters", "guild_id", "solvers", "author"}}
+        other_stuff = {key: value for key,value in problem.items() if key not in {"question", "answers", "id","problem_id", "voters", "guild_id", "solvers", "author"}}
+        problem_id = -1
+        if "problem_id" in problem.keys():
+            problem_id = problem["problem_id"]
+        elif "id" in problem.keys():
+            problem_id = problem["id"]
+
+
+        if "extra_stuff" in other_stuff.keys():
+            other_stuff.update(other_stuff["extra_stuff"])
         problem = cls(
             question=problem["question"],
             answers=problem["answers"],
-            id=int(problem["problem_id"]),
+            id=int(problem_id),
             guild_id=problem["guild_id"],
             voters=problem["voters"],
             solvers=problem["solvers"],
             author=problem["author"],
             cache=cache,
-            **other_stuff["extra_stuff"],
+            **other_stuff,
         )  # Problem-ify the problem, but set the guild_id to None and return it
         return problem
 

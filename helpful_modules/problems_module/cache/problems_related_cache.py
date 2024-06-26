@@ -270,7 +270,7 @@ class ProblemsRelatedCache:
                             pickle.loads(row), cache=copy(self)
                         )  # Convert the problems to problem objects
                     else:
-                        problem = convert_row_to_problem(row=row, cache=copy(self))
+                        problem = convert_row_to_problem(row=row, cache=None)
                     if (
                         problem.guild_id not in self.guild_ids
                     ):  # Similar logic: Make sure it's there!
@@ -295,7 +295,7 @@ class ProblemsRelatedCache:
             cursor = connection.cursor(dictionaries=True)
             cursor.execute("SELECT * FROM problems")  # Get all problems
             for row in cursor.fetchall():
-                problem = convert_row_to_problem(row, cache=copy(self))
+                problem = convert_row_to_problem(row, cache=None)
                 if (
                         problem.guild_id not in self.guild_ids
                 ):  # Similar logic: Make sure it's there!
@@ -463,7 +463,7 @@ class ProblemsRelatedCache:
                 # We will raise if the problem already exists!
                 await cursor.execute(
                     """INSERT INTO problems (guild_id, problem_id, question, answers, voters, solvers, author, extra_stuff)
-                VALUES (?,?,?,?,?,?,?,?)""",
+                VALUES (?,?,?,?,?,?,?,?); COMMIT;""",
                     (
                         problem.guild_id,  # We expect the problem's guild id to be either an integer or None
                         int(problem.id),
@@ -648,16 +648,7 @@ class ProblemsRelatedCache:
                     conn.row_factory = dict_factory  # Make sure the row_factory can be set to dict_factory
                 except BaseException as exc:
                     # Not writeable?
-                    try:
-                        dict_factory  # Check for name error
-                    except NameError as exc2:
-                        raise MathProblemsModuleException(
-                            "dict_factory could not be found"
-                        ) from exc2
-                    if isinstance(exc, AttributeError):  # Can't set attribute
-                        pass
-                    else:
-                        raise  # Re-raise the exception
+                    raise SQLException("The row factory can't be set to dict_factory") from exc
                 cursor = await conn.cursor()
                 # We will raise if the problem already exists!
                 await cursor.execute(
@@ -667,15 +658,18 @@ class ProblemsRelatedCache:
                     (
                         new.guild_id,
                         int(new.id),
-                        new.get_question(),
+                        new.question,
                         pickle.dumps(new.answers),
-                        pickle.dumps(new.get_voters()),
-                        pickle.dumps(new.get_solvers()),
+                        pickle.dumps(new.voters),
+                        pickle.dumps(new.solvers),
                         int(new.author),
-                        int(problem_id),
                         str(new.get_extra_stuff()),
+                        int(problem_id),
                     ),
                 )
+                await conn.commit()
+                await cursor.close()
+                # await conn.close()
         else:
             with mysql_connection(
                 host=self.mysql_db_ip,
@@ -696,10 +690,13 @@ class ProblemsRelatedCache:
                         pickle.dumps(new.voters),
                         pickle.dumps(new.solvers),
                         int(new.author),
-                        problem_id,
                         str(new.get_extra_stuff()),
+                        problem_id,
+
                     ),
                 )
+                connection.commit()
+
 
     @property
     def max_question_length(self):

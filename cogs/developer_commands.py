@@ -137,7 +137,7 @@ class DeveloperCommands(HelperCog):
     ) -> None:
         """/raise_error {error_type: str|Exception} [error_description: str = None]
         This command raises an error (of type error_type) that has the description of the error_description.
-        You must be a trusted user and the bot owner to run this command!
+        You must be the owner of this bot and be a trusted user to have permission to run this command (although I suppose anybody could run it).
         The purpose of this command is to test the bot's on_slash_command_error event!
         """
         # if (

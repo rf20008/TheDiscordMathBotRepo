@@ -23,6 +23,7 @@ import traceback
 from copy import deepcopy
 from sys import exc_info, stderr
 from time import asctime
+import os
 
 import disnake
 from disnake.ext import commands
@@ -31,7 +32,7 @@ from ._error_logging import log_error
 from .cooldowns import OnCooldown
 from .custom_embeds import *
 from .problems_module.errors import LockedCacheException
-
+from helpful_modules.paginator_view import PaginatorView
 from .the_documentation_file_loader import DocumentationFileLoader
 
 
@@ -97,6 +98,7 @@ async def base_on_error(
     """ + disnake.utils.escape_markdown(
         error_traceback
     )  # TODO: update when my support server becomes public & think about providing the traceback to the user
+    #print(error)
     try:
         await log_error(error)  # Log the error
     except Exception as log_error_exc:
@@ -136,4 +138,14 @@ async def base_on_error(
         return {"content": plain_text}
     footer = f"Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but should not contain identifying information (only code which is on github)"
     embed.set_footer(text=footer)
-    return {"embed": embed}
+    if len(embed.description) < 2048:
+        return {"embed": embed}
+    paginator = PaginatorView.paginate(
+        user_id=inter.author.id,
+        text=embed.description,
+        breaking_chars="\n",
+        max_page_length=1900,
+        special_color=Color.red()
+    )
+    first_page = paginator.create_embed()
+    return {"embed": first_page, "view": paginator}

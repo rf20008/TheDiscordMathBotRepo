@@ -272,7 +272,7 @@ class ProblemsCog(HelperCog):
             if not (
                 (
                     problem.is_author(inter.author)
-                    or inter.author.id not in self.bot.trusted_users
+                    or not await self.bot.is_trusted(inter.author)
                     or (
                         is_guild_problem
                         and inter.author.guild_permissions.administrator
@@ -355,7 +355,7 @@ class ProblemsCog(HelperCog):
             ),
             Option(
                 name="show_guild_problems",
-                description="Whether to show solved problems",
+                description="Whether to show guild problems",
                 type=OptionType.boolean,
                 required=False,
             ),
@@ -403,17 +403,19 @@ class ProblemsCog(HelperCog):
         # await inter.send("You solved all the problems! You should add a new one.", ephemeral=True)
         # return
         pages = []
+        await self.cache.get_all_problems(replace_cache=True)
         for guild_id in guilds_to_append_from:
-            await self.cache.cache_all_problems()
+            #await self.cache.cache_all_problems()
             for problem in (await self.cache.get_problems_by_guild_id(guild_id, replace_cache=False)).values():
                 # the user solved the problem, so don't show it
-                if not show_solved_problems and problem.is_solver(inter.author):
+                if (not show_solved_problems) and problem.is_solver(inter.author):
                     continue
                 pages.append(problem.__str__(vote_threshold=self.bot.vote_threshold))
         if len(pages) == 0:
             await inter.send(embed=ErrorEmbed("No problems match the filter..."))
             return
-        await inter.send(view=PaginatorView(user_id = inter.author.id, pages=pages))
+        view =PaginatorView(user_id = inter.author.id, pages=pages)
+        await inter.send(view=view, embed = view.create_embed())
 
     @commands.slash_command(
         name="delallbotproblems",
@@ -755,7 +757,7 @@ class ProblemsCog(HelperCog):
                 ephemeral=True,
             )
             problem.solvers.append(inter.author.id)
-            await self.cache.update_problem(problem, problem.id)
+            await self.cache.update_problem(problem.id, problem)
 
             return
 
@@ -771,7 +773,7 @@ class ProblemsCog(HelperCog):
             ),
             Option(
                 name="is_guild_problem",
-                description="problem id of the problem you are attempting to delete",
+                description="whether the problem you're voting for is a guild problem",
                 type=OptionType.boolean,
                 required=False,
             ),
@@ -786,30 +788,34 @@ class ProblemsCog(HelperCog):
         There is a 5-second cooldown on this command, to prevent spam.
         The data about you voting is not private; it will be given to people who created/solved/voted for problems and use /user_data get_data
         """
+        # Get the problem
         try:
+            guild_id = inter.guild_id if is_guild_problem else None
             problem = await self.bot.cache.get_problem(
-                inter.guild.id
-                if is_guild_problem
-                else None,  # If it's a guild problem, set the guild id to the guild_id, otherwise set it to None
-                problem_id=int(problem_id),  # Will probably have to change
-            )  # Get the problem
-            if problem.is_voter(
-                inter.author
-            ):  # You can't vote for a problem you already voted for!
-                await inter.send(
-                    embed=ErrorEmbed(
-                        "You have already voted for the deletion of this problem!"
-                    ),
-                    ephemeral=True,
-                )
-                return  # Exit the command
+                guild_id, problem_id=int(problem_id),
+            )
         except problems_module.ProblemNotFound:
             await inter.send(  # The problem doesn't exist
                 embed=ErrorEmbed("This problem doesn't exist!"), ephemeral=True
             )
             return
+        # Step 2: make sure they didn't vote, to make sure people can only vote once
+        if problem.is_voter(inter.author):
+            await inter.send(
+                embed=ErrorEmbed(
+                    "You have already voted for the deletion of this problem!"
+                ),
+                ephemeral=True,
+            )
+            return  # Exit the command
+
+        # did they already vote? we have to prevent them from voting again
+        if inter.author.id in problem.voters: #
+            await inter.send(embed=ErrorEmbed("You already voted, and you cannot vote again"), ephemeral=True)
+            return
+
         problem.voters.append(inter.author.id)
-        await self.cache.update_problem(problem.id, problem)
+        await self.bot.cache.update_problem(problem.id, problem)
         string_to_print = "You successfully voted for the problem's deletion! As long as this problem is not deleted, you can always un-vote. There are "
         string_to_print += f"{problem.get_num_voters()}/{self.bot.vote_threshold} votes on this problem!"  # Tell the user how many votes there are now
         await inter.send(
@@ -833,17 +839,17 @@ class ProblemsCog(HelperCog):
 
     @commands.slash_command(
         name="unvote",
-        description="Vote for the deletion of a problem",
+        description="Remove your vote for deletion on a problem",
         options=[
             Option(
                 name="problem_id",
-                description="problem id of the problem you are attempting to delete",
-                type=OptionType.boolean,
+                description="problem id of the problem that you want to delete your vote from",
+                type=OptionType.integer,
                 required=True,
             ),
             Option(
                 name="is_guild_problem",
-                description="problem id of the problem you are attempting to delete",
+                description="Whether the problem you want to delete your vote from is a guild problem or a global problem",
                 type=OptionType.boolean,
                 required=False,
             ),
@@ -862,39 +868,45 @@ class ProblemsCog(HelperCog):
         Otherwise, it will look for the global problem with the given id.
         After searching for the problem, it removes your vote for deletion of that problem.
         There is a 5-second cooldown on this command."""
+
+        # Step 1: Which problem do we want our vote from?
         try:
             problem = await self.bot.cache.get_problem(
                 inter.guild.id if is_guild_problem else None,
                 problem_id=int(problem_id),
             )  # Get the problem!
-            if not problem.is_voter(
-                inter.author
-            ):  # You can't un-vote unless you are voting
-                await inter.send(
-                    embed=ErrorEmbed(
-                        "You can't un-vote because you are not voting for the deletion of this problem!"
-                    ),
-                    ephemeral=True,
-                )
-                return
         except problems_module.ProblemNotFound:
             await inter.send(  # The problem doesn't exist, get_problem will raise ProblemNotFound
                 embed=ErrorEmbed("This problem doesn't exist!"), ephemeral=True
             )
             return
-        problem.voters.remove(inter.author.id)  # Remove the user id from problem
-        await problem.update_self()  # Save the changes to the database.
 
+        # Step 2: Check whether they're actually voting
+        if not problem.is_voter(inter.author):
+            await inter.send(
+                embed=ErrorEmbed(
+                    "You can't un-vote because you are not voting for the deletion of this problem!"
+                ),
+                ephemeral=True,
+            )
+            return
+        # Step 3: Remove their vote
+        problem.voters.remove(inter.author.id)  # Remove the user id from problem
+        # Step 4: Update the DB so it reflects this change
+        await self.cache.update_problem(problem.id, problem)
+        # Step 5: Notify them
         successMessage = f"You successfully un-voted for the problem's deletion!" + (
-            "As long as this problem is not deleted, you can always un-vote."
+            "As long as this problem is not deleted, you can always re-vote."
             + (
-                "There are {problem.get_num_voters()}/{self.bot.vote_threshold} votes on this problem!"
+                f"There are {problem.get_num_voters()}/{self.bot.vote_threshold} votes on this problem!"
             )
         )
         await inter.send(
             embed=SuccessEmbed(successMessage, successTitle="Successfully un-voted!"),
             ephemeral=True,
         )  # Tell the user of the successful un-vote.
+        # Yay, we're finished!!
+        return
 
     @commands.slash_command(
         name="delete_problem",
