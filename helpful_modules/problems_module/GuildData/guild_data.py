@@ -8,7 +8,7 @@ from .the_basic_check import CheckForUserPassage
 
 class GuildData:
     blacklisted: bool
-    guild_id: int
+    guild_id: int | None
     can_create_problems_check: CheckForUserPassage
     can_create_quizzes_check: CheckForUserPassage
     mods_check: CheckForUserPassage
@@ -17,7 +17,7 @@ class GuildData:
 
     def __init__(
         self,
-        guild_id: int,
+        guild_id: int | None,
         blacklisted: bool,
         can_create_problems_check: str | CheckForUserPassage,
         can_create_quizzes_check: str | CheckForUserPassage,
@@ -51,14 +51,14 @@ class GuildData:
             This exception would be raised if `can_create_quizzes_check`, `can_create_problems_check`, or `mods_check` could not be parsed into JSON
         """
         # self.cache = cache
-        if not isinstance(guild_id, int):
+        if not isinstance(guild_id, int) and guild_id is not None:
             raise TypeError(
-                f"I expected guild_id to be an int, but I got a {guild_id.__class__.name__} instead!"
+                f"I expected `guild_id` to be an int, but I got a {guild_id.__class__.__name__} instead!"
             )
         self.guild_id = guild_id
-        if not isinstance(guild_id, bool):
+        if not isinstance(blacklisted, bool):
             raise TypeError(
-                f"I expected guild_id to be an int, but I got a {guild_id.__class__.name__} instead!"
+                f"I expected `blacklisted` to be an int, but I got a {guild_id.__class__.__name__} instead!"
             )
         self.blacklisted = blacklisted
         if isinstance(can_create_quizzes_check, str):
@@ -137,19 +137,17 @@ class GuildData:
             blacklisted=bool(data["blacklisted"]),
             guild_id=data["guild_id"],
             can_create_problems_check=data["can_create_problems_check"],
-            mods_check=data["mods_check"],
+            mods_check=data["mod_check"],
             can_create_quizzes_check=data["can_create_quizzes_check"],
         )
 
-    def to_dict(self, include_cache: bool) -> dict:
+    def to_dict(self) -> dict:
         dict_to_return = {
             "blacklisted": int(self.blacklisted),
             "guild_id": self.guild_id,
-            "can_create_problems_check": self.can_create_problems_check,
-            "can_create_quizzes_check": self.can_create_quizzes_check,
-            "mods_check": self.mods_check,
+            "can_create_problems_check": self.can_create_problems_check.to_dict(),
+            "can_create_quizzes_check": self.can_create_quizzes_check.to_dict(),
+            "mods_check": self.mods_check.to_dict(),
         }
-        if include_cache:
-            dict_to_return["cache"] = self.cache
 
         return dict_to_return

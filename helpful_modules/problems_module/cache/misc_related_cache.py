@@ -31,12 +31,11 @@ from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
 from ..quizzes import Quiz, QuizProblem, QuizSolvingSession, QuizSubmission
 from ..quizzes.quiz_description import QuizDescription
-from .user_data_related_cache import UserDataRelatedCache
-
+from .appeals_related_cache import AppealsRelatedCache
 log = logging.getLogger(__name__)
 
 
-class MathProblemCache(UserDataRelatedCache):
+class MiscRelatedCache(AppealsRelatedCache):
     async def update_cache(self: "MathProblemCache") -> None:
         """Method revamped! This method updates the cache of the guilds, the guild problems, and the cache of the global problems. Takes O(N) time"""
         warn(message="update_cache hangs", category=PMDeprecationWarning, stacklevel=-1)

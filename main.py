@@ -314,20 +314,20 @@ async def on_error(event, *args, **kwargs):
 async def on_slash_command_error(inter, error):
     """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""
     # print the traceback to the file
-    print("help")
+    #print("help")
     try:
         dict_args = await base_on_error(inter, error)
     except Exception as e:
         print(traceback.format_exception(e))
         raise e
 
-    print(dict_args)
+    #print(dict_args)
     try:
         await inter.send(**dict_args)
+        return
     except BaseException as be:
         await log_error(be)
-        os._exit(1)
-    return
+        #os._exit(1)
     try:
         if inter.response.is_done():
             await inter.followup.send(**dict_args)
@@ -355,6 +355,11 @@ async def on_guild_join(guild):
     """Ran when the bot joins a guild!"""
     if guild.id is None:  # Should never happen
         raise Exception("Uh oh!")  # This is probably causing the bot to do stuff
+
+    if await bot.is_guild_blacklisted(guild):
+        await bot.notify_guild_on_guild_leave_because_guild_blacklist(guild)
+        if bot.get_guild(guild.id) is not None:
+            await bot.get_guild(guild.id).leave()
         # await guild.leave()  # This will mess up stuff
         # print("Oh no")
         # raise RuntimeError(

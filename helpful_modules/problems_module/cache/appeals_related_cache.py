@@ -9,7 +9,7 @@ from .guild_data_related_cache import GuildDataRelatedCache
 class AppealsRelatedCache(GuildDataRelatedCache):
     async def set_appeal_data(self, data: Appeal):
         assert isinstance(data, Appeal)  # Basic type-checking
-
+        if self.use_sqlite:
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
                 await cursor.execute(

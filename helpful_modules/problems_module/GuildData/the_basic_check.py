@@ -51,7 +51,7 @@ class CheckForUserPassage:
         return cls(
             blacklisted_users=data["blacklisted_users"],
             permissions_needed=data["permissions_needed"],
-            roles_allowed=data["roles_needed"],
+            roles_allowed=data["roles_allowed"],
             whitelisted_users=data["whitelisted_users"],
         )
 

@@ -3,6 +3,7 @@ import copy
 
 import aiomysql
 import aiosqlite
+import orjson
 from aiomysql import DictCursor
 
 from ...dict_factory import dict_factory
@@ -17,26 +18,28 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
     async def set_guild_data(self, data: GuildData):
         """Set the guild data given in the cache. The guild id will be inferred."""
         assert isinstance(data, GuildData)  # Basic type-checking
-
+        CCPCTD = orjson.dumps(data.can_create_problems_check.to_dict()).decode("utf-8")
+        CCQCTD = orjson.dumps(data.can_create_quizzes_check.to_dict()).decode("utf-8")
+        MCTD = orjson.dumps(data.mods_check.to_dict()).decode("utf-8")
         if self.use_sqlite:
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
                 await cursor.execute(
                     """INSERT INTO guild_data (guild_id, blacklisted, can_create_problems_check, can_create_quizzes_check, mod_check) 
                     VALUES (?,?,?,?,?) 
-                    ON CONFLICT REPLACE 
+                    ON CONFLICT(guild_id) DO UPDATE SET
                     guild_id = ?, blacklisted=?, can_create_problems_check = ?, can_create_quizzes_check = ?, mod_check = ?""",
                     (
                         data.guild_id,
                         int(data.blacklisted),
-                        str(data.can_create_problems_check.to_dict()),
-                        str(data.can_create_quizzes_check.to_dict()),
-                        str(data.mods_check.to_dict()),
+                        CCPCTD,
+                        CCQCTD,
+                        MCTD,
                         data.guild_id,
                         int(data.blacklisted),
-                        str(data.can_create_problems_check.to_dict()),
-                        str(data.can_create_quizzes_check.to_dict()),
-                        str(data.mods_check.to_dict()),
+                        CCPCTD,
+                        CCQCTD,
+                        MCTD
                     ),
                 )  # TODO: test
                 await conn.commit()
@@ -51,14 +54,14 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                     (
                         data.guild_id,
                         int(data.blacklisted),
-                        str(data.can_create_problems_check.to_dict()),
-                        str(data.can_create_quizzes_check.to_dict()),
-                        str(data.mods_check.to_dict()),
+                        CCPCTD,
+                        CCQCTD,
+                        MCTD,
                         data.guild_id,
                         int(data.blacklisted),
-                        str(data.can_create_problems_check.to_dict()),
-                        str(data.can_create_quizzes_check.to_dict()),
-                        str(data.mods_check.to_dict()),
+                        CCPCTD,
+                        CCQCTD,
+                        MCTD
                     ),
                 )  # TODO: test this
 

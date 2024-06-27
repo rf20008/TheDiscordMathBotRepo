@@ -10,10 +10,17 @@ from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
 from helpful_modules.my_modals import MyModal
 from helpful_modules.threads_or_useful_funcs import _generate_special_id
-
+from helpful_modules.problems_module import Appeal
 from .helper_cog import HelperCog
 
-
+class AppealModal(MyModal):
+    async def callback(s, modal_inter: disnake.ModalInteraction):
+        s.view.stop()
+        nonlocal reason
+        reason = modal_inter.text_values[unblacklist_custom_id]
+        await modal_inter.send(
+            "Thanks! I'm now going to add this to the database :)"
+        )
 class AppealsCog(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
@@ -33,7 +40,9 @@ class AppealsCog(HelperCog):
     @commands.cooldown(2, 86400, commands.BucketType.user)
     @appeal.sub_command(name="blacklist", description="Appeal your blacklists")
     async def blacklist(self, inter: disnake.ApplicationCommandInteraction):
-        """Appeal your blacklists!
+        """
+        /appeal
+        Appeal your blacklists!
 
         You should write out your reasoning beforehand. However, you have 20 minutes to type.
         If you close the modal without saving your work somewhere else, YOUR WORK WILL BE LOST!!!!
@@ -53,18 +62,11 @@ class AppealsCog(HelperCog):
         ]
         reason: str = ""
 
-        async def callback(s, modal_inter: disnake.ModalInteraction):
-            s.view.stop()
-            nonlocal reason
-            reason = modal_inter.text_values[unblacklist_custom_id]
-            await modal_inter.send(
-                "Thanks! I'm now going to add this to the database :)"
-            )
 
-        modal = MyModal(
-            callback=callback,
+
+        modal = AppealModal(
             title="Why should I un-blacklist you?",
-            components=[],
+            components=[text_inputs],
             timeout=1200,
             custom_id=modal_custom_id,
         )

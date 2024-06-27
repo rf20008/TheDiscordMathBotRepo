@@ -12,6 +12,7 @@ from disnake.ext import commands, tasks
 
 import helpful_modules
 from helpful_modules import problems_module
+from helpful_modules.problems_module import GuildData
 from helpful_modules.constants_loader import BotConstants
 from helpful_modules.problems_module.cache import MathProblemCache
 from helpful_modules.restart_the_bot import RestartTheBot
@@ -148,7 +149,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         data = await self.cache.get_user_data(
             user_id=user_id,
             default=problems_module.UserData(
-                user_id=user_id, trusted=False, blacklisted=False
+                user_id=user_id, trusted=False, denylisted=False
             ),
         )
         return data.trusted
@@ -157,15 +158,15 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         data = await self.cache.get_user_data(
             user_id=user_id,
             default=problems_module.UserData(
-                user_id=user_id, trusted=False, blacklisted=False
+                user_id=user_id, trusted=False, denylisted=False
             ),
         )
-        return data.blacklisted
+        return data.denylisted
 
     async def is_user_blacklisted(
         self, user: typing.Union[disnake.User, disnake.Member]
     ) -> bool:
-        return await self.is_blacklisted_by_user_id(user.id)
+        return await self.is_blacklisted_by_guild_id(user.id)
 
     async def is_guild_blacklisted(self, guild: disnake.Guild) -> bool:
         return await self.is_blacklisted_by_guild_id(guild.id)
@@ -173,7 +174,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def is_blacklisted_by_guild_id(self, guild_id: int) -> bool:
         data: GuildData = await self.cache.get_guild_data(
             guild_id=guild_id,
-            default=problems_module.GuildData.default(guild_id=guild_id),
+            default=GuildData.default(guild_id=guild_id),
         )
         return data.blacklisted
 
@@ -184,14 +185,14 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         Throws RuntimeError if the guild is not actually blacklisted.
         Throws HTTPException if sending the message failed, or leaving the guild failed.
         """
-        if not await self.is_guild_blacklisted(guild):
+        if not await self.is_guild_denylisted(guild):
             raise RuntimeError("The guild isn't blacklisted!")
-
+        print("hello")
         me: disnake.Member = guild.me
         channels_that_we_could_send_to = [
             channel
             for channel in guild.channels
-            if channel.permissions_for(me).send_messages
+            if issubclass(type(channel), disnake.abc.Messageable) and channel.permissions_for(me).send_messages
         ]
 
         if not channels_that_we_could_send_to:
@@ -229,7 +230,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
                 channel_to_send_to = random.choice(channels_that_mods_can_see)
 
         await channel_to_send_to.send(
-            f"""I have left the guild because the guild is blacklisted, under my terms and conditions.
+            f"""I have left the guild because the guild is denylisted, under my terms and conditions.
         However, I'm available under the GPL. My source code is at {self.constants.SOURCE_CODE_LINK}, so you could self-host the bot if you wish.
         """
         )

@@ -512,7 +512,7 @@ class MiscCommandsCog(HelperCog):
         Blacklist a guild from TheDiscordMathProblemBot. Only trusted users can run this command.
         Also, reasons are not shared.
         """
-
+        print(issubclass(type(self.cache), problems_module.cache.GuildDataRelatedCache))
         # Check if the user is blacklisted from using this command
         if await self.bot.is_user_blacklisted(inter.author):
             await inter.send(embed=SimpleEmbed(
@@ -546,7 +546,7 @@ class MiscCommandsCog(HelperCog):
         old_data.blacklisted = True
 
         # Update the guild's data in storage or cache
-        await self.bot.cache.set_guild_data(new=old_data)
+        await self.bot.cache.set_guild_data(data=old_data)
 
         # Notify the user that the guild has been successfully blacklisted
         await inter.send(
@@ -610,7 +610,7 @@ class MiscCommandsCog(HelperCog):
         old_data.blacklisted = False
 
         # Update the guild's data in storage or cache
-        await self.bot.cache.set_guild_data(new=old_data)
+        await self.bot.cache.set_guild_data(data=old_data)
 
         # Notify the user that the guild has been successfully unblacklisted
         await inter.send(

@@ -23,9 +23,11 @@ from .base_problem import BaseProblem
 from .computational_problem import ComputationalProblem
 from .linear_algebra_problem import LinearAlgebraProblem
 from .cache import *
+from .GuildData import GuildData, CheckForUserPassage
 from .cache_rewrite_with_redis import RedisCache
 from .errors import *
 from .quizzes import *
+from .appeal import Appeal
 from .user_data import UserData
 
 __version__ = "0.1.0"

@@ -110,8 +110,8 @@ def is_not_blacklisted():
         )
         if user_data.blacklisted:
             raise BlacklistedException(
-                "You are denylisted from the bot!"
-                "To appeal, you must use /appeal"
+                "You are denylisted from the bot! "
+                "To appeal, you must use /appeal. "
                 "Note that appeals are seen very rarely..."
             )
         return True
@@ -119,7 +119,7 @@ def is_not_blacklisted():
     return commands.check(predicate)
 
 
-def guild_not_blacklisted():
+def guild_not_denylisted():
     """Check to make sure a command isn't being executed in a blacklisted guild -- instead, we will say the guild has been blacklisted & leave the guild"""
 
     async def predicate(inter: disnake.ApplicationCommandInteraction):
@@ -173,7 +173,7 @@ def guild_owners_or_trusted_users_only():
 
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
-            raise TypeError("Uh oh - inter.bot isn't TheDiscordMathProblemBot")
+            raise RuntimeError("Uh oh - inter.bot isn't TheDiscordMathProblemBot")
         if await inter.bot.is_trusted(inter.author):
             return True  # Trusted users can run this
         if inter.guild is None:
