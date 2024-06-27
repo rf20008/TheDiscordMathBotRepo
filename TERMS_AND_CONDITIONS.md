@@ -312,13 +312,17 @@ Finally, you must not use my DMCA inbox for marketing purposes.
 Misusing my DMCA inbox is a bannable offense. Depending on your abuse, you may also be subject to legal penalties.
 #### 12.5.2: Safe harbor for actual DMCA notices
 
-You are not violating section 12.5.0 if you send me in good faith a real, actual DMCA notice, and you try in good faith to fufill the requirements set out by the DMCA, no matter whether it is legitimate or not. 
+You are not violating section 12.5.0 if you send me in good faith a real, actual DMCA notice (or a real, actual DMCA counter-notice), and you try in good faith to fufill the requirements set out by the DMCA, no matter whether your notice is legitimate or not. 
 You are also not violating section 12.5.0 if you send me something along the lines of "Hello! I am [Name] from [Entity], and I found content at [PLACES] that we own. Please remove such content immediately or we will send a DMCA notice to you. Thank you!"
 
 Section 12.5.2 applies only to the extent that it is a safe harbor protecting you from the provisions of section 12.5.0, and does not supercede the DMCA, federal law, Discord's ToS, or other related provisions.
 
+Also, Section 12.5.2 does not protect you from any of the consequences of filing false DMCA notices. There are severe consequences for filing false notices.
+
 Also, a final warning: There are severe consequences for filing false DMCA notices. Section 12.5.2 cannot protect you from those consequences.
+
 Section 12.5.2 does not protect you, or transfer any liability away from you, or do anything like that, if you commit illegal acts such as perjury
+
 Finally: If you commit perjury by submitting a false DMCA notice, Section 12.5.2 will not protect you or aid you in any way, shape, or form.
 
 
