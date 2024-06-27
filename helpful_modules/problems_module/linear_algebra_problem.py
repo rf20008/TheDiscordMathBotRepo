@@ -18,7 +18,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 import numbers
-from .errors import MathProblemsModuleException
+from .errors import MathProblemsModuleException, LinearAlgebraUserInputErrorException
 import mpmath
 from .base_problem import BaseProblem
 from copy import deepcopy
@@ -158,7 +158,7 @@ class LinearAlgebraProblem(BaseProblem):
                     mpmath.mpc(token)
                 except ValueError:
                     tokens_that_dont_work.append(token)
-            raise MathProblemsModuleException(
+            raise LinearAlgebraUserInputErrorException(
                 f"Some tokens (specifically: {tokens_that_dont_work}) can't be converted to complex numbers"
             )
         for equation_idx in range(len(self.coeffs)):
@@ -169,7 +169,7 @@ class LinearAlgebraProblem(BaseProblem):
                     "The matrix of coefficients is not rectangular"
                 )
             if len(values) != len(equation):
-                raise MathProblemsModuleException(
+                raise LinearAlgebraUserInputErrorException(
                     "You don't have enough variable values to satisfy all the equations"
                 )
             lhs = 0.0

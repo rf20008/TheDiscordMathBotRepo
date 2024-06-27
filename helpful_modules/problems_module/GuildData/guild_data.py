@@ -1,5 +1,7 @@
 import json
 
+import disnake
+
 from ..errors import InvalidDictionaryInDatabaseException
 from .the_basic_check import CheckForUserPassage
 
@@ -11,13 +13,15 @@ class GuildData:
     can_create_quizzes_check: CheckForUserPassage
     mods_check: CheckForUserPassage
 
+
+
     def __init__(
         self,
         guild_id: int,
         blacklisted: bool,
-        can_create_problems_check: str,
-        can_create_quizzes_check: str,
-        mods_check: str,
+        can_create_problems_check: str | CheckForUserPassage,
+        can_create_quizzes_check: str | CheckForUserPassage,
+        mods_check: str | CheckForUserPassage,
     ):
         """
         Do not instantiate this manually! The `py:class:MathProblemCache` will do it for you.
@@ -57,42 +61,76 @@ class GuildData:
                 f"I expected guild_id to be an int, but I got a {guild_id.__class__.name__} instead!"
             )
         self.blacklisted = blacklisted
-        try:
-            self.can_create_problems_check = CheckForUserPassage.from_dict(
-                json.loads(can_create_problems_check)
-            )
-        except json.JSONDecodeError as exc:
-            raise InvalidDictionaryInDatabaseException.from_invalid_data(
-                can_create_problems_check
-            ) from exc
-        except KeyError as exc:
-            raise InvalidDictionaryInDatabaseException(
-                f"I was able to parse {can_create_problems_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
-            ) from exc
-        try:
-            self.can_create_quizzes_check = CheckForUserPassage.from_dict(
-                json.loads(can_create_quizzes_check)
-            )
-        except json.JSONDecodeError as exc:
-            raise InvalidDictionaryInDatabaseException.from_invalid_data(
-                can_create_quizzes_check
-            ) from exc
-        except KeyError as exc:
-            raise InvalidDictionaryInDatabaseException(
-                f"I was able to parse {can_create_quizzes_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
-            ) from exc
+        if isinstance(can_create_quizzes_check, str):
+            try:
+                self.can_create_problems_check = CheckForUserPassage.from_dict(
+                    json.loads(can_create_problems_check)
+                )
+            except json.JSONDecodeError as exc:
+                raise InvalidDictionaryInDatabaseException.from_invalid_data(
+                    can_create_problems_check
+                ) from exc
+            except KeyError as exc:
+                raise InvalidDictionaryInDatabaseException(
+                    f"I was able to parse {can_create_problems_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
+                ) from exc
+        else:
+            self.can_create_quizzes_check = can_create_quizzes_check
+        if isinstance(can_create_problems_check, str):
+            try:
+                self.can_create_quizzes_check = CheckForUserPassage.from_dict(
+                    json.loads(can_create_quizzes_check)
+                )
+            except json.JSONDecodeError as exc:
+                raise InvalidDictionaryInDatabaseException.from_invalid_data(
+                    can_create_quizzes_check
+                ) from exc
+            except KeyError as exc:
+                raise InvalidDictionaryInDatabaseException(
+                    f"I was able to parse {can_create_quizzes_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
+                ) from exc
+        else:
+            self.can_create_problems_check=can_create_problems_check
 
-        try:
-            self.mods_check = CheckForUserPassage.from_dict(json.loads(mods_check))
-        except json.JSONDecodeError as exc:
-            raise InvalidDictionaryInDatabaseException.from_invalid_data(
-                mods_check
-            ) from exc
-        except KeyError as exc:
-            raise InvalidDictionaryInDatabaseException(
-                f"I was able to parse {mods_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
-            ) from exc
+        if isinstance(mods_check, str):
+            try:
+                self.mods_check = CheckForUserPassage.from_dict(json.loads(mods_check))
+            except json.JSONDecodeError as exc:
+                raise InvalidDictionaryInDatabaseException.from_invalid_data(
+                    mods_check
+                ) from exc
+            except KeyError as exc:
+                raise InvalidDictionaryInDatabaseException(
+                    f"I was able to parse {mods_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
+                ) from exc
+        else:
+            self.mods_check=mods_check
 
+    @classmethod
+    def default(cls, guild_id: int):
+        return GuildData(
+            guild_id=guild_id,
+            blacklisted=False,
+            can_create_quizzes_check=CheckForUserPassage(
+                blacklisted_users=[],
+                whitelisted_users=[],
+                roles_allowed=[guild_id],
+                permissions_needed=[]
+            ),
+            can_create_problems_check=CheckForUserPassage(
+                blacklisted_users=[],
+                whitelisted_users=[],
+                roles_allowed=[guild_id],
+                permissions_needed=["administrator"]
+            ),
+            mods_check=CheckForUserPassage(
+                blacklisted_users=[],
+                whitelisted_users=[],
+                roles_allowed=[],
+                permissions_needed=["administrator"]
+            )
+
+        )
     @classmethod
     def from_dict(cls, data: dict) -> "GuildData":
         return cls(

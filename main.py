@@ -24,6 +24,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 # imports - standard library
 import signal
 import threading
+import traceback
 import warnings
 from asyncio import sleep as asyncio_sleep
 from copy import copy
@@ -313,8 +314,14 @@ async def on_error(event, *args, **kwargs):
 async def on_slash_command_error(inter, error):
     """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""
     # print the traceback to the file
-    dict_args = await base_on_error(inter, error)
-    #print(dict_args)
+    print("help")
+    try:
+        dict_args = await base_on_error(inter, error)
+    except Exception as e:
+        print(traceback.format_exception(e))
+        raise e
+
+    print(dict_args)
     try:
         await inter.send(**dict_args)
     except BaseException as be:

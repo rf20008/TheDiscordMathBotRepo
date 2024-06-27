@@ -32,8 +32,10 @@ class CheckForUserPassage:
             role_ids_of_this_user.intersection(roles_allowed) != set()
         ):  # This user has at least 1 of the allowed roles
             return True
+        if not self.permissions_needed:
+            return True
+        _permissions_needed_dict = dict.fromkeys(self.permissions_needed, True)
 
-        _permissions_needed_dict = dict.fromkeys(self.permission_names_needed, True)
         all_permissions_needed = disnake.Permissions(
             **_permissions_needed_dict
         )  # Create the Permissions instance based on what permissions are required

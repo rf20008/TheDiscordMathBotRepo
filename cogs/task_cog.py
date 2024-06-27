@@ -60,9 +60,9 @@ class TaskCog(HelperCog):
                 _int_task = task.get_task()
                 if _int_task.done():
                     try:
-                        log_error(_int_task.exception())
+                        await log_error(_int_task.exception())
                     except asyncio.InvalidStateError as ISE:
-                        log_error(ISE)
+                        await log_error(ISE)
 
     # Task to leave blacklisted guilds
     @tasks.loop(minutes=15)

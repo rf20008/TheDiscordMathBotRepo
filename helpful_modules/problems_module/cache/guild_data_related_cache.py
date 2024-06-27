@@ -6,6 +6,7 @@ import aiosqlite
 from aiomysql import DictCursor
 
 from ...dict_factory import dict_factory
+from ..errors import SQLException
 from ..GuildData.guild_data import GuildData
 from ..mysql_connector_with_stmt import *
 from ..mysql_connector_with_stmt import mysql_connection
@@ -61,7 +62,9 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                     ),
                 )  # TODO: test this
 
-    async def get_guild_data(self, guild_id: int, default: GuildData):
+    async def get_guild_data(self, guild_id: int, default: GuildData | None = None):
+        if default is None:
+            default = GuildData.default(guild_id)
         assert isinstance(guild_id, int)
         assert isinstance(default, GuildData)
 

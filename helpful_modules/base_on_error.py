@@ -30,8 +30,8 @@ from disnake.ext import commands
 import subprocess
 from ._error_logging import log_error
 from .cooldowns import OnCooldown
-from .custom_embeds import *
-from .problems_module.errors import LockedCacheException
+from .custom_embeds import SuccessEmbed, ErrorEmbed, SimpleEmbed
+from .problems_module.errors import LockedCacheException, LinearAlgebraUserInputErrorException
 from helpful_modules.paginator_view import PaginatorView
 from .the_documentation_file_loader import DocumentationFileLoader
 
@@ -56,11 +56,20 @@ async def base_on_error(
         if exc_info()[0] is not None:
             raise
         raise error
-    if isinstance(error, LockedCacheException):
+    cause = None
+    if error.__context__ is not None:
+        cause = error.__context__
+
+    if isinstance(cause, LockedCacheException) or isinstance(error, LockedCacheException):
         return {
             "content": "The bot's cache's lock is currently being held. Please try again later."
         }
-
+    #print(isinstance(cause, LinearAlgebraUserInputErrorException))
+    #print(type(cause))
+    if isinstance(cause, LinearAlgebraUserInputErrorException) or isinstance(error, LinearAlgebraUserInputErrorException):
+        print(cause.args)
+        print(str(cause))
+        return {"embed": ErrorEmbed(str(cause))}
     if isinstance(error, (OnCooldown, disnake.ext.commands.CommandOnCooldown)):
         # This is a cooldown exception
         content = f"This command is on cooldown; please retry **{disnake.utils.format_dt(disnake.utils.utcnow() + datetime.timedelta(seconds=error.retry_after), style='R')}**."
@@ -78,6 +87,8 @@ async def base_on_error(
         return {"embed": ErrorEmbed("You are not the owner of this bot.")}
     if isinstance(error, disnake.ext.commands.errors.CheckFailure):
         return {"embed": ErrorEmbed(str(error))}
+
+
     # Embed = ErrorEmbed(custom_title="⚠ Oh no! Error: " + str(type(error)), description=("Command raised an exception:" + str(error)))
     logging.error("Uh oh - an error occurred ", exc_info=exc_info())
     error_traceback = "\n".join(traceback.format_exception(error))
@@ -145,7 +156,7 @@ async def base_on_error(
         text=embed.description,
         breaking_chars="\n",
         max_page_length=1900,
-        special_color=Color.red()
+        special_color=disnake.Color.red()
     )
     first_page = paginator.create_embed()
     return {"embed": first_page, "view": paginator}

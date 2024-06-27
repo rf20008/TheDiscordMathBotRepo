@@ -491,3 +491,127 @@ class MiscCommandsCog(HelperCog):
             await inter.send("Successfully un-blacklisted the user!")
 
             # TODO: what do I do after a user gets blacklisted? Do I delete their data?
+
+    @commands.slash_command(
+        name="guild_blacklist",
+        description="Blacklist a guild from this bot",
+        options=[
+            Option(
+                name="guild_id",
+                description="The ID of the guild to blacklist",
+                type=OptionType.string,
+                required=True
+            )
+        ]
+    )
+    @checks.trusted_users_only()
+    @checks.is_not_blacklisted()
+    async def guild_blacklist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
+        """
+        /guild_blacklist [guild_id: int]
+        Blacklist a guild from TheDiscordMathProblemBot. Only trusted users can run this command.
+        Also, reasons are not shared.
+        """
+
+        # Check if the user is blacklisted from using this command
+        if await self.bot.is_user_blacklisted(inter.author):
+            await inter.send(embed=SimpleEmbed(
+                title="Insufficient permissions",
+                description="You cannot add guilds to the denylist without proper permissions.",
+                color=disnake.Color.red()
+            ))
+            return
+
+        # Check if the user is trusted to perform this action
+        if not await self.bot.is_trusted(inter.author):
+            await inter.send(embed=SimpleEmbed(
+                title="Insufficient permissions",
+                description="You cannot add guilds to the denylist without proper permissions.",
+                color=disnake.Color.red()
+            ))
+            return
+        try:
+            guild_id = int(guild_id)
+        except ValueError:
+            await inter.send(embed=ErrorEmbed("The guild ID you provided isn't actually an integer"))
+        # Fetch current data of the guild
+        old_data = await self.bot.cache.get_guild_data(guild_id=guild_id)
+
+        # Check if the guild is already blacklisted
+        if old_data.blacklisted:
+            await inter.send(embed=ErrorEmbed("The guild you're trying to denylist is already on the denylist"))
+            return
+
+        # Perform the blacklist operation
+        old_data.blacklisted = True
+
+        # Update the guild's data in storage or cache
+        await self.bot.cache.set_guild_data(new=old_data)
+
+        # Notify the user that the guild has been successfully blacklisted
+        await inter.send(
+            embed=SuccessEmbed(f"The guild with ID {guild_id} has successfully been added to the denylist"))
+
+        # Notify the bot's owner or admins about the action
+        just_denylisted_guild = self.bot.get_guild(guild_id)
+        if just_denylisted_guild is not None:
+            await self.bot.notify_guild_on_guild_leave_because_guild_blacklist(just_denylisted_guild)
+
+    @commands.slash_command(
+        name="guild_unblacklist",
+        description="Remove a guild from this bot's blacklist",
+        options=[
+            Option(
+                name="guild_id",
+                description="The ID of the guild to un-blacklist",
+                type=OptionType.string,
+                required=True
+            )
+        ]
+    )
+    @checks.trusted_users_only()
+    @checks.is_not_blacklisted()
+    async def guild_unblacklist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
+        """
+        /guild_unblacklist [guild_id: int]
+        Remove a guild from the blacklist of this bot. Only trusted users can run this command.
+        """
+        # Check if the user is blacklisted from using this command
+        if await self.bot.is_user_blacklisted(inter.author):
+            await inter.send(embed=SimpleEmbed(
+                title="Insufficient permissions",
+                description="You cannot remove guilds from the denylist without proper permissions.",
+                color=disnake.Color.red()
+            ))
+            return
+
+        # Check if the user is trusted to perform this action
+        if not await self.bot.is_trusted(inter.author):
+            await inter.send(embed=SimpleEmbed(
+                title="Insufficient permissions",
+                description="You cannot remove guilds from the denylist without proper permissions.",
+                color=disnake.Color.red()
+            ))
+            return
+        try:
+            guild_id = int(guild_id)
+        except ValueError:
+            await inter.send(embed=ErrorEmbed("The guild ID you provided isn't actually an integer"))
+        # Fetch current data of the guild
+        old_data = await self.bot.cache.get_guild_data(guild_id=guild_id)
+
+        # Check if the guild is not already blacklisted
+        if not old_data.blacklisted:
+            await inter.send(
+                embed=ErrorEmbed("The guild you're trying to remove from the denylist is not on the denylist!"))
+            return
+
+        # Perform the unblacklist operation
+        old_data.blacklisted = False
+
+        # Update the guild's data in storage or cache
+        await self.bot.cache.set_guild_data(new=old_data)
+
+        # Notify the user that the guild has been successfully unblacklisted
+        await inter.send(
+            embed=SuccessEmbed(f"The guild with ID {guild_id} has successfully been removed from the denylist"))

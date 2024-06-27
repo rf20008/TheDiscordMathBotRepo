@@ -182,3 +182,7 @@ class LockedCacheException(RuntimeError):
     """Raised when an operation is done on a locked RedisCache"""
 
     pass
+
+class LinearAlgebraUserInputErrorException(MathProblemsModuleException):
+    "Raised when a Linear Algebra user input has a problem"
+    pass
