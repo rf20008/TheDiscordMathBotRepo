@@ -32,7 +32,7 @@ class CreatingQuizzesCommandsCog(HelperCog):
         self.bot = bot
         self.cache = bot.cache
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @commands.slash_command(
         name="create",
         description="Create a quiz!",
@@ -46,7 +46,7 @@ class CreatingQuizzesCommandsCog(HelperCog):
         /quiz create blank
         Creates a blank quiz."""
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @create.sub_command(
         name="from_json",
         description="Create a quiz from JSON.",
@@ -198,7 +198,7 @@ class CreatingQuizzesCommandsCog(HelperCog):
         await self.cache.add_quiz(quiz_to_create)
         await inter.send("Quiz successfully created!")
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @create.sub_command(name="blank", description="Create a blank quiz")
     async def blank(self, inter):
         """/quiz create blank
@@ -231,7 +231,7 @@ class CreatingQuizzesCommandsCog(HelperCog):
         await self.bot.cache.add_quiz(quiz)
         await inter.send("Successfully created quiz!")
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @create.sub_command(
         name="with_existing_problem",
         description="Create quizzes with existing problems",

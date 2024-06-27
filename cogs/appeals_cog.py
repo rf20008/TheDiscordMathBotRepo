@@ -17,7 +17,7 @@ class AppealModal(MyModal):
     async def callback(s, modal_inter: disnake.ModalInteraction):
         s.view.stop()
         nonlocal reason
-        reason = modal_inter.text_values[unblacklist_custom_id]
+        reason = modal_inter.text_values[undenylist_custom_id]
         await modal_inter.send(
             "Thanks! I'm now going to add this to the database :)"
         )
@@ -36,36 +36,44 @@ class AppealsCog(HelperCog):
         There are subcommands!"""
         pass
 
-    @has_privileges(blacklisted=True)
+    @has_privileges(denylisted=True)
     @commands.cooldown(2, 86400, commands.BucketType.user)
-    @appeal.sub_command(name="blacklist", description="Appeal your blacklists")
-    async def blacklist(self, inter: disnake.ApplicationCommandInteraction):
+    @appeal.sub_command(name="denylist", description="Appeal your denylists")
+    async def denylist(self, inter: disnake.ApplicationCommandInteraction):
         """
         /appeal
-        Appeal your blacklists!
+        Appeal your denylists!
 
         You should write out your reasoning beforehand. However, you have 20 minutes to type.
         If you close the modal without saving your work somewhere else, YOUR WORK WILL BE LOST!!!!
         """
 
-        # Make sure they are blacklisted because if they're not blacklisted, they can't appeal
+        async def callback(s, modal_inter: disnake.ModalInteraction):
+            s.view.stop()
+            nonlocal reason
+            reason = modal_inter.text_values[undenylist_custom_id]
+            await modal_inter.send(
+                "Thanks! I'm now going to add this to the database :)"
+            )
+        # Make sure they are denylisted because if they're not denylisted, they can't appeal
         # Get the info from the user
         modal_custom_id = str(inter.id) + urandom(10).hex()
-        unblacklist_custom_id = str(inter.id) + urandom(10).hex()
+        undenylist_custom_id = str(inter.id) + urandom(10).hex()
         text_inputs = [
             disnake.ui.TextInput(
-                label="Why should I unblacklist you? You have 20 minutes to answer",
+                label="Why should I undenylist you? You have 20 minutes to answer",
                 style=disnake.TextInputStyle.long,
                 required=True,
-                custom_id=unblacklist_custom_id,
+                custom_id=undenylist_custom_id,
             )
         ]
         reason: str = ""
 
 
 
-        modal = AppealModal(
-            title="Why should I un-blacklist you?",
+        modal = MyModal(
+            callback=callback,
+            title="Why should I un-denylist you?",
             components=[text_inputs],
             timeout=1200,
             custom_id=modal_custom_id,
@@ -90,7 +98,7 @@ class AppealsCog(HelperCog):
             special_id=_generate_appeal_id(inter.author.id, highest_appeal_num),
             appeal_num=highest_appeal_num,
             user_id=inter.author.id,
-            type=problems_module.AppealType.BLACKLIST_APPEAL.value,
+            type=problems_module.AppealType.DENYKLIST_APPEAL.value,
         )
         await self.cache.set_appeal_data(appeal)
         raise NotImplementedError("The program that finds the highest appeal number is not yet implemented. However, your appeal should have been sent")

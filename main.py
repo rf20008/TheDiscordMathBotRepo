@@ -256,7 +256,7 @@ bot.add_cog(QuizCog(bot))
 bot.add_cog(MiscCommandsCog(bot))
 bot.add_cog(HelpCog(bot))
 bot.CONSTANTS = bot_constants
-bot.add_check(checks.is_not_blacklisted())
+bot.add_check(checks.is_not_denylisted())
 bot.add_cog(InterestingComputationCog(bot))
 bot.add_cog(DataModificationCog(bot))
 bot.add_cog(ProblemGenerationCog(bot))
@@ -356,8 +356,8 @@ async def on_guild_join(guild):
     if guild.id is None:  # Should never happen
         raise Exception("Uh oh!")  # This is probably causing the bot to do stuff
 
-    if await bot.is_guild_blacklisted(guild):
-        await bot.notify_guild_on_guild_leave_because_guild_blacklist(guild)
+    if await bot.is_guild_denylisted(guild):
+        await bot.notify_guild_on_guild_leave_because_guild_denylist(guild)
         if bot.get_guild(guild.id) is not None:
             await bot.get_guild(guild.id).leave()
         # await guild.leave()  # This will mess up stuff

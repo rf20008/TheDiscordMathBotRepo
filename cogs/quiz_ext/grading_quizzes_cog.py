@@ -55,7 +55,7 @@ class GradingQuizzesCog(HelperCog):
         """This is a slash command that is meant to be used to grade quizzes!"""
         pass
 
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @quiz_grade.sub_command(
         name="view_submission_users",
         description="View the users who submitted submissions to this quiz",
@@ -89,7 +89,7 @@ class GradingQuizzesCog(HelperCog):
         del users_with_submissions
         del string_to_send
         return
-
+    @checks.is_not_denylisted()
     @quiz_grade.sub_command(name="manual_grade", description="Manually grade quizzes")
     async def manual_grade(
         self,

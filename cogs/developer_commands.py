@@ -258,7 +258,7 @@ class DeveloperCommands(HelperCog):
         ],
     )
     @checks.trusted_users_only()
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @commands.cooldown(2, 600, commands.BucketType.user)
     async def add_trusted_user(
         self,
@@ -272,7 +272,7 @@ class DeveloperCommands(HelperCog):
         user_data = await self.bot.cache.get_user_data(
             user_id=user.id,
             default=problems_module.UserData(
-                user_id=user.id, trusted=False, blacklisted=False
+                user_id=user.id, trusted=False, denylisted=False
             ),
         )
 
@@ -312,6 +312,7 @@ class DeveloperCommands(HelperCog):
         ],
     )
     @commands.cooldown(1, 600, commands.BucketType.user)
+    @checks.is_not_denylisted()
     @checks.trusted_users_only()
     async def remove_trusted_user(
         self: "DeveloperCommands",
@@ -324,7 +325,7 @@ class DeveloperCommands(HelperCog):
         my_user_data = await self.cache.get_user_data(
             inter.author.id,
             default=problems_module.UserData(
-                user_id=inter.author.id, trusted=False, blacklisted=False
+                user_id=inter.author.id, trusted=False, denylisted=False
             ),
         )
         if not my_user_data.trusted:
@@ -335,7 +336,7 @@ class DeveloperCommands(HelperCog):
         their_user_data = await self.cache.get_user_data(
             user.id,
             default=problems_module.UserData(
-                trusted=False, user_id=user.id, blacklisted=False
+                trusted=False, user_id=user.id, denylisted=False
             ),
         )
         if not their_user_data.trusted:
@@ -347,7 +348,7 @@ class DeveloperCommands(HelperCog):
         try:
             await self.cache.set_user_data(user_id=user.id, new=their_user_data)
         except problems_module.UserDataNotExistsException:
-            await self.cache.add_user_data(user_id=user_id, thing_to_add=their_user_data)
+            await self.cache.add_user_data(user_id=user.id, thing_to_add=their_user_data)
         await inter.send(
             embed=SuccessEmbed(
                 f"Successfully made {user.global_name} no longer a trusted user!"

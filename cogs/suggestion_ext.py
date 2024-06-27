@@ -51,7 +51,7 @@ class ConfirmView(disnake.ui.View):
         async def check():
             return (
                 self.user_id == inter.author.id
-                and not await self.bot.is_blacklisted_by_user_id(inter.author.id)
+                and not await self.bot.is_denylisted_by_user_id(inter.author.id)
             )
 
         if await check():
@@ -121,7 +121,7 @@ class SuggestionCog(HelperCog):
         )
         self.is_ready = True
 
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @commands.slash_command(description="Make a suggestion")
     async def suggest(
         self, inter: disnake.ApplicationCommandInteraction, suggestion: str
@@ -139,7 +139,7 @@ class SuggestionCog(HelperCog):
                 title="Are you sure you want to make this?",
                 description=(
                     "This suggestion will be sent to the official support server. "
-                    + "You may be BLACKLISTED for making rule-breaking suggestions. "
+                    + "You may be DENYLISTED for making rule-breaking suggestions. "
                     + "Do you want do this anyway? "
                     + "You have 3 minutes to respond."
                 ),

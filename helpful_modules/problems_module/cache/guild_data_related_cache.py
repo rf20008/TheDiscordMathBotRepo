@@ -25,18 +25,18 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    """INSERT INTO guild_data (guild_id, blacklisted, can_create_problems_check, can_create_quizzes_check, mod_check) 
+                    """INSERT INTO guild_data (guild_id, denylisted, can_create_problems_check, can_create_quizzes_check, mod_check) 
                     VALUES (?,?,?,?,?) 
                     ON CONFLICT(guild_id) DO UPDATE SET
-                    guild_id = ?, blacklisted=?, can_create_problems_check = ?, can_create_quizzes_check = ?, mod_check = ?""",
+                    guild_id = ?, denylisted=?, can_create_problems_check = ?, can_create_quizzes_check = ?, mod_check = ?""",
                     (
                         data.guild_id,
-                        int(data.blacklisted),
+                        int(data.denylisted),
                         CCPCTD,
                         CCQCTD,
                         MCTD,
                         data.guild_id,
-                        int(data.blacklisted),
+                        int(data.denylisted),
                         CCPCTD,
                         CCQCTD,
                         MCTD
@@ -47,18 +47,18 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
             async with self.get_a_connection() as connection:
                 cursor = await connection.cursor(DictCursor)
                 await cursor.execute(
-                    """INSERT INTO guild_data (guild_id, blacklisted, can_create_problems_check, can_create_quizzes_check, mod_check)
+                    """INSERT INTO guild_data (guild_id, denylisted, can_create_problems_check, can_create_quizzes_check, mod_check)
                     VALUES (%s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
-                    guild_id=?, blacklisted=?, can_create_problems_check=?, can_create_quizzes_check=?, mod_check = ?""",
+                    guild_id=?, denylisted=?, can_create_problems_check=?, can_create_quizzes_check=?, mod_check = ?""",
                     (
                         data.guild_id,
-                        int(data.blacklisted),
+                        int(data.denylisted),
                         CCPCTD,
                         CCQCTD,
                         MCTD,
                         data.guild_id,
-                        int(data.blacklisted),
+                        int(data.denylisted),
                         CCPCTD,
                         CCQCTD,
                         MCTD
@@ -113,7 +113,7 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                 await cursor.execute(
                     """CREATE TABLE IF NOT EXISTS guild_data (
                         guild_id INTEGER PRIMARY KEY,
-                        blacklisted INTEGER,
+                        denylisted INTEGER,
                         can_create_problems_check TEXT,
                         can_create_quizzes_check TEXT,
                         mod_check TEXT
@@ -126,7 +126,7 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                 await cursor.execute(
                     """CREATE TABLE IF NOT EXISTS guild_data (
                         guild_id BIGINT PRIMARY KEY,
-                        blacklisted BOOLEAN,
+                        denylisted BOOLEAN,
                         can_create_problems_check JSON,
                         can_create_quizzes_check JSON,
                         mod_check JSON

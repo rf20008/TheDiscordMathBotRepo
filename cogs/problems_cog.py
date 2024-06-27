@@ -44,14 +44,14 @@ class ProblemsCog(HelperCog):
         checks.setup(bot)
 
     @commands.cooldown(1, 1, commands.BucketType.user)
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @commands.slash_command(name="edit_problem", description="edit a problem")
     async def edit_problem(self, inter: disnake.ApplicationCommandInteraction):
         """The base command to edit problems."""
         pass
 
     @commands.cooldown(1, 1, commands.BucketType.user)
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @edit_problem.sub_command(
         name="general_edits",
         description="edit a problem",
@@ -367,7 +367,7 @@ class ProblemsCog(HelperCog):
             ),
         ],
     )
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     async def list_all_problems(
         self,
         inter,
@@ -613,7 +613,7 @@ class ProblemsCog(HelperCog):
     #         ),
     #     ],
     # )
-    # @checks.is_not_blacklisted()
+    # @checks.is_not_denylisted()
     # async def check_answer(
     #         self,
     #         inter: disnake.ApplicationCommandInteraction,
@@ -695,7 +695,7 @@ class ProblemsCog(HelperCog):
             ),
         ],
     )
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def check_answer(
         self,
@@ -856,7 +856,7 @@ class ProblemsCog(HelperCog):
         ],
     )
     @commands.cooldown(1, 5, commands.BucketType.user)
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     async def unvote(
         self,
         inter: disnake.ApplicationCommandInteraction,
@@ -954,7 +954,7 @@ class ProblemsCog(HelperCog):
                             default=UserData(
                                 user_id=inter.author.id,
                                 trusted=False,
-                                blacklisted=False,
+                                denylisted=False,
                             ),
                         )
                     )
@@ -967,7 +967,7 @@ class ProblemsCog(HelperCog):
                     await self.bot.cache.get_user_data(
                         user_id=inter.author.id,
                         default=UserData(
-                            user_id=inter.author.id, trusted=False, blacklisted=False
+                            user_id=inter.author.id, trusted=False, denylisted=False
                         ),
                     )
                 )

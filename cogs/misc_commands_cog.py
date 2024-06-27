@@ -412,109 +412,109 @@ class MiscCommandsCog(HelperCog):
         await inter.send("Your request has been submitted!")
 
     @commands.slash_command(
-        name="blacklist",
-        description="Blacklist someone from the bot!",
+        name="denylist",
+        description="Denylist someone from the bot!",
         options=[
             Option(
                 name="user",
-                description="The user to blacklist",
+                description="The user to denylist",
                 type=OptionType.user,
                 required=True,
             )
         ],
     )
     @checks.trusted_users_only()
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @commands.cooldown(1, 1, commands.BucketType.user)
-    async def blacklist(
+    async def denylist(
         self: "MiscCommandsCog",
         inter: disnake.ApplicationCommandInteraction,
         user: typing.Union[disnake.User, disnake.Member],
     ):
-        """/blacklist [user: user]
-        Blacklist someone from the bot. You must be a trusted user to do this!
+        """/denylist [user: user]
+        denylist someone from the bot. You must be a trusted user to do this!
         There is a 1-second cooldown."""
         user_data = await self.cache.get_user_data(
             user_id=user.id,
             default=problems_module.UserData(
-                user_id=user.id, trusted=False, blacklisted=False
+                user_id=user.id, trusted=False, denylisted=False
             ),
         )
-        if user_data.blacklisted:
-            self.bot.log.debug("Can't blacklist user; user already blacklisted")
-            return await inter.send("Can't blacklist user; user already blacklisted")
+        if user_data.denylisted:
+            self.bot.log.debug("Can't denylist user; user already denylisted")
+            return await inter.send("Can't denylist user; user already denylisted")
         else:
-            user_data.blacklisted = True
+            user_data.denylisted = True
             await self.cache.set_user_data(user_id=user.id, new=user_data)
 
-            self.bot.log.info(f"Successfully blacklisted the user with id {user.id}")
-            await inter.send("Successfully blacklisted the user!")
+            self.bot.log.info(f"Successfully denylisted the user with id {user.id}")
+            await inter.send("Successfully denylisted the user!")
 
-            # TODO: what do I do after a user gets blacklisted? Do I delete their data?
+            # TODO: what do I do after a user gets denylisted? Do I delete their data?
 
     @commands.slash_command(
-        name="unblacklist",
-        description="Remove someone's blacklist",
+        name="undenylist",
+        description="Remove someone's denylist",
         options=[
             Option(
                 name="user",
-                description="The user to un-blacklist",
+                description="The user to un-denylist",
                 type=OptionType.user,
                 required=True,
             )
         ],
     )
     @checks.trusted_users_only()
-    @checks.is_not_blacklisted()
+    @checks.is_not_denylisted()
     @commands.cooldown(1, 1, commands.BucketType.user)
-    async def unblacklist(
+    async def undenylist(
         self: "MiscCommandsCog",
         inter: disnake.ApplicationCommandInteraction,
         user: typing.Union[disnake.User, disnake.Member],
     ):
-        """/unblacklist [user: user]
-        Remove a user's bot blacklist. You must be a trusted user to do this!
+        """/undenylist [user: user]
+        Remove a user's bot denylist. You must be a trusted user to do this!
         There is a 1-second cooldown."""
         user_data = await self.cache.get_user_data(
             user_id=user.id,
             default=problems_module.UserData(
-                user_id=user.id, trusted=False, blacklisted=False
+                user_id=user.id, trusted=False, denylisted=False
             ),
         )
-        if not user_data.blacklisted:
-            self.bot.log.debug("Can't un-blacklist user; user not blacklisted")
-            return await inter.send("Can't un-blacklist user; user not blacklisted")
+        if not user_data.denylisted:
+            self.bot.log.debug("Can't un-denylist user; user not denylisted")
+            return await inter.send("Can't un-denylist user; user not denylisted")
         else:
-            user_data.blacklisted = False
+            user_data.denylisted = False
             await self.cache.set_user_data(user_id=user.id, new=user_data)
-            self.bot.log.info(f"Successfully un-blacklisted the user with id {user.id}")
-            await inter.send("Successfully un-blacklisted the user!")
+            self.bot.log.info(f"Successfully un-denylisted the user with id {user.id}")
+            await inter.send("Successfully un-denylisted the user!")
 
-            # TODO: what do I do after a user gets blacklisted? Do I delete their data?
+            # TODO: what do I do after a user gets denylisted? Do I delete their data?
 
     @commands.slash_command(
-        name="guild_blacklist",
-        description="Blacklist a guild from this bot",
+        name="guild_denylist",
+        description="denylist a guild from this bot",
         options=[
             Option(
                 name="guild_id",
-                description="The ID of the guild to blacklist",
+                description="The ID of the guild to denylist",
                 type=OptionType.string,
                 required=True
             )
         ]
     )
     @checks.trusted_users_only()
-    @checks.is_not_blacklisted()
-    async def guild_blacklist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
+    @checks.is_not_denylisted()
+    async def guild_denylist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
         """
-        /guild_blacklist [guild_id: int]
-        Blacklist a guild from TheDiscordMathProblemBot. Only trusted users can run this command.
+        /guild_denylist [guild_id: int]
+        denylist a guild from TheDiscordMathProblemBot. Only trusted users can run this command.
         Also, reasons are not shared.
         """
         print(issubclass(type(self.cache), problems_module.cache.GuildDataRelatedCache))
-        # Check if the user is blacklisted from using this command
-        if await self.bot.is_user_blacklisted(inter.author):
+        # Check if the user is denylisted from using this command
+        if await self.bot.is_user_denylisted(inter.author):
             await inter.send(embed=SimpleEmbed(
                 title="Insufficient permissions",
                 description="You cannot add guilds to the denylist without proper permissions.",
@@ -537,47 +537,47 @@ class MiscCommandsCog(HelperCog):
         # Fetch current data of the guild
         old_data = await self.bot.cache.get_guild_data(guild_id=guild_id)
 
-        # Check if the guild is already blacklisted
-        if old_data.blacklisted:
+        # Check if the guild is already denylisted
+        if old_data.denylisted:
             await inter.send(embed=ErrorEmbed("The guild you're trying to denylist is already on the denylist"))
             return
 
-        # Perform the blacklist operation
-        old_data.blacklisted = True
+        # Perform the denylist operation
+        old_data.denylisted = True
 
         # Update the guild's data in storage or cache
         await self.bot.cache.set_guild_data(data=old_data)
 
-        # Notify the user that the guild has been successfully blacklisted
-        await inter.send(
+        # Notify the user that the guild has been successfully denylisted
+        await inter.send
             embed=SuccessEmbed(f"The guild with ID {guild_id} has successfully been added to the denylist"))
 
         # Notify the bot's owner or admins about the action
         just_denylisted_guild = self.bot.get_guild(guild_id)
         if just_denylisted_guild is not None:
-            await self.bot.notify_guild_on_guild_leave_because_guild_blacklist(just_denylisted_guild)
+            await self.bot.notify_guild_on_guild_leave_because_guild_denylist(just_denylisted_guild)
 
     @commands.slash_command(
-        name="guild_unblacklist",
-        description="Remove a guild from this bot's blacklist",
+        name="guild_undenylist",
+        description="Remove a guild from this bot's denylist",
         options=[
             Option(
                 name="guild_id",
-                description="The ID of the guild to un-blacklist",
+                description="The ID of the guild to un-denylist",
                 type=OptionType.string,
                 required=True
             )
         ]
     )
     @checks.trusted_users_only()
-    @checks.is_not_blacklisted()
-    async def guild_unblacklist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
+    @checks.is_not_denylisted()
+    async def guild_undenylist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
         """
-        /guild_unblacklist [guild_id: int]
-        Remove a guild from the blacklist of this bot. Only trusted users can run this command.
+        /guild_undenylist [guild_id: int]
+        Remove a guild from the denylist of this bot. Only trusted users can run this command.
         """
-        # Check if the user is blacklisted from using this command
-        if await self.bot.is_user_blacklisted(inter.author):
+        # Check if the user is denylisted from using this command
+        if await self.bot.is_user_denylisted(inter.author):
             await inter.send(embed=SimpleEmbed(
                 title="Insufficient permissions",
                 description="You cannot remove guilds from the denylist without proper permissions.",
@@ -600,18 +600,18 @@ class MiscCommandsCog(HelperCog):
         # Fetch current data of the guild
         old_data = await self.bot.cache.get_guild_data(guild_id=guild_id)
 
-        # Check if the guild is not already blacklisted
-        if not old_data.blacklisted:
+        # Check if the guild is not already denylisted
+        if not old_data.denylisted:
             await inter.send(
                 embed=ErrorEmbed("The guild you're trying to remove from the denylist is not on the denylist!"))
             return
 
-        # Perform the unblacklist operation
-        old_data.blacklisted = False
+        # Perform the undenylist operation
+        old_data.denylisted = False
 
         # Update the guild's data in storage or cache
         await self.bot.cache.set_guild_data(data=old_data)
 
-        # Notify the user that the guild has been successfully unblacklisted
+        # Notify the user that the guild has been successfully undenylisted
         await inter.send(
             embed=SuccessEmbed(f"The guild with ID {guild_id} has successfully been removed from the denylist"))

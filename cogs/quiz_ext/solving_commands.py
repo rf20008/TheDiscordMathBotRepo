@@ -23,7 +23,7 @@ class QuizSolveCog(HelperCog):
         self.bot = bot
         self.cache = bot.cache
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @commands.slash_command(name="solve_quiz", description="Solve quizzes")
     async def solve_quiz(self, inter: disnake.ApplicationCommandInteraction):
         """This is a command used to solve quizzes
@@ -111,7 +111,7 @@ class QuizSolveCog(HelperCog):
         )
         return
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @solve_quiz.sub_command(
         name="initialize_quiz_solving",
         description="Initialize solving a quiz",

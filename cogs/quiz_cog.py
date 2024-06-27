@@ -457,7 +457,7 @@ JSON error: {e}"""
                 user_data: UserData = await self.bot.cache.get_user_data(
                     user_id=inter.author.id,
                     default=UserData(
-                        trusted=False, blacklisted=False, user_id=inter.author.id
+                        trusted=False, denylisted=False, user_id=inter.author.id
                     ),
                 )
                 if user_data.trusted:

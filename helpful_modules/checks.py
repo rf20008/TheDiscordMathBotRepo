@@ -31,8 +31,8 @@ class NotTrustedUser(CustomCheckFailure):
     pass
 
 
-class BlacklistedException(CustomCheckFailure):
-    """Raised when trying to run a command, but something you are trying to use is blacklisted"""
+class DenylistedException(CustomCheckFailure):
+    """Raised when trying to run a command, but something you are trying to use is denylisted"""
 
     pass
 
@@ -95,8 +95,8 @@ def always_failing_check():
     return commands.check(predicate)
 
 
-def is_not_blacklisted():
-    """Check to make sure the user is not blacklisted"""
+def is_not_denylisted():
+    """Check to make sure the user is not denylisted"""
 
     async def predicate(inter):
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
@@ -106,10 +106,10 @@ def is_not_blacklisted():
 
         user_data: UserData = await inter.bot.cache.get_user_data(
             user_id=inter.author.id,
-            default=UserData(user_id=inter.author.id, trusted=False, blacklisted=False),
+            default=UserData(user_id=inter.author.id, trusted=False, denylisted=False),
         )
-        if user_data.blacklisted:
-            raise BlacklistedException(
+        if user_data.denylisted:
+            raise DenylistedException(
                 "You are denylisted from the bot! "
                 "To appeal, you must use /appeal. "
                 "Note that appeals are seen very rarely..."
@@ -120,19 +120,21 @@ def is_not_blacklisted():
 
 
 def guild_not_denylisted():
-    """Check to make sure a command isn't being executed in a blacklisted guild -- instead, we will say the guild has been blacklisted & leave the guild"""
+    """Check to make sure a command isn't being executed in a denylisted guild -- instead, we will say the guild has been denylisted & leave the guild"""
 
     async def predicate(inter: disnake.ApplicationCommandInteraction):
         """The actual check"""
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
             raise TypeError("Uh oh! inter.bot isn't TheDiscordMathProblemBot")
-        if await inter.bot.is_guild_blacklisted(inter.guild):
+        if inter.guild is None:
+            return True
+        if await inter.bot.is_guild_denylisted(inter.guild):
             await inter.send(
-                "This guild has just been blacklisted -- therefore I'm leaving."
+                "This guild has just been denylisted -- therefore I'm leaving."
                 f"However, my source code is available at {inter.bot.constants.SOURCE_CODE_LINK}",
                 ephemeral=True,
             )
-            await inter.bot.notify_guild_on_guild_leave_because_guild_blacklist(
+            await inter.bot.notify_guild_on_guild_leave_because_guild_denylist(
                 inter.guild
             )
             return False
@@ -145,7 +147,7 @@ def has_privileges(**privileges_required):
     """Make sure the user running this has the privileges required to run this command (not permissions, but bot privileges).
     Right now, the only privileges that can be checked are:
         -`trusted`,
-        -`blacklisted`
+        -`denylisted`
     As this is the internal API of my bot, this may change at any time; don't rely on it :-)
     """
 

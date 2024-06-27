@@ -57,7 +57,7 @@ class HelperCog(ext.commands.Cog):
                     ctx.author.id,
                     default=problems_module.UserData(
                         trusted=False,
-                        blacklisted=False,
+                        denylisted=False,
                         user_id=ctx.author.id
                     )
             ):

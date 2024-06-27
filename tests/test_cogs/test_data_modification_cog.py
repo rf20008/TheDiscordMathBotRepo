@@ -34,7 +34,7 @@ class TestDataModificationCog(unittest.IsolatedAsyncioTestCase):
         # Mock cache methods
         self.bot.cache.get_problems_by_func.return_value = []
         self.bot.cache.get_user_data.return_value = MagicMock(
-            user_id=interaction.author.id, trusted=False, blacklisted=False
+            user_id=interaction.author.id, trusted=False, denylisted=False
         )
 
         # Call the delete_all command

@@ -96,7 +96,7 @@ class ViewingQuizzesCog(HelperCog):
             return False
         return True
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @commands.slash_command(name="quiz_view", description="View quizzes!")
     async def quiz_view(self, inter: disnake.ApplicationCommandInteraction):
         """/quiz_view
@@ -302,7 +302,7 @@ class ViewingQuizzesCog(HelperCog):
             await inter.send("I have attached the file!", file=file, ephemeral=True)
             del file
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @quiz_view.sub_command(
         name="single_problem",
         description="View a single problem in a quiz",
@@ -427,7 +427,7 @@ Max Score: {problem.max_score}
             await inter.send("You're not allowed to do this!")
             return
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @quiz_view.sub_command(
         name="ids",
         description="View the Quiz IDs of the available quizzes and a short description",

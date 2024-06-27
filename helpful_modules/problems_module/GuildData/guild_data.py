@@ -7,7 +7,7 @@ from .the_basic_check import CheckForUserPassage
 
 
 class GuildData:
-    blacklisted: bool
+    denylisted: bool
     guild_id: int | None
     can_create_problems_check: CheckForUserPassage
     can_create_quizzes_check: CheckForUserPassage
@@ -18,7 +18,7 @@ class GuildData:
     def __init__(
         self,
         guild_id: int | None,
-        blacklisted: bool,
+        denylisted: bool,
         can_create_problems_check: str | CheckForUserPassage,
         can_create_quizzes_check: str | CheckForUserPassage,
         mods_check: str | CheckForUserPassage,
@@ -29,8 +29,8 @@ class GuildData:
         ----------
         guild_id : int
             The ID of the guild that this `GuildData` is attached to.
-        blacklisted : bool
-            Whether this guild is blacklisted. If this is not found in the database , then it will be `False` by default
+        denylisted : bool
+            Whether this guild is denylisted. If this is not found in the database , then it will be `False` by default
         can_create_quizzes_check : str
             This is a JSON representation of the `py:class:CheckForUserPassage` to check whether a user can create quizzes.
             Defaults to allowing everyone to create quizzes.
@@ -56,11 +56,11 @@ class GuildData:
                 f"I expected `guild_id` to be an int, but I got a {guild_id.__class__.__name__} instead!"
             )
         self.guild_id = guild_id
-        if not isinstance(blacklisted, bool):
+        if not isinstance(denylisted, bool):
             raise TypeError(
-                f"I expected `blacklisted` to be an int, but I got a {guild_id.__class__.__name__} instead!"
+                f"I expected `denylisted` to be a bool, but I got a(n) {denylisted.__class__.__name__} instead!"
             )
-        self.blacklisted = blacklisted
+        self.denylisted = denylisted
         if isinstance(can_create_quizzes_check, str):
             try:
                 self.can_create_problems_check = CheckForUserPassage.from_dict(
@@ -110,22 +110,22 @@ class GuildData:
     def default(cls, guild_id: int):
         return GuildData(
             guild_id=guild_id,
-            blacklisted=False,
+            denylisted=False,
             can_create_quizzes_check=CheckForUserPassage(
-                blacklisted_users=[],
-                whitelisted_users=[],
+                denylisted_users=[],
+                allowlisted_users=[],
                 roles_allowed=[guild_id],
                 permissions_needed=[]
             ),
             can_create_problems_check=CheckForUserPassage(
-                blacklisted_users=[],
-                whitelisted_users=[],
+                denylisted_users=[],
+                allowlisted_users=[],
                 roles_allowed=[guild_id],
                 permissions_needed=["administrator"]
             ),
             mods_check=CheckForUserPassage(
-                blacklisted_users=[],
-                whitelisted_users=[],
+                denylisted_users=[],
+                allowlisted_users=[],
                 roles_allowed=[],
                 permissions_needed=["administrator"]
             )
@@ -134,7 +134,7 @@ class GuildData:
     @classmethod
     def from_dict(cls, data: dict) -> "GuildData":
         return cls(
-            blacklisted=bool(data["blacklisted"]),
+            denylisted=bool(data["denylisted"]),
             guild_id=data["guild_id"],
             can_create_problems_check=data["can_create_problems_check"],
             mods_check=data["mod_check"],
@@ -143,7 +143,7 @@ class GuildData:
 
     def to_dict(self) -> dict:
         dict_to_return = {
-            "blacklisted": int(self.blacklisted),
+            "denylisted": int(self.denylisted),
             "guild_id": self.guild_id,
             "can_create_problems_check": self.can_create_problems_check.to_dict(),
             "can_create_quizzes_check": self.can_create_quizzes_check.to_dict(),

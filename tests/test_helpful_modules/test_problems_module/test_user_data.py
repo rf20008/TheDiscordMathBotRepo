@@ -26,30 +26,30 @@ class TestUserData(unittest.TestCase):
         # Arrange
         user_id = -123
         trusted = True
-        blacklisted = False
+        denylisted = False
 
         # Act
-        user_data = UserData(user_id=user_id, trusted=trusted, blacklisted=blacklisted)
+        user_data = UserData(user_id=user_id, trusted=trusted, denylisted=denylisted)
 
         # Assert
         self.assertEqual(user_data.user_id, user_id)
         self.assertEqual(user_data.trusted, trusted)
-        self.assertEqual(user_data.blacklisted, blacklisted)
+        self.assertEqual(user_data.denylisted, denylisted)
 
     def test_init_with_invalid_input(self):
         # Arrange & Act & Assert
         with self.assertRaises(TypeError):
-            UserData(user_id="-123", trusted=True, blacklisted=False)
+            UserData(user_id="-123", trusted=True, denylisted=False)
 
         with self.assertRaises(TypeError):
-            UserData(user_id=-123, trusted="True", blacklisted=False)
+            UserData(user_id=-123, trusted="True", denylisted=False)
 
         with self.assertRaises(TypeError):
-            UserData(user_id=-123, trusted=True, blacklisted="False")
+            UserData(user_id=-123, trusted=True, denylisted="False")
 
     def test_from_dict(self):
         # Arrange
-        user_data_dict = {"user_id": -123, "trusted": True, "blacklisted": False}
+        user_data_dict = {"user_id": -123, "trusted": True, "denylisted": False}
 
         # Act
         user_data = UserData.from_dict(user_data_dict)
@@ -57,14 +57,14 @@ class TestUserData(unittest.TestCase):
         # Assert
         self.assertEqual(user_data.user_id, user_data_dict["user_id"])
         self.assertEqual(user_data.trusted, user_data_dict["trusted"])
-        self.assertEqual(user_data.blacklisted, user_data_dict["blacklisted"])
+        self.assertEqual(user_data.denylisted, user_data_dict["denylisted"])
 
     def test_to_dict(self):
         # Arrange
         user_id = -123
         trusted = True
-        blacklisted = False
-        user_data = UserData(user_id=user_id, trusted=trusted, blacklisted=blacklisted)
+        denylisted = False
+        user_data = UserData(user_id=user_id, trusted=trusted, denylisted=denylisted)
 
         # Act
         user_data_dict = user_data.to_dict()
@@ -72,7 +72,7 @@ class TestUserData(unittest.TestCase):
         # Assert
         self.assertEqual(user_data_dict["user_id"], user_id)
         self.assertEqual(user_data_dict["trusted"], trusted)
-        self.assertEqual(user_data_dict["blacklisted"], blacklisted)
+        self.assertEqual(user_data_dict["denylisted"], denylisted)
 
     def test_default_method(self):
         # Arrange
@@ -84,7 +84,7 @@ class TestUserData(unittest.TestCase):
         # Assert
         self.assertEqual(user_data.user_id, user_id)
         self.assertFalse(user_data.trusted)
-        self.assertFalse(user_data.blacklisted)
+        self.assertFalse(user_data.denylisted)
 
 if __name__ == "__main__":
     unittest.main()

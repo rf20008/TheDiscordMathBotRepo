@@ -8,7 +8,7 @@ from .dict_convertible import DictConvertible
 
 class AppealType(Enum):
     DENYKLIST_APPEAL = 0
-    GUILD_BLACKLIST_APPEAL = 1
+    GUILD_DENYLIST_APPEAL = 1
     SUPPORT_SERVER_BAN = 2
     SUPPORT_SERVER_MISC_PUNISHMENT = 3
     OTHER = 4

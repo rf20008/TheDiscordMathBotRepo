@@ -5,7 +5,7 @@ Disclaimer 2: I did not consult any lawyers or get any legal advice while writin
 
 Most of the content in this privacy policy should be self-explanatory. (Write to me if it isn't!)
 If you use this application (the Discord Math Problem Bot), (I assume that) you (would) agree to this policy. If you do not agree, you should not use this application.
-The only data we'll store about you without your consent is whether you're blacklisted or not. By using this bot, you agree to us storing data about you in accordance with my Privacy Policy.
+The only data we'll store about you without your consent is whether you're denylisted or not. By using this bot, you agree to us storing data about you in accordance with my Privacy Policy.
 
 # Definitions
 "the bot" means The Discord Math Problem Bot.
@@ -43,7 +43,7 @@ You can see *almost all* of your data using the command /user_data get_data. (So
 As of right now, quizzes do not have a user interface, but problems you submit can still be deleted via ``/delete_problem``. 
 Due to Discord limitations, you are not able to delete individual problems that are part of Discord servers are not a part of. 
 There is also a ``/user_data delete_all`` command, which will delete *all* your problems, quizzes, quiz submissions, and grades you submitted (including guilds you are not part of).
-However, due to security reasons, we won't delete the data we store about you about whether you're blacklisted / trusted.  
+However, due to security reasons, we won't delete the data we store about you about whether you're denylisted / trusted.  
 It is possible to delete data about whether you voted or solved problems, as of January 5, 2024, but this is not currently implemented.
 
 ## Updates and notification

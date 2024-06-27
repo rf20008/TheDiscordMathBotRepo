@@ -183,41 +183,41 @@ class GuildConfigCog(HelperCog):
             return
 
     @modify_mod_check.sub_command(
-        description="add_blacklisted_user",
+        description="add_denylisted_user",
     )
-    async def add_blacklisted_user(self, inter: GuildCommandInteraction, user: User):
+    async def add_denylisted_user(self, inter: GuildCommandInteraction, user: User):
         """/guild_config modify_mod_check add_blacklisted_user [user: User]
-        Add a blacklisted user to the mod check, which prevents this user from interacting as a mod with this bot, even if they meet all other requirements
+        Add a denylisted user to the mod check, which prevents this user from interacting as a mod with this bot, even if they meet all other requirements
         """  # noqa: E401
 
         data = await self.cache.get_guild_data(
             inter.guild_id,
             default=problems_module.GuildData.default(guild_id=inter.guild_id),
         )
-        data.blacklisted_users.append(user.id)
+        data.denylisted_users.append(user.id)
         await self.cache.set_guild_data(inter.guild_id, data=data)
         await inter.send(
-            "Successfully added a blacklisted user to the list of blacklisted users..."
+            "Successfully added a denylisted user to the list of denylisted users..."
         )
 
     @commands.slash_command(
-        description="Remove a blacklisted user from the list of blacklisted users in the mod check",
+        description="Remove a denylisted user from the list of denylisted users in the mod check",
     )
-    async def remove_blacklisted_user(self, inter: GuildCommandInteraction, user: User):
-        """/guild_config modify_mod_check remove_blacklisted_user [user: User]
-        Attempt to remove a blacklisted user from the list of blacklisted users, and don't do anything if the user is not blacklisted
+    async def remove_denylisted_user(self, inter: GuildCommandInteraction, user: User):
+        """/guild_config modify_mod_check remove_denylisted_user [user: User]
+        Attempt to remove a denylisted user from the list of denylisted users, and don't do anything if the user is not denyisted
         """
         data = await self.cache.get_guild_data(
             inter.guild_id, default=problems_module.GuildData.default()
         )
         try:
-            data.mod_check.blacklisted_users.remove(user.id)
+            data.mod_check.denylisted_users.remove(user.id)
             await self.cache.set_guild_data(inter.guild_id, data=data)
-            await inter.send("Successfully removed the user's blacklistness")
+            await inter.send("Successfully removed the user's denylistness")
             return
         except ValueError:
             await inter.send(
-                "The user is not blacklisted, so I cannot unblacklist the user from the mod check."
+                "The user is not denylisted, so I cannot undenylist the user from the mod check."
             )
             raise  # for debugging purposes
 

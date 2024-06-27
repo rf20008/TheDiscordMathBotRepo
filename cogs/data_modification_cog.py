@@ -44,7 +44,7 @@ class DataModificationCog(HelperCog):
         This doesn't do anything (you need to call a subcommand)"""
         pass
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.is_not_denylisted()
     @disnake.ext.commands.cooldown(1, 500, commands.BucketType.user)  # To prevent abuse
     @user_data.sub_command(
         name="delete_all",
@@ -85,7 +85,7 @@ class DataModificationCog(HelperCog):
         If save_data_before_deletion, the data about you will be sent as a json file
         This has a 500-second cooldown.
 
-        You cannot use this command if you are blacklisted.
+        You cannot use this command if you are denylisted.
 
         This command will delete your permissions --
 
@@ -226,11 +226,11 @@ class DataModificationCog(HelperCog):
         user_data: problems_module.UserData = await self.bot.cache.get_user_data(
             user_id=author.id,
             default=problems_module.UserData(
-                user_id=author.id, trusted=False, blacklisted=False
+                user_id=author.id, trusted=False, denylisted=False
             ),
         )
         is_trusted_user = user_data.trusted
-        is_blacklisted = user_data.blacklisted
+        is_denylisted = user_data.denylisted
 
         new_data = {
             "Problems": [problem.to_dict(show_answer=True) for problem in raw_data["problems"]],
@@ -256,7 +256,7 @@ class DataModificationCog(HelperCog):
             ],
             "User status": {
                 "trusted_user": is_trusted_user,
-                "blacklisted": is_blacklisted,
+                "denylisted": is_denylisted,
             },
             "Appeals": [appeal.to_dict() for appeal in raw_data["appeals"]],
             "total_session_command_stats": [
@@ -277,7 +277,7 @@ class DataModificationCog(HelperCog):
         """/user_data get_data
         Get (almost) all the data the bot stores about you automatically.
         To prevent spam and getting rate limited, there is a 100-second cooldown.
-        You can use this command even if you are blacklisted."""
+        You can use this command even if you are denylisted."""
         await inter.response.defer()
         file = disnake.File(
             io.BytesIO(

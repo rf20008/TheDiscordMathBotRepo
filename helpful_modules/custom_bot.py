@@ -68,7 +68,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         # self.trusted_users = kwargs.get("trusted_users", None)
         # if not self.trusted_users and self.trusted_users != []:
         #    raise TypeError("trusted_users was not found")
-        # self.blacklisted_users = kwargs.get("blacklisted_users", [])
+        # self.denylisted_users = kwargs.get("denylisted_users", [])
         self.closing_things = []
         self.support_server = None
 
@@ -154,7 +154,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         )
         return data.trusted
 
-    async def is_blacklisted_by_user_id(self, user_id: int) -> bool:
+    async def is_denylisted_by_user_id(self, user_id: int) -> bool:
         data = await self.cache.get_user_data(
             user_id=user_id,
             default=problems_module.UserData(
@@ -163,30 +163,30 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         )
         return data.denylisted
 
-    async def is_user_blacklisted(
+    async def is_user_denylisted(
         self, user: typing.Union[disnake.User, disnake.Member]
     ) -> bool:
-        return await self.is_blacklisted_by_guild_id(user.id)
+        return await self.is_denylisted_by_guild_id(user.id)
 
-    async def is_guild_blacklisted(self, guild: disnake.Guild) -> bool:
-        return await self.is_blacklisted_by_guild_id(guild.id)
+    async def is_guild_denylisted(self, guild: disnake.Guild) -> bool:
+        return await self.is_denylisted_by_guild_id(guild.id)
 
-    async def is_blacklisted_by_guild_id(self, guild_id: int) -> bool:
+    async def is_denylisted_by_guild_id(self, guild_id: int) -> bool:
         data: GuildData = await self.cache.get_guild_data(
             guild_id=guild_id,
             default=GuildData.default(guild_id=guild_id),
         )
-        return data.blacklisted
+        return data.denylisted
 
-    async def notify_guild_on_guild_leave_because_guild_blacklist(
+    async def notify_guild_on_guild_leave_because_guild_denylist(
             self, guild: disnake.Guild
     ) -> None:
-        """Notify the guild about the bot leaving the guild because the guild is blacklisted.
-        Throws RuntimeError if the guild is not actually blacklisted.
+        """Notify the guild about the bot leaving the guild because the guild is denylisted.
+        Throws RuntimeError if the guild is not actually denylisted.
         Throws HTTPException if sending the message failed, or leaving the guild failed.
         """
         if not await self.is_guild_denylisted(guild):
-            raise RuntimeError("The guild isn't blacklisted!")
+            raise RuntimeError("The guild isn't denylisted!")
         print("hello")
         me: disnake.Member = guild.me
         channels_that_we_could_send_to = [
@@ -238,9 +238,9 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     # async def on_application_command(self, inter: disnake.ApplicationCommandInteraction):
     #    await super().on_application_command(inter)
-    #    if await self.is_guild_blacklisted(inter.guild):
+    #    if await self.is_guild_denylisted(inter.guild):
     #        await inter.send("This command has been executed in a b")
-    #       await self.notify_guild_on_guild_leave_because_guild_blacklist(inter.guild)
+    #       await self.notify_guild_on_guild_leave_because_guild_denylist(inter.guild)
 
     def task(
         self,

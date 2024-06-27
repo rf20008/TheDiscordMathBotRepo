@@ -7,21 +7,21 @@ import orjson
 class CheckForUserPassage:
     def __init__(
         self,
-        blacklisted_users: t.List[int],
-        whitelisted_users: t.List[int],
+        denylisted_users: t.List[int],
+        allowlisted_users: t.List[int],
         roles_allowed: t.List[int],
         permissions_needed: t.List[str],
     ):
-        self.blacklisted_users = blacklisted_users
-        self.whitelisted_users = whitelisted_users
+        self.denylisted_users = denylisted_users
+        self.allowlisted_users = allowlisted_users
         self.roles_allowed = roles_allowed
         self.permissions_needed = permissions_needed
 
     def check_for_user_passage(self, member: disnake.Member) -> bool:
-        "Return whether the user passes this check. First we check for blacklisted/whitelisted people. Then roles and permissions are checked. If none of those checks succeed, False is returned. Otherwise True is returned"
-        if member.id in self.blacklisted_users:
+        "Return whether the user passes this check. First we check for denylisted/allowlisted people. Then roles and permissions are checked. If none of those checks succeed, False is returned. Otherwise True is returned"
+        if member.id in self.denylisted_users:
             return False
-        if member.id in self.whitelisted_users:
+        if member.id in self.allowlisted_users:
             return True
 
         role_ids_of_this_user: set = {
@@ -49,7 +49,7 @@ class CheckForUserPassage:
     def from_dict(cls, data: dict) -> "CheckForUserPassage":
         "Convert a dictionary into an instance of CheckForUserPassage"
         return cls(
-            blacklisted_users=data["blacklisted_users"],
+            denylisted_users=data["denylisted_users"],
             permissions_needed=data["permissions_needed"],
             roles_allowed=data["roles_allowed"],
             whitelisted_users=data["whitelisted_users"],
@@ -58,7 +58,7 @@ class CheckForUserPassage:
     def to_dict(self):
         "Convert myself to a dictionary"
         return {
-            "blacklisted_users": self.blacklisted_users,
+            "denylisted_users": self.denylisted_users,
             "whitelisted_users": self.whitelisted_users,
             "roles_allowed": self.roles_allowed,
             "permissions_needed": self.permissions_needed,

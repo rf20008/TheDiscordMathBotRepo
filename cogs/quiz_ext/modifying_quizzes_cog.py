@@ -37,7 +37,7 @@ from ..helper_cog import HelperCog
 
 
 class ModifyingQuizzesCog(HelperCog):
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @commands.slash_command(name="quiz_edit", description="Edit quizzes")
     async def quiz_edit(self, inter: disnake.ApplicationCommandInteraction):
         """/quiz edit
@@ -51,7 +51,7 @@ class ModifyingQuizzesCog(HelperCog):
         /quiz edit delete_problem (quiz_id: int) (problem_num: int)"""
         pass
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @commands.cooldown(1, 5, commands.BucketType.user)
     @quiz_edit.sub_command(
         name="add_answer",
@@ -117,7 +117,7 @@ class ModifyingQuizzesCog(HelperCog):
         problem.add_answer(answer)
         await inter.send("Successfully added an answer!")
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @commands.cooldown(1, 30, commands.BucketType.user)
     @quiz_edit.sub_command(
         name="add_problem",
@@ -214,7 +214,7 @@ class ModifyingQuizzesCog(HelperCog):
             await quiz.add_problem(problem, problem_to_insert_before)
             return await inter.send("Successfully added the problem!")
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @commands.cooldown(1, 60, commands.BucketType.user)
     @quiz_edit.sub_command(
         name="delete_problem",
@@ -264,7 +264,7 @@ class ModifyingQuizzesCog(HelperCog):
                 user_data: UserData = await self.bot.cache.get_user_data(
                     user_id=inter.author.id,
                     default=UserData(
-                        trusted=False, blacklisted=False, user_id=inter.author.id
+                        trusted=False, denylisted=False, user_id=inter.author.id
                     ),
                 )
                 if user_data.trusted:
@@ -290,7 +290,7 @@ class ModifyingQuizzesCog(HelperCog):
         except IndexError:
             return await inter.send("This problem in the quiz was not found.")
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @quiz_edit.sub_command(
         name="modify_problem",
         description="Modify a problem, changing its question/answer/point worth/etc...",
@@ -380,7 +380,7 @@ class ModifyingQuizzesCog(HelperCog):
 
         # TODO: use QuizSessions to keep track of people solving quizzes!
 
-    @checks.has_privileges(blacklisted=False)
+    @checks.has_privileges(denylisted=False)
     @quiz_edit.sub_command(
         name="modify_quiz_description",
         description="Modify the quiz description of a quiz",

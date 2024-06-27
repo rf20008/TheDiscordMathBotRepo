@@ -39,16 +39,16 @@ class TaskCog(HelperCog):
     # Listener to handle slash commands
     @commands.Cog.listener()
     async def on_slash_command(self, inter: disnake.ApplicationCommandInteraction):
-        """Leave guilds because the guild is blacklisted"""
+        """Leave guilds because the guild is denylisted"""
         if not inter.guild:
             return
         # Check if the bot instance is of the correct type
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
             raise TypeError("The bot instance must be an instance of TheDiscordMathProblemBot")
-        # Check if the guild is blacklisted and notify before leaving
-        if await inter.bot.is_guild_blacklisted(inter.guild):
-            await inter.send("Your guild is blacklisted - so I am leaving this guild")
-            await inter.bot.notify_guild_on_guild_leave_because_guild_blacklist()
+        # Check if the guild is denylisted and notify before leaving
+        if await inter.bot.is_guild_denylisted(inter.guild):
+            await inter.send("Your guild is denylisted - so I am leaving this guild")
+            await inter.bot.notify_guild_on_guild_leave_because_guild_denylist()
 
     # Task to report any failed tasks
     @tasks.loop(seconds=15)
@@ -64,13 +64,13 @@ class TaskCog(HelperCog):
                     except asyncio.InvalidStateError as ISE:
                         await log_error(ISE)
 
-    # Task to leave blacklisted guilds
+    # Task to leave denylisted guilds
     @tasks.loop(minutes=15)
-    async def leaving_blacklisted_guilds_task(self):
-        """Leave guilds that are blacklisted"""
+    async def leaving_denylisted_guilds_task(self):
+        """Leave guilds that are denylisted"""
         for guild in self.bot.guilds:
-            if await self.bot.is_guild_blacklisted(guild):
-                await self.bot.notify_guild_on_guild_leave_because_guild_blacklist(guild)
+            if await self.bot.is_guild_denylisted(guild):
+                await self.bot.notify_guild_on_guild_leave_because_guild_denylist(guild)
 
     # Task to update cache
     @tasks.loop(seconds=15)
@@ -81,7 +81,7 @@ class TaskCog(HelperCog):
     def cog_unload(self):
         """Stop all tasks when cog is unloaded"""
         super().cog_unload()
-        self.leaving_blacklisted_guilds_task.stop()
+        self.leaving_denylisted_guilds_task.stop()
         self.update_cache_task.stop()
         self.report_tasks_task.stop()
 

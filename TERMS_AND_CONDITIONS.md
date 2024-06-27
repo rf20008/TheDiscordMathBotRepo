@@ -196,7 +196,7 @@ However, as a rule of thumb, you are not allowed to sell anything related to my 
 ### 11.1: Selling trusted user status
 The following rule only applies to instances of my bot that are not fork instances of my bot:
 * You must not sell trusted user status at all. This is because trusted user status is a moderation rank.
-* You might be blacklisted for selling trusted user status.  Additionally, your trusted user status may be revoked.
+* You might be denylisted for selling trusted user status.  Additionally, your trusted user status may be revoked.
 The rationale for this rule is that I want to prevent disruptions to my bot.
 
 ### 11.2: Selling ownership is prohibited

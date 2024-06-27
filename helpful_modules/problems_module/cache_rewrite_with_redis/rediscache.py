@@ -364,14 +364,14 @@ class RedisCache:
             ).trusted != permissions_required["trusted"]:
                 return False
 
-        if "blacklisted" in permissions_required.keys():
+        if "denylisted" in permissions_required.keys():
             if (
                 (
                     await self.get_user_data(
                         user_id, default=UserData.default(user_id=user_id)
                     )
                 )
-            ).blacklisted != permissions_required["blacklisted"]:
+            ).denylisted != permissions_required["denylisted"]:
                 return False
         user_data = await self.get_user_data(user_id)
         return all(

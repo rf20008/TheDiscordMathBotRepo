@@ -488,7 +488,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                     """CREATE TABLE IF NOT EXISTS user_data (
                     USER_ID INT,
                     trusted INT NOT NULL,
-                    blacklisted INT NOT NULL)"""  # will use bool(val) because SQLite doesn't support booleans
+                    denylisted INT NOT NULL)"""  # will use bool(val) because SQLite doesn't support booleans
                 )
                 await cursor.execute(
                     """CREATE TABLE IF NOT EXISTS quiz_submission_sessions (
@@ -518,7 +518,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                 )
                 await cursor.execute(
                     """CREATE TABLE IF NOT EXISTS guild_data (
-                    blacklisted INT,
+                    denylisted INT,
                     guild_id INT PRIMARY KEY,
                     can_create_problems_check VARCHAR,
                     can_create_quizzes_check VARCHAR,
@@ -580,7 +580,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                     """CREATE TABLE IF NOT EXISTS user_data (
                     user_id INT,
                     trusted BOOLEAN DEFAULT false,
-                    blacklisted BOOLEAN DEFAULT false
+                    denylisted BOOLEAN DEFAULT false
                     )"""
                 )
                 cursor.execute(
@@ -611,7 +611,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                 )
                 cursor.execute(
                     """CREATE TABLE IF NOT EXISTS guild_data (
-                    blacklisted INT,
+                    denylisted INT,
                     guild_id INT,
                     can_create_problems_check VARCHAR,
                     can_create_quizzes_check VARCHAR,
