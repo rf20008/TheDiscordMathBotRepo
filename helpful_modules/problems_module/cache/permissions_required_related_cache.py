@@ -44,28 +44,18 @@ class PermissionsRequiredRelatedCache(UserDataRelatedCache):
                 command_name
             )
 
-        await self.update_cache()
+        user_data = await self.get_user_data(user_id)
         if "trusted" in permissions_required.keys():
-            if (
-                await self.get_user_data(
-                    user_id, default=UserData.default(user_id=user_id)
-                )
-            ).trusted != permissions_required["trusted"]:
+            if user_data.trusted != permissions_required["trusted"]:
                 return False
 
         if "denylisted" in permissions_required.keys():
-            if (
-                (
-                    await self.get_user_data(
-                        user_id, default=UserData.default(user_id=user_id)
-                    )
-                )
-            ).denylisted != permissions_required["denylisted"]:
+            if user_data.denylisted != permissions_required["denylisted"]:
                 return False
-
+        UDTD = user_data.to_dict()
         for key, val in permissions_required.items():
             try:
-                if self.cached_user_data[user_id].to_dict()[key] != val:
+                if UDTD[key] != val:
                     return False
             except KeyError:
                 pass

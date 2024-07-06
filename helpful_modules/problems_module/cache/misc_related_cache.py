@@ -25,7 +25,7 @@ from warnings import warn
 import aiosqlite
 from ..parse_problem import convert_row_to_problem
 from helpful_modules.dict_factory import dict_factory
-from ..appeal import Appeal
+from ..appeal import Appeal, AppealViewInfo
 from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
@@ -181,7 +181,8 @@ class MiscRelatedCache(AppealsRelatedCache):
                 )
         self.cached_submissions = quiz_submissions_dict.values()
         self.cached_submissions_organized_by_dict = quiz_submissions_dict
-
+    async def get_all_by_user_id(self, user_id: int) -> dict:
+        return self.get_all_by_author_id(user_id)
     async def get_all_by_author_id(self, author_id: int) -> dict:
         """Return a dictionary containing everything that was created by the author"""
         assert isinstance(author_id, int)  # Make sure it is of type integer
@@ -241,6 +242,8 @@ class MiscRelatedCache(AppealsRelatedCache):
                     Appeal.from_dict(data, cache=self)
                     for data in await cursor.fetchall()
                 ]
+                await cursor.execute("SELECT * from appeal_view_infos WHERE user_id=?", (author_id))
+                appeal_view_infos = [AppealViewInfo.from_dict(data) for data in await cursor.fetchall()]
         else:
             with mysql_connection(
                 host=self.mysql_db_ip,
@@ -275,7 +278,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                 ]
                 cursor.execute(
                     "SELECT * FROM quiz_submission_sessions WHERE author = %s",
-                    (user_id,),
+                    (author_id,),
                 )
                 sessions = [
                     QuizSolvingSession.from_mysql_dict(cache=self, dict=item)
@@ -293,6 +296,8 @@ class MiscRelatedCache(AppealsRelatedCache):
                     Appeal.from_dict(data, cache=self)
                     for data in await cursor.fetchall()
                 ]
+                await cursor.execute("SELECT * from appeal_view_infos WHERE user_id=?", (author_id))
+                appeal_view_infos = [AppealViewInfo.from_dict(data) for data in await cursor.fetchall()]
 
         return {
             "quiz_problems": quiz_problems,
@@ -300,7 +305,8 @@ class MiscRelatedCache(AppealsRelatedCache):
             "problems": problems,
             "sessions": sessions,
             "descriptions_created": descriptions,
-            "appeals": appeals
+            "appeals": appeals,
+            "appeal_view_infos": appeal_view_infos
         }
 
     async def delete_all_by_user_id(self, user_id: int) -> None:
@@ -326,6 +332,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                     "DELETE FROM quiz_description WHERE author= ?", (user_id,)
                 )
                 await cursor.execute("DELETE FROM appeals WHERE user_id=?", (user_id,))
+                await cursor.execute("DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,))
                 await conn.commit()  # Otherwise, nothing happens and it rolls back!!
         else:
             with mysql_connection(
@@ -347,6 +354,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                     "DELETE FROM quiz_description WHERE author = %s", (user_id,)
                 )
                 await cursor.execute("DELETE FROM appeals WHERE user_id=%s", (user_id,))
+                await cursor.execute("DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,))
                 connection.commit()
 
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
@@ -375,6 +383,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                 await cursor.execute(
                     "DELETE FROM quiz_description WHERE guild_id = %s", (guild_id,)
                 )
+                await cursor.execute("DELETE FROM appeal_view_infos WHERE guild_id=?", (guild_id,))
                 await conn.commit()  # Otherwise, nothing happens!
         else:
             with mysql_connection(
@@ -400,7 +409,7 @@ class MiscRelatedCache(AppealsRelatedCache):
                 cursor.execute(
                     "DELETE FROM quiz_description WHERE guild_id = %s", (guild_id,)
                 )
-
+                await cursor.execute("DELETE FROM appeal_view_infos WHERE guild_id=?", (guild_id,))
                 # uh oh - we don't have a guild id
                 connection.commit()
 
@@ -438,6 +447,7 @@ class MiscRelatedCache(AppealsRelatedCache):
     async def initialize_sql_table(self):
         """Initialize my internal SQL tables. This does nothing if the internal SQL tables already exist!"""
         log.info("Initializing my internal SQL tables")
+        await super().initialize_sql_table()
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
                 cursor = await conn.cursor()

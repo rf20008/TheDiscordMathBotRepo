@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 import asyncio
+import json
 import typing
 from typing import List
 
@@ -23,7 +24,7 @@ import orjson
 from redis import asyncio as aioredis  # type: ignore
 from ..parse_problem import convert_dict_to_problem
 from ...FileDictionaryReader import AsyncFileDict
-from ..appeal import Appeal
+from ..appeal import Appeal, AppealViewInfo
 from ..base_problem import BaseProblem
 from ..dict_convertible import DictConvertible
 from ..errors import (
@@ -32,6 +33,8 @@ from ..errors import (
     LockedCacheException,
     ProblemNotFoundException,
     ThingNotFound,
+    AppealViewInfoNotFound,
+    SQLNotSupportedInRedisException
 )
 from ..GuildData import GuildData
 from ..quizzes import Quiz
@@ -379,9 +382,9 @@ class RedisCache:
         )
 
     async def get_appeal(
-        self, user_id: int, default: Appeal | None = None
+        self, special_id: int, default: Appeal | None = None
     ) -> Appeal | None:
-        result = await self.get_key(f"Appeal:{user_id}")
+        result = await self.get_key(f"Appeal:{special_id}")
         if result is not None:
             try:
                 return Appeal.from_dict(orjson.loads(result))
@@ -396,10 +399,10 @@ class RedisCache:
         raise ThingNotFound("I could not find any appeal")
 
     async def add_appeal(self, thing: Appeal):
-        await self.set_key(f"Appeal:{thing.user_id}", thing.to_dict())
+        await self.set_key(f"Appeal:{thing.special_id}", thing.to_dict())
 
     async def remove_appeal(self, thing: Appeal):
-        await self.del_key(f"Appeal:{thing.user_id}")
+        await self.del_key(f"Appeal:{thing.special_id}")
 
     async def update_cache(self):
         """
@@ -456,7 +459,7 @@ class RedisCache:
 
     async def get_all_by_user_id(self, user_id: int) -> list[str]:
         """
-        Get a list of keys corresponding to things authored by the specified user.
+        Get a list of values corresponding to things authored by the specified user.
 
         This method queries all things stored in the Redis database and returns the keys
         of the items where the provided user_id matches the 'author', 'authors', or 'user_id'
@@ -480,13 +483,13 @@ class RedisCache:
             if dictionarified is None:
                 raise FormatException("No dictionary found")
             if dictionarified.get("author", None) == user_id:
-                things_authored.append(key)
+                things_authored.append(value)
                 continue
             elif user_id in dictionarified.get("authors", []):
-                things_authored.append(key)
+                things_authored.append(value)
                 continue
             elif dictionarified.get("user_id", None) == user_id:
-                things_authored.append(key)
+                things_authored.append(value)
                 continue
 
         return things_authored
@@ -503,7 +506,7 @@ class RedisCache:
 
         Returns
         nothing"""
-        things_to_remove = await self.get_all_by_user_data(user_id=user_id)
+        things_to_remove = await self.get_all_by_user_id(user_id=user_id)
         async with self.lock:
             await asyncio.sleep(3.0000)
             await self.redis.delete(*things_to_remove)
@@ -562,6 +565,86 @@ class RedisCache:
         - BGSaveNotSupportedOnSQLException: If the cache is a SQL cache and does not support background save operations.
         """
         await self.redis.bgsave(schedule=schedule, path=path, wait=wait, raise_on_error=raise_on_error, replace=replace, **kwargs)
+    async def run_sql(
+        self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
+    ) -> dict:
+        """Run arbitrary SQL. Only used in /sql"""
+        raise SQLNotSupportedInRedisException("SQL is not supported in a Redis Cache")
+
+    async def run_sql(
+            self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
+    ) -> dict:
+        """
+        Run arbitrary SQL.
+
+        Parameters:
+        - sql (str): The SQL query to execute.
+        - placeholders (Optional[List[Any]]): List of placeholders for SQL query parameters.
+
+        Raises:
+        - SQLNotSupportedInRedisException: Always raised since SQL operations are not supported in a Redis cache.
+        """
+        raise SQLNotSupportedInRedisException("SQL is not supported in a Redis Cache")
+
+    async def set_appeal_view_info(self, view_info: AppealViewInfo):
+        """
+        Store appeal view information in Redis.
+
+        Parameters:
+        - view_info (AppealViewInfo): The AppealViewInfo object to store.
+        """
+        await self.set_key(f"AppealViewInfo:{view_info.message_id}", orjson.dumps(view_info.to_dict()))
+
+    async def get_appeal_view_info(self, message_id: int) -> AppealViewInfo:
+        """
+        Retrieve appeal view information from Redis.
+
+        Parameters:
+        - message_id (int): The message ID associated with the appeal view information to retrieve.
+
+        Returns:
+        - AppealViewInfo: The retrieved AppealViewInfo object.
+
+        Raises:
+        - AppealViewInfoNotFound: If no appeal view information is found for the given message_id.
+        - FormatException: If the stored data cannot be decoded into an AppealViewInfo object.
+        """
+        result = await self.get_key(f"AppealViewInfo:{message_id}")
+        if result is None:
+            raise AppealViewInfoNotFound(f"No appeal view information found for message ID {message_id}")
+        try:
+            return AppealViewInfo.from_dict(json.loads(result))
+        except orjson.JSONDecodeError as jde:
+            raise FormatException("Failed to decode JSON data into AppealViewInfo") from jde
+
+    async def get_appeal_view_infos(self):
+        """
+        Retrieve all appeal view information stored in Redis.
+
+        Yields:
+        - AppealViewInfo: Each retrieved AppealViewInfo object.
+
+        Raises:
+        - AppealViewInfoNotFound: If no appeal view information is found in Redis.
+        - BaseExceptionGroup: If there are formatting exceptions during result processing.
+        """
+        results = await self.redis.hgetall("AppealViewInfo")
+        if len(results) == 0:
+            raise AppealViewInfoNotFound("No appeal view information found in Redis")
+        errors = []
+        for result in results:
+            try:
+                yield AppealViewInfo.from_dict(orjson.loads(result))
+            except orjson.JSONDecodeError as jde:
+                err = InvalidDictionaryInDatabaseException.from_invalid_data(result)
+                err.__cause__ = jde
+                errors.append(jde)
+            except KeyError as err:
+                nerr = FormatException(f"Expected a valid AppealViewInfo object, but got {result}")
+                nerr.__cause__ = err
+                errors.append(nerr)
+        if errors:
+            raise BaseExceptionGroup("Formatting exceptions occurred during result processing", errors)
 
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

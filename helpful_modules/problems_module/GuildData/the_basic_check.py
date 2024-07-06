@@ -52,14 +52,14 @@ class CheckForUserPassage:
             denylisted_users=data["denylisted_users"],
             permissions_needed=data["permissions_needed"],
             roles_allowed=data["roles_allowed"],
-            whitelisted_users=data["whitelisted_users"],
+            allowlisted_users=data["allowlisted_users"],
         )
 
     def to_dict(self):
         "Convert myself to a dictionary"
         return {
             "denylisted_users": self.denylisted_users,
-            "whitelisted_users": self.whitelisted_users,
+            "allowlisted_users": self.allowlisted_users,
             "roles_allowed": self.roles_allowed,
             "permissions_needed": self.permissions_needed,
         }

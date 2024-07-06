@@ -107,6 +107,11 @@ class QuizNotFound(ThingNotFound):
     pass
 
 
+class AppealViewInfoNotFound(ThingNotFound):
+    """Raised when appeal view info is not found"""
+    pass
+
+
 class FormatException(KeyError, MathProblemsModuleException):
     """Raised when something is not formatted correctly"""
 
@@ -174,7 +179,6 @@ class InvalidDictionaryInDatabaseException(FormatException):
 
 class PMDeprecationWarning(DeprecationWarning):
     """Raised when someone tries to use a feature of the problems module that is deprecated"""
-
     pass
 
 
@@ -185,4 +189,13 @@ class LockedCacheException(RuntimeError):
 
 class LinearAlgebraUserInputErrorException(MathProblemsModuleException):
     "Raised when a Linear Algebra user input has a problem"
+    pass
+
+
+class SQLNotSupportedInRedisException(MathProblemsModuleException):
+    """Raised when a redis cache attempts to run SQL"""
+    pass
+
+class OwnershipNotDeterminableException(MathProblemsModuleException):
+    """Raised when the ownership of an object cannot be determined"""
     pass

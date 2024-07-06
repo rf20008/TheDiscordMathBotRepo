@@ -549,8 +549,9 @@ class MiscCommandsCog(HelperCog):
         await self.bot.cache.set_guild_data(data=old_data)
 
         # Notify the user that the guild has been successfully denylisted
-        await inter.send
+        await inter.send(
             embed=SuccessEmbed(f"The guild with ID {guild_id} has successfully been added to the denylist"))
+
 
         # Notify the bot's owner or admins about the action
         just_denylisted_guild = self.bot.get_guild(guild_id)

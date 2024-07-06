@@ -37,6 +37,11 @@ class DenylistedException(CustomCheckFailure):
     pass
 
 
+class BotClosingException(commands.CheckFailure):
+    """Raised when the bot is closing and someone tries to use a command"""
+    pass
+
+
 def custom_check(
     function=lambda inter: True, args: list = [], exceptionToRaiseIfFailed=None
 ):
@@ -59,7 +64,6 @@ def trusted_users_only():
             raise TypeError("Uh oh; inter.bot isn't TheDiscordMathProblemBot")
         if await inter.bot.is_trusted(inter.author):
             return True
-
         raise NotTrustedUser(
             f"You aren't a trusted user, {inter.author.mention}. Therefore, you do not have permission to run this command!"
         )
@@ -259,3 +263,12 @@ async def always_succeeding_check_unwrapped(inter, *args, **kwargs):
     if callable(inter):
         raise ValueError("You cannot use this to wrap a function, because it is not a check")
     return True
+
+def not_is_closing():
+    async def predicate(inter):
+        if not isinstance(inter.bot, TheDiscordMathProblemBot):
+            raise TypeError("inter.bot is not a TheDiscordMathProblemBot")
+        if inter.bot.is_closing:
+            raise BotClosingException("This bot is currently closing. Try again when the bot is not closing.")
+        return True
+    return commands.check(predicate)

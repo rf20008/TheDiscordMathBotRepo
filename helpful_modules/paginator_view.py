@@ -32,6 +32,7 @@ class PaginatorPageViewModal(disnake.ui.Modal):
         self.page_num_custom_id = page_num_custom_id
         self.original_inter = original_inter
         super().__init__(*args, **kwargs)
+
     async def on_timeout(self: "PaginatorPageViewModal"):
         await self.original_inter.send(
             embed=ErrorEmbed(
@@ -88,7 +89,20 @@ class PaginatorView(disnake.ui.View):
         self.user_id = user_id
         self.pages = pages
         self.page_num = 0
+    def add_page(self, page_content: str):
+        if not isinstance(page_content, str):
+            raise TypeError(f"page_content is not a str but an instance of {page_content.__class__.__name__}")
+        self.pages.append(page_content)
+    def add_pages(self, pages: list[str]):
+        if not isinstance(pages, list):
+            raise TypeError(f'pages is not a list, but an instance of {pages.__class__.__name__}')
+        page_num = 0
+        for page in pages:
 
+            if not isinstance(page, str):
+                raise TypeError(f"page#{page_num} is not a str, but an instance of {page.__class__.__name__}")
+            page_num += 1
+        self.pages.extend(pages)
     @classmethod
     def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, breaking_chars: str = None, special_color: disnake.Color | None = None, **kwargs) -> 'PaginatorView':
         pages = cls.break_into_pages(text, max_page_length, breaking_chars=(breaking_chars if breaking_chars else DEFAULT_BREAKING_CHARS))

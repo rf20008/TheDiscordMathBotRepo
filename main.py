@@ -44,7 +44,7 @@ from helpful_modules import (
     the_documentation_file_loader,
 )
 from helpful_modules.constants_loader import *
-from helpful_modules.custom_bot import TheDiscordMathProblemBot
+from helpful_modules.custom_bot import TheDiscordMathProblemBot, SUPPORT_SERVER_GUILD_ID
 from helpful_modules.StatsTrack import StreamWrapperStorer
 from helpful_modules.threads_or_useful_funcs import *
 from helpful_modules.base_on_error import base_on_error
@@ -57,7 +57,7 @@ if (
 ):  # __debug__ must be true for the bot to run (because assert statements)
     exit("__debug__ must be True for the bot to run! (Don't run with -o or -OO)")
 del exit
-VERSION = "0.0.8a1"
+VERSION = "0.0.9a1"
 try:
     import dotenv  # https://pypi.org/project/python-dotenv/
 
@@ -149,6 +149,7 @@ main_cache = problems_module.MathProblemCache(
     mysql_db_name=bot_constants.MYSQL_DB_NAME,
     use_sqlite=bot_constants.USE_SQLITE,
 )  # Generate a new cache for the bot!
+asyncio.run(main_cache.initialize_sql_table())
 assert main_cache.db is main_cache.db_name
 vote_threshold = -1  # default
 mathProblems = {}
@@ -180,7 +181,6 @@ def get_git_revision_hash() -> str:
 async def on_ready(bot: TheDiscordMathProblemBot):
     """Ran when the disnake library detects that the bot is ready"""
     app_info = await bot.application_info()
-
     print("The bot is now ready!")
     print(f"I connected as {bot.user.name}#{bot.user.discriminator}.")
     print(
@@ -193,6 +193,14 @@ async def on_ready(bot: TheDiscordMathProblemBot):
         bot.owner_id = app_info.owner.id
 
     print(f"My owner ids are {bot.owner_ids}")
+    try:
+        await bot.register_appeal_views()
+    except BaseExceptionGroup as begroup:
+        bot.log.exception("Exceptions happened while trying to register appeal views:", begroup)
+        await log_error(begroup)
+    except Exception as e:
+        bot.log.exception("The following exception happened while trying to register appeal views:", e)
+        await log_error(e)
 
 
 # Bot creation
@@ -260,6 +268,7 @@ bot.add_check(checks.is_not_denylisted())
 bot.add_cog(InterestingComputationCog(bot))
 bot.add_cog(DataModificationCog(bot))
 bot.add_cog(ProblemGenerationCog(bot))
+bot.add_check(checks.not_is_closing())
 # Events
 
 
@@ -267,6 +276,7 @@ bot.add_cog(ProblemGenerationCog(bot))
 @bot.event
 async def on_connect():
     """Run when the bot connects"""
+
     print("The bot has connected to Discord successfully.")
     await asyncio_sleep(0.5)
     bot.get_cog("HelpCog").update_cached_command_dict()
@@ -314,7 +324,6 @@ async def on_error(event, *args, **kwargs):
 async def on_slash_command_error(inter, error):
     """Function called when a slash command errors, which will inevitably happen. All the functionality was moved to base_on_error :-)"""
     # print the traceback to the file
-    #print("help")
     try:
         dict_args = await base_on_error(inter, error)
     except Exception as e:

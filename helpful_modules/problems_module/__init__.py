@@ -29,5 +29,4 @@ from .errors import *
 from .quizzes import *
 from .appeal import Appeal
 from .user_data import UserData
-
 __version__ = "0.1.0"

@@ -1,7 +1,20 @@
 import datetime
 import time
 import traceback
-
+MONTH_NAMES = {
+    1: "January",
+    2: "February,",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December",
+}
 
 async def log_error(error, file_path="", send_to_webhook=False):
     log_error_to_file(error, file_path)
@@ -21,22 +34,7 @@ def log_error_to_file(error, file_path=""):
             "error_logs/"
             + str(now.year)
             + " "
-            + str(
-                {
-                    1: "January",
-                    2: "February,",
-                    3: "March",
-                    4: "April",
-                    5: "May",
-                    6: "June",
-                    7: "July",
-                    8: "August",
-                    9: "September",
-                    10: "October",
-                    11: "November",
-                    12: "December",
-                }[now.month]
-            )
+            + str(MONTH_NAMES[now.month])
             + " "
             + str(now.day)
             + ".txt"

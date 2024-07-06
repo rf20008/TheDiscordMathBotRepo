@@ -188,6 +188,7 @@ class DebugCog(HelperCog):
         """/sql [query: str]
         A debug command to run SQL!
         You must own this bot to run this command!"""
+        print("hello!")
         try:
             assert await self.cog_slash_command_check(inter)
         except AssertionError:

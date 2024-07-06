@@ -17,7 +17,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 from typing import Dict, Protocol, TypeVar
-
+from .errors import OwnershipNotDeterminableException
 
 T = TypeVar("T")
 
@@ -41,3 +41,26 @@ class DictConvertible(Protocol):
     def from_dict(cls, data: Dict) -> T: ...
 
     def to_dict(self) -> Dict: ...
+
+    def belongs_to_user(self, user_id: int):
+        """
+        Check if this object belongs to a specific user identified by user_id.
+
+        Args:
+        - user_id (int): The ID of the user to check ownership against.
+
+        Returns:
+        - bool: True if the object belongs to the specified user, False otherwise.
+
+        Raises:
+        - OwnershipNotKnownError: If the ownership cannot be determined from the object's dictionary representation.
+        """
+        self_dict = self.to_dict()
+        if self_dict.get("user_id") is not None:
+            return self_dict.get("user_id") == user_id
+        elif self_dict.get("author") is not None:
+            return self_dict.get("author") == user_id
+        elif self_dict.get("authors") is not None :
+            return user_id in self_dict.get("authors")
+        else:
+            raise OwnershipNotDeterminableException(f"I could not determine whether this object belongs to the user with user id {user_id}")

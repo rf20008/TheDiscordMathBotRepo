@@ -106,14 +106,13 @@ async def base_on_error(
 
     The error traceback is shown below; this may be removed/DMed to the user in the future.
 
-    """ + disnake.utils.escape_markdown(
-        error_traceback
-    )  # TODO: update when my support server becomes public & think about providing the traceback to the user
-    #print(error)
+    """ # TODO: update when my support server becomes public & think about providing the traceback to the user
+    traceback_msg = disnake.utils.escape_markdown(error_traceback)
+    additional_error = ""
     try:
         await log_error(error)  # Log the error
     except Exception as log_error_exc:
-        error_msg += (
+        additional_error = (
             """Additionally, while trying to log this error, the following exception occurred: \n"""
             + disnake.utils.escape_markdown(
                 "\n".join(traceback.format_exception(log_error_exc))
@@ -123,7 +122,7 @@ async def base_on_error(
     try:
         embed = disnake.Embed(
             colour=disnake.Colour.red(),
-            description=error_msg,
+            description=error_msg + traceback_msg + additional_error,
             title="Oh, no! An error occurred!",
         )
     except (TypeError, NameError) as e:
@@ -131,7 +130,7 @@ async def base_on_error(
         plain_text = (
             """Oh no! An Exception occurred! And it couldn't be sent as an embed!```"""
         )
-        plain_text += error_traceback
+        plain_text += error_msg + traceback_msg + additional_error
         plain_text += f"```Time: {str(asctime())} Commit hash: {get_git_revision_hash()} The stack trace is shown for debugging purposes. The stack trace is also logged (and pushed), but should not contain identifying information (only code which is on github)"
 
         plain_text += f"Error that occurred while attempting to send it as an embed:"
@@ -153,10 +152,16 @@ async def base_on_error(
         return {"embed": embed}
     paginator = PaginatorView.paginate(
         user_id=inter.author.id,
-        text=embed.description,
+        text=error_msg,
         breaking_chars="\n",
         max_page_length=1900,
         special_color=disnake.Color.red()
     )
+    paginator.add_pages(PaginatorView.break_into_pages(traceback_msg, max_page_length=1900, breaking_chars="\n"))
+    if additional_error:
+        paginator.add_pages(PaginatorView.break_into_pages(additional_error, max_page_length=1900, breaking_chars="\n"))
+    accounted_for = len(error_msg) + len(traceback_msg) + len(additional_error)
+    if len(embed.description) != accounted_for:
+        paginator.add_pages(PaginatorView.break_into_pages(embed.description[accounted_for:], max_page_length=1900, breaking_chars="\n"))
     first_page = paginator.create_embed()
     return {"embed": first_page, "view": paginator}

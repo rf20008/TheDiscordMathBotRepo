@@ -21,6 +21,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 import disnake
 from disnake.ext import commands, tasks
 
+from helpful_modules.problems_module.cache_rewrite_with_redis.rediscache import RedisCache
 from helpful_modules._error_logging import log_error
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.problems_module.errors import BGSaveNotSupportedOnSQLException
@@ -84,6 +85,10 @@ class TaskCog(HelperCog):
         self.leaving_denylisted_guilds_task.stop()
         self.update_cache_task.stop()
         self.report_tasks_task.stop()
+        self.update_support_server.stop()
+        self.make_sure_config_json_is_correct.stop()
+        self.make_sure_stats_are_saved.stop()
+        self.bgsave_every_so_often.stop()
 
     # Task to update support server information
     @tasks.loop(minutes=4)
@@ -111,6 +116,12 @@ class TaskCog(HelperCog):
             await self.bot.cache.bgsave()
         except BGSaveNotSupportedOnSQLException:
             pass
+
+    @tasks.loop(seconds=60)
+    async def manage_redis_memory(self):
+        if not isinstance(self.bot.cache, RedisCache):
+            return
+        memory_info = await self.bot.cache.redis.info("memory")
 
 def setup(bot: TheDiscordMathProblemBot):
     bot.add_cog(TaskCog(bot))

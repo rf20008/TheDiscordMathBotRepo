@@ -76,5 +76,34 @@ class Appeal(DictConvertible):
         
         This is appeal #{self.appeal_num}
         and its special id is {self.special_id}
-        
-"""
+        """
+
+class AppealViewInfo(DictConvertible):
+    def __init__(self, message_id: int, user_id: int, guild_id: int, done: bool = False):
+        self.message_id = message_id
+        self.user_id = user_id
+        self.guild_id = guild_id
+        self.done = done
+
+    def mark_done(self):
+        self.done = True
+
+    def to_dict(self):
+        return {
+            "message_id": self.message_id,
+            "user_id": self.user_id,
+            "guild_id": self.guild_id,
+            "done": self.done
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            message_id=data["message_id"],
+            user_id=data["user_id"],
+            guild_id=data["guild_id"],
+            done=data.get("done", False)
+        )
+
+    def __repr__(self):
+        return f"AppealViewInfo(message_id={self.message_id}, user_id={self.user_id}, guild_id={self.guild_id}, done={self.done})"
