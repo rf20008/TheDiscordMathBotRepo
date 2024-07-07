@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import contextlib
 import datetime
 import io
@@ -30,13 +31,13 @@ from helpful_modules import checks
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import SuccessEmbed
 from helpful_modules.my_modals import MyModal
+from helpful_modules.paginator_view import PaginatorView
 from helpful_modules.problems_module.cache_rewrite_with_redis import RedisCache
 from helpful_modules.threads_or_useful_funcs import (
+    file_version_of_item,
     get_log,
     log_evaled_code,
-    file_version_of_item
 )
-from helpful_modules.paginator_view import PaginatorView
 
 from .helper_cog import HelperCog
 from .interesting_computation_ import InterestingComputationCog
@@ -111,7 +112,9 @@ class DebugCog(HelperCog):
             await inter.send(embed=SuccessEmbed(text), ephemeral=ephemeral)
         else:
             await inter.response.defer()
-            stdout_pages = PaginatorView.break_into_pages(new_stdout.getvalue(), max_page_length=2994)
+            stdout_pages = PaginatorView.break_into_pages(
+                new_stdout.getvalue(), max_page_length=2994
+            )
 
             for i in range(len(stdout_pages)):
                 stdout_pages[i] = f"```{stdout_pages[i]}```"
@@ -119,7 +122,9 @@ class DebugCog(HelperCog):
                 stdout_pages[0] = "Stdout: " + stdout_pages[0]
             else:
                 stdout_pages = ["Stdout: ``` ```"]
-            stderr_pages = PaginatorView.break_into_pages(new_stderr.getvalue(), max_page_length=2994)
+            stderr_pages = PaginatorView.break_into_pages(
+                new_stderr.getvalue(), max_page_length=2994
+            )
             for i in range(len(stderr_pages)):
                 stderr_pages[i] = f"```{stderr_pages[i]}```"
             if stderr_pages:
@@ -129,7 +134,9 @@ class DebugCog(HelperCog):
             all_pages = []
             all_pages.extend(stdout_pages)
             all_pages.extend(stderr_pages)
-            await inter.send(view=PaginatorView(user_id=inter.author.id, pages=all_pages))
+            await inter.send(
+                view=PaginatorView(user_id=inter.author.id, pages=all_pages)
+            )
         new_stdout.close()
         new_stderr.close()
         if err is not None:
@@ -209,7 +216,7 @@ class DebugCog(HelperCog):
             await inter.send(
                 "The result is in the attached file!",
                 ephemeral=ephemeral,
-                file=file_version_of_item(str(result), "sql_result.txt")
+                file=file_version_of_item(str(result), "sql_result.txt"),
             )
         return
 
@@ -246,7 +253,9 @@ class DebugCog(HelperCog):
         new_stdout = io.StringIO()
         new_stderr = io.StringIO()
         try:
-            if not await self.cog_slash_command_check(inter) or not await self.bot.is_owner(inter.author):
+            if not await self.cog_slash_command_check(
+                inter
+            ) or not await self.bot.is_owner(inter.author):
                 await inter.send(
                     "I know that you don't own me. You cannot use /eval. Goodbye."
                 )
@@ -318,16 +327,16 @@ class DebugCog(HelperCog):
     @commands.slash_command(
         name="eval2",
         description="Evaluate Python code (for owners only)- this uses a modal",
-        options = [
+        options=[
             disnake.Option(
                 name="ephemeral",
                 description="Whether to send the results ephermally",
                 type=disnake.OptionType.boolean,
-                required=False
+                required=False,
             )
-        ]
+        ],
     )
-    async def eval2(self, inter, ephemeral: bool=False):
+    async def eval2(self, inter, ephemeral: bool = False):
         """/eval2
 
         This does Eval2. It is restricted to owners only. This command gives a modal"""
@@ -364,7 +373,7 @@ class DebugCog(HelperCog):
             callback=callback,
             inter=inter,
             components=[],
-            check = checks.always_succeeding_check_unwrapped
+            check=checks.always_succeeding_check_unwrapped,
         )
         modal.append_component(text_inputs)
         await inter.response.send_modal(modal)

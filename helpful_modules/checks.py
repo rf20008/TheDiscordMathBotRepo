@@ -39,6 +39,7 @@ class DenylistedException(CustomCheckFailure):
 
 class BotClosingException(commands.CheckFailure):
     """Raised when the bot is closing and someone tries to use a command"""
+
     pass
 
 
@@ -259,16 +260,23 @@ def cmds_cnt():
 
     return commands.check(predicate)
 
+
 async def always_succeeding_check_unwrapped(inter, *args, **kwargs):
     if callable(inter):
-        raise ValueError("You cannot use this to wrap a function, because it is not a check")
+        raise ValueError(
+            "You cannot use this to wrap a function, because it is not a check"
+        )
     return True
+
 
 def not_is_closing():
     async def predicate(inter):
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
             raise TypeError("inter.bot is not a TheDiscordMathProblemBot")
         if inter.bot.is_closing:
-            raise BotClosingException("This bot is currently closing. Try again when the bot is not closing.")
+            raise BotClosingException(
+                "This bot is currently closing. Try again when the bot is not closing."
+            )
         return True
+
     return commands.check(predicate)

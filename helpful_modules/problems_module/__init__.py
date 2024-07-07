@@ -19,14 +19,15 @@
 #     along with the Discord Math Problem Bot.  If not, see <https://www.gnu.org/licenses/>.
 
 from . import *
+from .appeal import Appeal, AppealViewInfo, AppealType
 from .base_problem import BaseProblem
-from .computational_problem import ComputationalProblem
-from .linear_algebra_problem import LinearAlgebraProblem
 from .cache import *
-from .GuildData import GuildData, CheckForUserPassage
 from .cache_rewrite_with_redis import RedisCache
+from .computational_problem import ComputationalProblem
 from .errors import *
+from .GuildData import CheckForUserPassage, GuildData
+from .linear_algebra_problem import LinearAlgebraProblem
 from .quizzes import *
-from .appeal import Appeal
 from .user_data import UserData
+from .verification_code_info import VerificationCodeInfo
 __version__ = "0.1.0"

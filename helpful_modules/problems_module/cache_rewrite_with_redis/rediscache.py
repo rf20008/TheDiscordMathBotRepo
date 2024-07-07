@@ -15,6 +15,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import asyncio
 import json
 import typing
@@ -22,21 +23,22 @@ from typing import List
 
 import orjson
 from redis import asyncio as aioredis  # type: ignore
-from ..parse_problem import convert_dict_to_problem
+
 from ...FileDictionaryReader import AsyncFileDict
 from ..appeal import Appeal, AppealViewInfo
 from ..base_problem import BaseProblem
 from ..dict_convertible import DictConvertible
 from ..errors import (
+    AppealViewInfoNotFound,
     FormatException,
     InvalidDictionaryInDatabaseException,
     LockedCacheException,
     ProblemNotFoundException,
+    SQLNotSupportedInRedisException,
     ThingNotFound,
-    AppealViewInfoNotFound,
-    SQLNotSupportedInRedisException
 )
 from ..GuildData import GuildData
+from ..parse_problem import convert_dict_to_problem
 from ..quizzes import Quiz
 from ..user_data import UserData
 
@@ -98,7 +100,10 @@ class RedisCache:
         """Return a list of all problems!
         Time complexity: O(N)"""
         return list(
-            map(convert_dict_to_problem, await self.redis.hgetall("BaseProblem").values())
+            map(
+                convert_dict_to_problem,
+                await self.redis.hgetall("BaseProblem").values(),
+            )
         )
 
     async def get_all_things(self):
@@ -537,14 +542,15 @@ class RedisCache:
             await self.del_key(f"GuildData:{thing.guild_id}")
         else:
             await self.del_key(f"GuildData:{thing}")
+
     async def bgsave(
-            self,
-            schedule: typing.Any,
-            path: str = None,
-            wait: bool = False,
-            raise_on_error: bool = False,
-            replace: bool = False,
-            **kwargs
+        self,
+        schedule: typing.Any,
+        path: str = None,
+        wait: bool = False,
+        raise_on_error: bool = False,
+        replace: bool = False,
+        **kwargs,
     ):
         """
         Perform a background save operation.
@@ -564,7 +570,15 @@ class RedisCache:
         Raises:
         - BGSaveNotSupportedOnSQLException: If the cache is a SQL cache and does not support background save operations.
         """
-        await self.redis.bgsave(schedule=schedule, path=path, wait=wait, raise_on_error=raise_on_error, replace=replace, **kwargs)
+        await self.redis.bgsave(
+            schedule=schedule,
+            path=path,
+            wait=wait,
+            raise_on_error=raise_on_error,
+            replace=replace,
+            **kwargs,
+        )
+
     async def run_sql(
         self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
     ) -> dict:
@@ -572,7 +586,7 @@ class RedisCache:
         raise SQLNotSupportedInRedisException("SQL is not supported in a Redis Cache")
 
     async def run_sql(
-            self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
+        self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
     ) -> dict:
         """
         Run arbitrary SQL.
@@ -593,7 +607,9 @@ class RedisCache:
         Parameters:
         - view_info (AppealViewInfo): The AppealViewInfo object to store.
         """
-        await self.set_key(f"AppealViewInfo:{view_info.message_id}", orjson.dumps(view_info.to_dict()))
+        await self.set_key(
+            f"AppealViewInfo:{view_info.message_id}", orjson.dumps(view_info.to_dict())
+        )
 
     async def get_appeal_view_info(self, message_id: int) -> AppealViewInfo:
         """
@@ -611,11 +627,15 @@ class RedisCache:
         """
         result = await self.get_key(f"AppealViewInfo:{message_id}")
         if result is None:
-            raise AppealViewInfoNotFound(f"No appeal view information found for message ID {message_id}")
+            raise AppealViewInfoNotFound(
+                f"No appeal view information found for message ID {message_id}"
+            )
         try:
             return AppealViewInfo.from_dict(json.loads(result))
         except orjson.JSONDecodeError as jde:
-            raise FormatException("Failed to decode JSON data into AppealViewInfo") from jde
+            raise FormatException(
+                "Failed to decode JSON data into AppealViewInfo"
+            ) from jde
 
     async def get_appeal_view_infos(self):
         """
@@ -640,11 +660,16 @@ class RedisCache:
                 err.__cause__ = jde
                 errors.append(jde)
             except KeyError as err:
-                nerr = FormatException(f"Expected a valid AppealViewInfo object, but got {result}")
+                nerr = FormatException(
+                    f"Expected a valid AppealViewInfo object, but got {result}"
+                )
                 nerr.__cause__ = err
                 errors.append(nerr)
         if errors:
-            raise BaseExceptionGroup("Formatting exceptions occurred during result processing", errors)
+            raise BaseExceptionGroup(
+                "Formatting exceptions occurred during result processing", errors
+            )
+
 
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

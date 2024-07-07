@@ -89,6 +89,7 @@ class GradingQuizzesCog(HelperCog):
         del users_with_submissions
         del string_to_send
         return
+
     @checks.is_not_denylisted()
     @quiz_grade.sub_command(name="manual_grade", description="Manually grade quizzes")
     async def manual_grade(

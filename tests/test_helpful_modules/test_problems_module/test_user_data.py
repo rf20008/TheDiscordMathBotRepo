@@ -18,7 +18,9 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 import unittest
+
 from helpful_modules.problems_module import UserData
+
 
 class TestUserData(unittest.TestCase):
 
@@ -85,6 +87,7 @@ class TestUserData(unittest.TestCase):
         self.assertEqual(user_data.user_id, user_id)
         self.assertFalse(user_data.trusted)
         self.assertFalse(user_data.denylisted)
+
 
 if __name__ == "__main__":
     unittest.main()

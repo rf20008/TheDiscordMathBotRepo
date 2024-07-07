@@ -22,8 +22,8 @@ import disnake
 from disnake.ext import commands, tasks
 
 from helpful_modules import checks, custom_embeds
-from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.base_on_error import base_on_error
+from helpful_modules.custom_bot import TheDiscordMathProblemBot
 
 from .helper_cog import HelperCog
 

@@ -16,23 +16,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import asyncio
 import datetime
 import logging
+import os
+import subprocess
 import traceback
 from copy import deepcopy
 from sys import exc_info, stderr
 from time import asctime
-import os
 
 import disnake
 from disnake.ext import commands
-import subprocess
+
+from helpful_modules.paginator_view import PaginatorView
+
 from ._error_logging import log_error
 from .cooldowns import OnCooldown
-from .custom_embeds import SuccessEmbed, ErrorEmbed, SimpleEmbed
-from .problems_module.errors import LockedCacheException, LinearAlgebraUserInputErrorException
-from helpful_modules.paginator_view import PaginatorView
+from .custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
+from .problems_module.errors import (
+    LinearAlgebraUserInputErrorException,
+    LockedCacheException,
+)
 from .the_documentation_file_loader import DocumentationFileLoader
 
 
@@ -60,13 +66,17 @@ async def base_on_error(
     if error.__context__ is not None:
         cause = error.__context__
 
-    if isinstance(cause, LockedCacheException) or isinstance(error, LockedCacheException):
+    if isinstance(cause, LockedCacheException) or isinstance(
+        error, LockedCacheException
+    ):
         return {
             "content": "The bot's cache's lock is currently being held. Please try again later."
         }
-    #print(isinstance(cause, LinearAlgebraUserInputErrorException))
-    #print(type(cause))
-    if isinstance(cause, LinearAlgebraUserInputErrorException) or isinstance(error, LinearAlgebraUserInputErrorException):
+    # print(isinstance(cause, LinearAlgebraUserInputErrorException))
+    # print(type(cause))
+    if isinstance(cause, LinearAlgebraUserInputErrorException) or isinstance(
+        error, LinearAlgebraUserInputErrorException
+    ):
         print(cause.args)
         print(str(cause))
         return {"embed": ErrorEmbed(str(cause))}
@@ -88,7 +98,6 @@ async def base_on_error(
     if isinstance(error, disnake.ext.commands.errors.CheckFailure):
         return {"embed": ErrorEmbed(str(error))}
 
-
     # Embed = ErrorEmbed(custom_title="⚠ Oh no! Error: " + str(type(error)), description=("Command raised an exception:" + str(error)))
     logging.error("Uh oh - an error occurred ", exc_info=exc_info())
     error_traceback = "\n".join(traceback.format_exception(error))
@@ -106,7 +115,7 @@ async def base_on_error(
 
     The error traceback is shown below; this may be removed/DMed to the user in the future.
 
-    """ # TODO: update when my support server becomes public & think about providing the traceback to the user
+    """  # TODO: update when my support server becomes public & think about providing the traceback to the user
     traceback_msg = disnake.utils.escape_markdown(error_traceback)
     additional_error = ""
     try:
@@ -155,13 +164,27 @@ async def base_on_error(
         text=error_msg,
         breaking_chars="\n",
         max_page_length=1900,
-        special_color=disnake.Color.red()
+        special_color=disnake.Color.red(),
     )
-    paginator.add_pages(PaginatorView.break_into_pages(traceback_msg, max_page_length=1900, breaking_chars="\n"))
+    paginator.add_pages(
+        PaginatorView.break_into_pages(
+            traceback_msg, max_page_length=1900, breaking_chars="\n"
+        )
+    )
     if additional_error:
-        paginator.add_pages(PaginatorView.break_into_pages(additional_error, max_page_length=1900, breaking_chars="\n"))
+        paginator.add_pages(
+            PaginatorView.break_into_pages(
+                additional_error, max_page_length=1900, breaking_chars="\n"
+            )
+        )
     accounted_for = len(error_msg) + len(traceback_msg) + len(additional_error)
     if len(embed.description) != accounted_for:
-        paginator.add_pages(PaginatorView.break_into_pages(embed.description[accounted_for:], max_page_length=1900, breaking_chars="\n"))
+        paginator.add_pages(
+            PaginatorView.break_into_pages(
+                embed.description[accounted_for:],
+                max_page_length=1900,
+                breaking_chars="\n",
+            )
+        )
     first_page = paginator.create_embed()
     return {"embed": first_page, "view": paginator}

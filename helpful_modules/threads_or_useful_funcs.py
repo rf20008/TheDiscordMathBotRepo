@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import io
 import logging
 import pathlib
 import random
@@ -11,7 +12,7 @@ from typing import Any, Optional
 
 import aiofiles
 import disnake
-import io
+
 from .the_documentation_file_loader import DocumentationFileLoader
 
 # Licensed under GPLv3
@@ -218,6 +219,7 @@ def secure_fisher_yates_shuffle(sequence):
         )
 
     return shuffled_sequence
+
 
 def file_version_of_item(item: str, file_name: str) -> disnake.File:
     """

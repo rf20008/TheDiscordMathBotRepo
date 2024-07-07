@@ -17,14 +17,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
-
 import disnake
 from disnake.ext import commands, tasks
 
-from helpful_modules.problems_module.cache_rewrite_with_redis.rediscache import RedisCache
 from helpful_modules._error_logging import log_error
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
+from helpful_modules.problems_module.cache_rewrite_with_redis.rediscache import (
+    RedisCache,
+)
 from helpful_modules.problems_module.errors import BGSaveNotSupportedOnSQLException
+
 from .helper_cog import HelperCog
 
 # TODO: make this an extension :-)
@@ -45,7 +47,9 @@ class TaskCog(HelperCog):
             return
         # Check if the bot instance is of the correct type
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
-            raise TypeError("The bot instance must be an instance of TheDiscordMathProblemBot")
+            raise TypeError(
+                "The bot instance must be an instance of TheDiscordMathProblemBot"
+            )
         # Check if the guild is denylisted and notify before leaving
         if await inter.bot.is_guild_denylisted(inter.guild):
             await inter.send("Your guild is denylisted - so I am leaving this guild")
@@ -94,7 +98,9 @@ class TaskCog(HelperCog):
     @tasks.loop(minutes=4)
     async def update_support_server(self):
         """Update support server information"""
-        self.bot.support_server = await self.bot.fetch_guild(self.bot.constants.SUPPORT_SERVER_ID)
+        self.bot.support_server = await self.bot.fetch_guild(
+            self.bot.constants.SUPPORT_SERVER_ID
+        )
 
     # Task to ensure config JSON is correct
     @tasks.loop(seconds=5)
@@ -122,6 +128,7 @@ class TaskCog(HelperCog):
         if not isinstance(self.bot.cache, RedisCache):
             return
         memory_info = await self.bot.cache.redis.info("memory")
+
 
 def setup(bot: TheDiscordMathProblemBot):
     bot.add_cog(TaskCog(bot))

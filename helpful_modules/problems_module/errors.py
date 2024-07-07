@@ -23,9 +23,13 @@ class MathProblemsModuleException(Exception):
     """The base exception for problems_module."""
 
     pass
+
+
 class BGSaveNotSupportedOnSQLException(MathProblemsModuleException):
     """Raised when someone tries to call .bgsave but we're using SQL (BGsave is only used in redis"""
+
     pass
+
 
 class TooLongArgument(MathProblemsModuleException):
     """Raised when an argument passed into MathProblem() is too long."""
@@ -107,8 +111,15 @@ class QuizNotFound(ThingNotFound):
     pass
 
 
+class VerificationCodeInfoNotFound(ThingNotFound):
+    """Raised when verification code information is not found"""
+
+    pass
+
+
 class AppealViewInfoNotFound(ThingNotFound):
     """Raised when appeal view info is not found"""
+
     pass
 
 
@@ -179,6 +190,7 @@ class InvalidDictionaryInDatabaseException(FormatException):
 
 class PMDeprecationWarning(DeprecationWarning):
     """Raised when someone tries to use a feature of the problems module that is deprecated"""
+
     pass
 
 
@@ -187,6 +199,7 @@ class LockedCacheException(RuntimeError):
 
     pass
 
+
 class LinearAlgebraUserInputErrorException(MathProblemsModuleException):
     "Raised when a Linear Algebra user input has a problem"
     pass
@@ -194,8 +207,17 @@ class LinearAlgebraUserInputErrorException(MathProblemsModuleException):
 
 class SQLNotSupportedInRedisException(MathProblemsModuleException):
     """Raised when a redis cache attempts to run SQL"""
+
     pass
+
 
 class OwnershipNotDeterminableException(MathProblemsModuleException):
     """Raised when the ownership of an object cannot be determined"""
+
+    pass
+
+
+class VerificationCodeExpiredException(MathProblemsModuleException):
+    """Raised when a verification code is expired"""
+
     pass

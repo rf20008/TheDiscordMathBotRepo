@@ -64,9 +64,11 @@ class QuizSolvingSession(DictConvertible):
     @property
     def overtime(self: "QuizSolvingSession") -> bool:
         return time.time() > self.expire_time
+
     @property
     def is_finished(self: "QuizSolvingSession"):
         return self.overtime
+
     @classmethod
     def better_init(
         cls,

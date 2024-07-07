@@ -4,7 +4,9 @@ This code is licensed under the GNU GPLv3 :)
 """
 
 import warnings
+
 from .dict_convertible import DictConvertible
+
 
 class UserData(DictConvertible):
     """A dataclass to store user data for the bot!"""

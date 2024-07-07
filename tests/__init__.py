@@ -16,10 +16,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import sys
 
 from .mockable_aiofiles import MockableAioFiles
-from .utils import generate_many_randoms, check_embed_equality
+from .utils import check_embed_equality, generate_many_randoms
 
 # WARNING: the following command adds something to sys path
 sys.path.append("../")

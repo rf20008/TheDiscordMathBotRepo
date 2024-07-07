@@ -15,27 +15,31 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import logging
+import pickle
 import typing
 from copy import copy, deepcopy
 from typing import *
-import pickle
 from warnings import warn
 
 import aiosqlite
-from ..parse_problem import convert_row_to_problem
+
 from helpful_modules.dict_factory import dict_factory
+
 from ..appeal import Appeal, AppealViewInfo
 from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
+from ..parse_problem import convert_row_to_problem
 from ..quizzes import Quiz, QuizProblem, QuizSolvingSession, QuizSubmission
 from ..quizzes.quiz_description import QuizDescription
-from .appeals_related_cache import AppealsRelatedCache
+from .verification_codes_related_cache import VerificationCodesRelatedCache
+
 log = logging.getLogger(__name__)
 
 
-class MiscRelatedCache(AppealsRelatedCache):
+class MiscRelatedCache(VerificationCodesRelatedCache):
     async def update_cache(self: "MathProblemCache") -> None:
         """Method revamped! This method updates the cache of the guilds, the guild problems, and the cache of the global problems. Takes O(N) time"""
         warn(message="update_cache hangs", category=PMDeprecationWarning, stacklevel=-1)
@@ -69,11 +73,11 @@ class MiscRelatedCache(AppealsRelatedCache):
                         quiz_submissions_dict[submission.quiz_id] = [submission]
                 await cursor.execute("SELECT * FROM quiz_submission_sessions")
                 for _row in await cursor.fetchall():
-                        session = QuizSolvingSession.from_sqlite_dict(_row, cache=self)
-                        try:
-                            quiz_sessions_dict[session.quiz_id].append(session)
-                        except KeyError:
-                            quiz_sessions_dict[session.quiz_id] = [session]
+                    session = QuizSolvingSession.from_sqlite_dict(_row, cache=self)
+                    try:
+                        quiz_sessions_dict[session.quiz_id].append(session)
+                    except KeyError:
+                        quiz_sessions_dict[session.quiz_id] = [session]
 
         else:
             with mysql_connection(
@@ -181,8 +185,10 @@ class MiscRelatedCache(AppealsRelatedCache):
                 )
         self.cached_submissions = quiz_submissions_dict.values()
         self.cached_submissions_organized_by_dict = quiz_submissions_dict
+
     async def get_all_by_user_id(self, user_id: int) -> dict:
         return self.get_all_by_author_id(user_id)
+
     async def get_all_by_author_id(self, author_id: int) -> dict:
         """Return a dictionary containing everything that was created by the author"""
         assert isinstance(author_id, int)  # Make sure it is of type integer
@@ -237,13 +243,19 @@ class MiscRelatedCache(AppealsRelatedCache):
                     QuizDescription.from_dict(data, cache=self)
                     for data in await cursor.fetchall()
                 ]
-                await cursor.execute("SELECT * FROM appeals WHERE user_id=?", (author_id,))
+                await cursor.execute(
+                    "SELECT * FROM appeals WHERE user_id=?", (author_id,)
+                )
                 appeals = [
                     Appeal.from_dict(data, cache=self)
                     for data in await cursor.fetchall()
                 ]
-                await cursor.execute("SELECT * from appeal_view_infos WHERE user_id=?", (author_id))
-                appeal_view_infos = [AppealViewInfo.from_dict(data) for data in await cursor.fetchall()]
+                await cursor.execute(
+                    "SELECT * from appeal_view_infos WHERE user_id=?", (author_id)
+                )
+                appeal_view_infos = [
+                    AppealViewInfo.from_dict(data) for data in await cursor.fetchall()
+                ]
         else:
             with mysql_connection(
                 host=self.mysql_db_ip,
@@ -291,13 +303,19 @@ class MiscRelatedCache(AppealsRelatedCache):
                     QuizDescription.from_dict(cache=self, data=data)
                     for data in cursor.fetchall()
                 ]
-                await cursor.execute("SELECT * FROM appeals WHERE user_id=%s", (author_id,))
+                await cursor.execute(
+                    "SELECT * FROM appeals WHERE user_id=%s", (author_id,)
+                )
                 appeals = [
                     Appeal.from_dict(data, cache=self)
                     for data in await cursor.fetchall()
                 ]
-                await cursor.execute("SELECT * from appeal_view_infos WHERE user_id=?", (author_id))
-                appeal_view_infos = [AppealViewInfo.from_dict(data) for data in await cursor.fetchall()]
+                await cursor.execute(
+                    "SELECT * from appeal_view_infos WHERE user_id=?", (author_id)
+                )
+                appeal_view_infos = [
+                    AppealViewInfo.from_dict(data) for data in await cursor.fetchall()
+                ]
 
         return {
             "quiz_problems": quiz_problems,
@@ -306,7 +324,7 @@ class MiscRelatedCache(AppealsRelatedCache):
             "sessions": sessions,
             "descriptions_created": descriptions,
             "appeals": appeals,
-            "appeal_view_infos": appeal_view_infos
+            "appeal_view_infos": appeal_view_infos,
         }
 
     async def delete_all_by_user_id(self, user_id: int) -> None:
@@ -332,7 +350,9 @@ class MiscRelatedCache(AppealsRelatedCache):
                     "DELETE FROM quiz_description WHERE author= ?", (user_id,)
                 )
                 await cursor.execute("DELETE FROM appeals WHERE user_id=?", (user_id,))
-                await cursor.execute("DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,))
+                await cursor.execute(
+                    "DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,)
+                )
                 await conn.commit()  # Otherwise, nothing happens and it rolls back!!
         else:
             with mysql_connection(
@@ -354,7 +374,9 @@ class MiscRelatedCache(AppealsRelatedCache):
                     "DELETE FROM quiz_description WHERE author = %s", (user_id,)
                 )
                 await cursor.execute("DELETE FROM appeals WHERE user_id=%s", (user_id,))
-                await cursor.execute("DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,))
+                await cursor.execute(
+                    "DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,)
+                )
                 connection.commit()
 
     async def delete_all_by_guild_id(self, guild_id: int) -> None:
@@ -383,7 +405,9 @@ class MiscRelatedCache(AppealsRelatedCache):
                 await cursor.execute(
                     "DELETE FROM quiz_description WHERE guild_id = %s", (guild_id,)
                 )
-                await cursor.execute("DELETE FROM appeal_view_infos WHERE guild_id=?", (guild_id,))
+                await cursor.execute(
+                    "DELETE FROM appeal_view_infos WHERE guild_id=?", (guild_id,)
+                )
                 await conn.commit()  # Otherwise, nothing happens!
         else:
             with mysql_connection(
@@ -409,40 +433,15 @@ class MiscRelatedCache(AppealsRelatedCache):
                 cursor.execute(
                     "DELETE FROM quiz_description WHERE guild_id = %s", (guild_id,)
                 )
-                await cursor.execute("DELETE FROM appeal_view_infos WHERE guild_id=?", (guild_id,))
+                await cursor.execute(
+                    "DELETE FROM appeal_view_infos WHERE guild_id=?", (guild_id,)
+                )
                 # uh oh - we don't have a guild id
                 connection.commit()
 
     def __bool__(self):
         """Return bool(self)"""
         return True
-
-    async def run_sql(
-        self, sql: str, placeholders: typing.Optional[typing.List[Any]] = None
-    ) -> dict:
-        """Run arbitrary SQL. Only used in /sql"""
-        assert isinstance(sql, str)
-        assert isinstance(placeholders, list) or placeholders is None
-        if placeholders is None:
-            placeholders = []
-        if self.use_sqlite:
-            async with aiosqlite.connect(self.db_name) as conn:
-                conn.row_factory = dict_factory
-                cursor = await conn.cursor()
-                await cursor.execute(sql, placeholders)
-                await conn.commit()
-                return await cursor.fetchall()
-        else:
-            with mysql_connection(
-                host=self.mysql_db_ip,
-                password=self.mysql_password,
-                user=self.mysql_username,
-                database=self.mysql_db_name,
-            ) as connection:
-                cursor = connection.cursor(dictionaries=True)
-                cursor.execute(sql, placeholders)
-                connection.commit()
-                return cursor.fetchall()
 
     async def initialize_sql_table(self):
         """Initialize my internal SQL tables. This does nothing if the internal SQL tables already exist!"""

@@ -17,6 +17,7 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 from typing import Dict, Protocol, TypeVar
+
 from .errors import OwnershipNotDeterminableException
 
 T = TypeVar("T")
@@ -60,7 +61,9 @@ class DictConvertible(Protocol):
             return self_dict.get("user_id") == user_id
         elif self_dict.get("author") is not None:
             return self_dict.get("author") == user_id
-        elif self_dict.get("authors") is not None :
+        elif self_dict.get("authors") is not None:
             return user_id in self_dict.get("authors")
         else:
-            raise OwnershipNotDeterminableException(f"I could not determine whether this object belongs to the user with user id {user_id}")
+            raise OwnershipNotDeterminableException(
+                f"I could not determine whether this object belongs to the user with user id {user_id}"
+            )

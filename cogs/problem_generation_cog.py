@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import random
 import typing
 
@@ -23,24 +24,27 @@ import disnake
 from disnake import Option, OptionType
 from disnake.ext import commands
 
-from helpful_modules import (
-    checks,
-    problems_module,
-)
+from helpful_modules import checks, problems_module
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
-from helpful_modules.problem_generator import generate_arithmetic_problem, generate_linear_algebra_problem
-
+from helpful_modules.problem_generator import (
+    generate_arithmetic_problem,
+    generate_linear_algebra_problem,
+)
 from helpful_modules.threads_or_useful_funcs import generate_new_id
+
 from .helper_cog import HelperCog
 
 PROBLEM_GENERATORS = [generate_arithmetic_problem, generate_linear_algebra_problem]
+
+
 class ProblemGenerationCog(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
         self.bot: TheDiscordMathProblemBot = bot
         # checks = self.checks
         checks.setup(bot)
+
     @commands.slash_command(
         name="generate_new_problems",
         description="Generates new problems",
@@ -84,7 +88,9 @@ class ProblemGenerationCog(HelperCog):
             while True:
                 problem_id = generate_new_id()
                 try:
-                    already_existing_problem=await self.cache.get_problem(None, problem_id)
+                    already_existing_problem = await self.cache.get_problem(
+                        None, problem_id
+                    )
                     print(already_existing_problem)
                 except problems_module.ProblemNotFound:
                     break
@@ -104,6 +110,8 @@ class ProblemGenerationCog(HelperCog):
             ),
             ephemeral=True,
         )
+
+
 def setup(bot: TheDiscordMathProblemBot):
     bot.add_cog(ProblemGenerationCog(bot))
 

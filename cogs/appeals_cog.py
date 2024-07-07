@@ -9,18 +9,20 @@ from helpful_modules.checks import has_privileges
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
 from helpful_modules.my_modals import MyModal
-from helpful_modules.threads_or_useful_funcs import generate_new_id
 from helpful_modules.problems_module import Appeal
+from helpful_modules.threads_or_useful_funcs import generate_new_id
+
 from .helper_cog import HelperCog
+
 
 class AppealModal(MyModal):
     async def callback(s, modal_inter: disnake.ModalInteraction):
         s.view.stop()
-        #nonlocal reason
+        # nonlocal reason
         reason = modal_inter.text_values[undenylist_custom_id]
-        await modal_inter.send(
-            "Thanks! I'm now going to add this to the database :)"
-        )
+        await modal_inter.send("Thanks! I'm now going to add this to the database :)")
+
+
 class AppealsCog(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
@@ -56,6 +58,7 @@ class AppealsCog(HelperCog):
             await modal_inter.send(
                 "Thanks! I'm now going to add this to the database :)"
             )
+
         # Make sure they are denylisted because if they're not denylisted, they can't appeal
         # Get the info from the user
         modal_custom_id = str(inter.id) + urandom(10).hex()
@@ -70,8 +73,6 @@ class AppealsCog(HelperCog):
         ]
         reason: str = ""
 
-
-
         modal = MyModal(
             callback=callback,
             title="Why should I un-denylist you? (20m limit)",
@@ -79,18 +80,17 @@ class AppealsCog(HelperCog):
             timeout=1200,
             custom_id=modal_custom_id,
         )
-        #modal.append_component(text_inputs)
+        # modal.append_component(text_inputs)
         await inter.response.send_modal(modal)
         modal_inter = None
+
         def check(modal_i):
             if modal_i.author.id == inter.author.id:
-                modal_inter=modal_i
+                modal_inter = modal_i
                 return True
             return False
-        _ = await self.bot.wait_for(
-            "modal_submit",
-            check=check
-        )
+
+        _ = await self.bot.wait_for("modal_submit", check=check)
 
         # Create an appeal
         # find the appeal
@@ -109,15 +109,16 @@ class AppealsCog(HelperCog):
         )
         await self.cache.set_appeal_data(appeal)
         await modal_inter.send("Appeal should be sent?")
-        raise NotImplementedError("The feature that sends me the appeal is not implemented!")
-        #raise NotImplementedError("The program that finds the highest appeal number is not yet implemented. However, your appeal should have been sent")
+        raise NotImplementedError(
+            "The feature that sends me the appeal is not implemented!"
+        )
+        # raise NotImplementedError("The program that finds the highest appeal number is not yet implemented. However, your appeal should have been sent")
         for appeal in self.cache.cached_appeals:
             if appeal.user_id != inter.author.id:
                 continue
             if appeal.appeal_num > highest_appeal_num:
                 highest_appeal_num = appeal.appeal_num
         highest_appeal_num += 1
-
 
 
 def setup(bot):

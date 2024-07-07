@@ -39,7 +39,7 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                         int(data.denylisted),
                         CCPCTD,
                         CCQCTD,
-                        MCTD
+                        MCTD,
                     ),
                 )  # TODO: test
                 await conn.commit()
@@ -61,7 +61,7 @@ class GuildDataRelatedCache(PermissionsRequiredRelatedCache):
                         int(data.denylisted),
                         CCPCTD,
                         CCQCTD,
-                        MCTD
+                        MCTD,
                     ),
                 )  # TODO: test this
 

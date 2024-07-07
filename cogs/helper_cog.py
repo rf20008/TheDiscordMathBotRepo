@@ -54,12 +54,10 @@ class HelperCog(ext.commands.Cog):
                 (disnake.ext.commands.Context, disnake.ApplicationCommandInteraction),
             )
             if not self.cache.get_user_data(
-                    ctx.author.id,
-                    default=problems_module.UserData(
-                        trusted=False,
-                        denylisted=False,
-                        user_id=ctx.author.id
-                    )
+                ctx.author.id,
+                default=problems_module.UserData(
+                    trusted=False, denylisted=False, user_id=ctx.author.id
+                ),
             ):
                 raise RuntimeError(
                     f"Sadly, you're not allowed to do this, {ctx.author.mention} ☹️"

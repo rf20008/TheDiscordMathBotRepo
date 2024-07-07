@@ -16,23 +16,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-from helpful_modules.problems_module import ComputationalProblem, LinearAlgebraProblem
-import numpy as np
-import random
+
 import math
+import random
+
+import numpy as np
+
+from helpful_modules.problems_module import ComputationalProblem, LinearAlgebraProblem
 from helpful_modules.threads_or_useful_funcs import generate_new_id
+
 BOT_ID = 845751152901750824
 OPERATIONS = ["+", "-", "/", "*"]
 COMPLEXITY_LIMIT = 200
 NUMBER_RANGE = (-100, 100)
 ANSWER_RANGE = (-30000, 30000)
 ZERO_TOL = 1e-10
+
+
 # these are from ChatGPT
 def infix_to_postfix(infix_expression):
-    precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
+    precedence = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3}
     postfix_stack = []
     operator_stack = []
-    operand = ''
+    operand = ""
 
     # Helper function to handle appending operands to the postfix stack
     def append_operand(op):
@@ -46,16 +52,18 @@ def infix_to_postfix(infix_expression):
             operand += char
         else:
             append_operand(operand)
-            operand = ''
-            if char == '(':
+            operand = ""
+            if char == "(":
                 operator_stack.append(char)
-            elif char == ')':
-                while operator_stack and operator_stack[-1] != '(':
+            elif char == ")":
+                while operator_stack and operator_stack[-1] != "(":
                     postfix_stack.append(operator_stack.pop())
                 if operator_stack:
                     operator_stack.pop()  # Discard the '('
             else:
-                while operator_stack and precedence.get(operator_stack[-1], 0) >= precedence.get(char, 0):
+                while operator_stack and precedence.get(
+                    operator_stack[-1], 0
+                ) >= precedence.get(char, 0):
                     postfix_stack.append(operator_stack.pop())
                 operator_stack.append(char)
 
@@ -83,24 +91,26 @@ def evaluate_postfix(postfix_expression):
 
     return stack[0]
 
-def perform_operation(operand1, operand2, operator):
-    if operator == '+':
-        return operand1 + operand2
-    elif operator == '-':
-        return operand1 - operand2
-    elif operator == '*':
-        return operand1 * operand2
-    elif operator == '/':
-        return operand1 / operand2
-    elif operator == '^':
-        return operand1 ** operand2
 
+def perform_operation(operand1, operand2, operator):
+    if operator == "+":
+        return operand1 + operand2
+    elif operator == "-":
+        return operand1 - operand2
+    elif operator == "*":
+        return operand1 * operand2
+    elif operator == "/":
+        return operand1 / operand2
+    elif operator == "^":
+        return operand1**operand2
 
 
 # the following implementation is from GFG. It is not mine
 # link: https://www.geeksforgeeks.org/convert-infix-prefix-notation/
 def is_operator(c: str):
     return not c.isalpha() and not c.isdigit()
+
+
 def get_priority(c: str):
     if c in "+-":
         return 1
@@ -109,8 +119,10 @@ def get_priority(c: str):
     if c == "^":
         return 3
     return 0
+
+
 def infixToPostfix(infix):
-    infix = "("+infix+")"
+    infix = "(" + infix + ")"
     l = len(infix)
     char_stack = []
     output = ""
@@ -122,12 +134,12 @@ def infixToPostfix(infix):
             char_stack.append("(")
         elif infix[i]:
             # we need to reverse it because we have to pop
-            while char_stack[-1] != '(':
+            while char_stack[-1] != "(":
                 output += char_stack.pop()
             char_stack.pop()
         else:
             if is_operator(char_stack[-1]):
-                if infix[i] == '^':
+                if infix[i] == "^":
                     while get_priority(infix[i]) <= get_priority(char_stack[-1]):
                         output += char_stack.pop()
                 else:
@@ -137,6 +149,8 @@ def infixToPostfix(infix):
     while len(char_stack) != 0:
         output += char_stack.pop()
     return output
+
+
 def evaluate_postfix_expr(expr):
     thing_stack = []
     raise NotImplementedError("This is not implemented yet")
@@ -165,7 +179,7 @@ def generate_arithmetic_expression(complexity: int = 7):
                     continue
                 if aft_res - math.floor(aft_res) >= 0.000001:
                     continue
-                a = bef_res ** aft_res
+                a = bef_res**aft_res
                 if isinstance(a, complex):
                     if abs(a.imag) >= ZERO_TOL:
                         continue
@@ -191,7 +205,10 @@ def generate_arithmetic_expression(complexity: int = 7):
             case _:
                 continue
 
-def generate_arithmetic_problem(complexity: int = 7, guild_id: int | None = None, author_id: int = BOT_ID):
+
+def generate_arithmetic_problem(
+    complexity: int = 7, guild_id: int | None = None, author_id: int = BOT_ID
+):
     if not isinstance(complexity, int):
         raise TypeError("Complexity is not an int")
     if complexity < 0 or complexity > COMPLEXITY_LIMIT:
@@ -199,23 +216,31 @@ def generate_arithmetic_problem(complexity: int = 7, guild_id: int | None = None
     expression, equalsto = generate_arithmetic_expression(complexity=complexity)
     return ComputationalProblem(
         question=f"Evaluate {expression}. Remember: this uses a computer. "
-                 f"Your answer will be considered correct "
-                 f"if it is within 0.1% relative tolerance or 0.001 absolute tolerance",
+        f"Your answer will be considered correct "
+        f"if it is within 0.1% relative tolerance or 0.001 absolute tolerance",
         answers=[equalsto],
-        tolerance = 0.001,
+        tolerance=0.001,
         guild_id=guild_id,
         author=author_id,
-        id=generate_new_id()
+        id=generate_new_id(),
     )
 
-def generate_linear_algebra_problem(num_vars: int = 3, guild_id: int | None = None, author_id: int = BOT_ID):
+
+def generate_linear_algebra_problem(
+    num_vars: int = 3, guild_id: int | None = None, author_id: int = BOT_ID
+):
     vars = np.array([random.randint(*NUMBER_RANGE) for _ in range(num_vars)])
-    matrix = np.array([[random.randint(*NUMBER_RANGE) for _ in range(num_vars)] for __ in range(num_vars)])
+    matrix = np.array(
+        [
+            [random.randint(*NUMBER_RANGE) for _ in range(num_vars)]
+            for __ in range(num_vars)
+        ]
+    )
     equal_to = matrix.dot(vars)
     return LinearAlgebraProblem.from_coefficients(
         coeffs=list(map(list, matrix)),
         equal_to=list(equal_to),
         guild_id=guild_id,
         author_id=author_id,
-        id = generate_new_id()
+        id=generate_new_id(),
     )

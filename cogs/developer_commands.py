@@ -1,4 +1,5 @@
 """Admin-related commands. Licensed under GPLv3"""
+
 import random
 import typing
 import warnings
@@ -15,7 +16,7 @@ from helpful_modules import (
     the_documentation_file_loader,
 )
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed, SimpleEmbed
+from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.save_files import FileSaver
 from helpful_modules.threads_or_useful_funcs import generate_new_id
 
@@ -203,25 +204,27 @@ class DeveloperCommands(HelperCog):
             "Server Guild ID": inter.guild.id,
             "Invoker's user ID": inter.author.id,
             "Maximum number of guild-only problems allowed.": self.bot.cache.max_guild_problems,
-            "Has this guild reached the maximum number of problems?": "✅"
-            if len(await self.bot.cache.get_guild_problems(inter.guild))
-            >= self.bot.cache.max_guild_problems
-            else "❌",
+            "Has this guild reached the maximum number of problems?": (
+                "✅"
+                if len(await self.bot.cache.get_guild_problems(inter.guild))
+                >= self.bot.cache.max_guild_problems
+                else "❌"
+            ),
             "Number of guild-only problems": len(
                 await self.bot.cache.get_guild_problems(inter.guild)
             ),
         }
         correct_permissions = {  # todo: don't hardcode
             "Read Message History": "✅" if my_permissions.read_messages else "❌",
-            "Read Messages": "✅"
-            if my_permissions.read_messages
-            else "❌",  # can I read messages?
-            "Send Messages": "✅"
-            if my_permissions.send_messages
-            else "❌",  # can I send messages?
-            "Embed Links": "✅"
-            if my_permissions.embed_links
-            else "❌",  # can I embed links?
+            "Read Messages": (
+                "✅" if my_permissions.read_messages else "❌"
+            ),  # can I read messages?
+            "Send Messages": (
+                "✅" if my_permissions.send_messages else "❌"
+            ),  # can I send messages?
+            "Embed Links": (
+                "✅" if my_permissions.embed_links else "❌"
+            ),  # can I embed links?
             "Use Slash Commands": "✅" if my_permissions.use_slash_commands else "❌",
         }
         debug_dict["Do I have the correct permissions?"] = correct_permissions
@@ -242,8 +245,6 @@ class DeveloperCommands(HelperCog):
                             text += f"\t{k}: {v}\n"
 
         await inter.send(text, ephemeral=send_ephermally)
-
-
 
     @commands.slash_command(
         name="add_trusted_user",
@@ -348,7 +349,9 @@ class DeveloperCommands(HelperCog):
         try:
             await self.cache.set_user_data(user_id=user.id, new=their_user_data)
         except problems_module.UserDataNotExistsException:
-            await self.cache.add_user_data(user_id=user.id, thing_to_add=their_user_data)
+            await self.cache.add_user_data(
+                user_id=user.id, thing_to_add=their_user_data
+            )
         await inter.send(
             embed=SuccessEmbed(
                 f"Successfully made {user.global_name} no longer a trusted user!"

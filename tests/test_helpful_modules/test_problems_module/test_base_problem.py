@@ -17,12 +17,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
+import pickle
 import unittest
 import unittest.mock
 from unittest.mock import AsyncMock
+
 import disnake
+
 from helpful_modules.problems_module import BaseProblem, PMDeprecationWarning
-import pickle
 
 # Define a standard sample problem for testing
 sample_problem = BaseProblem(
@@ -35,8 +37,9 @@ sample_problem = BaseProblem(
     solvers=[],
     cache=None,
     answers=["4"],
-    tolerance=0.001
+    tolerance=0.001,
 )
+
 
 class TestBaseProblem(unittest.TestCase):
     def test_init(self):
@@ -61,7 +64,7 @@ class TestBaseProblem(unittest.TestCase):
             "answers": pickle.dumps(["6"]),
             "voters": pickle.dumps([]),
             "solvers": pickle.dumps([]),
-            "tolerance": 0.2
+            "tolerance": 0.2,
         }
         recieved_problem = BaseProblem.from_row(row)
         self.assertEqual(recieved_problem.question, "What is 3+3?")
@@ -80,7 +83,7 @@ class TestBaseProblem(unittest.TestCase):
             "solvers": [],
             "author": -123456789,
             "answers": ["8"],
-            "tolerance": 0.3
+            "tolerance": 0.3,
         }
         problem_gotten = BaseProblem.from_dict(problem_dict)
         self.assertEqual(problem_gotten.question, "What is 4+4?")
@@ -101,14 +104,16 @@ class TestBaseProblem(unittest.TestCase):
             "solvers": [],
             "author": -123456789,
             "answers": ["4"],
-            "tolerance": 0.1
+            "tolerance": 0.1,
         }
         self.assertEqual(problem_dict, expected_dict)
 
     # Tests for other methods...
     def test_add_voter(self):
         problem = sample_problem
-        problem.add_voter(unittest.mock.AsyncMock(spec=disnake.User, id=-987654321))  # Adding a voter
+        problem.add_voter(
+            unittest.mock.AsyncMock(spec=disnake.User, id=-987654321)
+        )  # Adding a voter
         self.assertIn(-987654321, problem.voters)
 
     def test_add_solver(self):
@@ -138,7 +143,9 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_check_answer_and_add_checker(self):
         problem = sample_problem
-        problem.check_answer_and_add_checker("4", unittest.mock.AsyncMock(spec=disnake.User, id="-987654321"))  # Checking answer and adding a solver
+        problem.check_answer_and_add_checker(
+            "4", unittest.mock.AsyncMock(spec=disnake.User, id="-987654321")
+        )  # Checking answer and adding a solver
         self.assertIn("-987654321", problem.solvers)
 
     def test_check_answer(self):
@@ -165,7 +172,9 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_is_voter(self):
         problem = sample_problem
-        self.assertFalse(problem.is_voter(AsyncMock(spec=disnake.User, id="-987654321")))  # Not a voter
+        self.assertFalse(
+            problem.is_voter(AsyncMock(spec=disnake.User, id="-987654321"))
+        )  # Not a voter
 
     def test_get_solvers(self):
         problem = sample_problem
@@ -175,7 +184,9 @@ class TestBaseProblem(unittest.TestCase):
     def test_is_solver(self):
         problem = sample_problem
         problem.solvers.clear()
-        self.assertFalse(problem.is_solver(AsyncMock(spec=disnake.User, id="-987654321"))) # Not a solver
+        self.assertFalse(
+            problem.is_solver(AsyncMock(spec=disnake.User, id="-987654321"))
+        )  # Not a solver
 
     def test_get_author(self):
         problem = sample_problem
@@ -187,7 +198,9 @@ class TestBaseProblem(unittest.TestCase):
 
     def test_is_author(self):
         problem = sample_problem
-        self.assertTrue(problem.is_author(unittest.mock.AsyncMock(spec=disnake.User, id=-123456789)))  # Is the author
+        self.assertTrue(
+            problem.is_author(unittest.mock.AsyncMock(spec=disnake.User, id=-123456789))
+        )  # Is the author
 
     def test___eq__(self):
         problem1 = sample_problem
@@ -198,13 +211,12 @@ class TestBaseProblem(unittest.TestCase):
         problem = sample_problem
         self.assertEqual(
             repr(problem),
-            "problems_module.BaseProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789, cache=None )"
+            "problems_module.BaseProblem(question='What is 2+2?', answers = ['4'], id = -1, guild_id=None, voters=[], solvers=[], author=-123456789, cache=None )",
         )  # Representation matches expected value
 
     def test___str__(self):
         problem = sample_problem
         self.assertEqual(
-
             "Question: 'What is 2+2?', \n"
             "        id: -1, \n"
             "        guild_id: None, \n"
@@ -215,6 +227,7 @@ class TestBaseProblem(unittest.TestCase):
 
     def test___deepcopy__(self):
         import copy
+
         problem = sample_problem
         copied_problem = copy.deepcopy(problem)
         self.assertEqual(problem, copied_problem)  # Deepcopy matches original object

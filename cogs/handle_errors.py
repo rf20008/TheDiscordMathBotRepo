@@ -16,14 +16,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import sys
 import traceback
 from time import asctime
-from helpful_modules.custom_embeds import ErrorEmbed
+
 from disnake.ext.commands import CommandOnCooldown, NotOwner
-from helpful_modules.cooldowns import OnCooldown
+
 from helpful_modules._error_logging import log_error
 from helpful_modules.base_on_error import get_git_revision_hash
+from helpful_modules.cooldowns import OnCooldown
+from helpful_modules.custom_embeds import ErrorEmbed
+
 from .helper_cog import *
 
 
@@ -33,7 +37,9 @@ class ErrorHandlerCog(HelperCog):
         self.bot = bot
 
     @staticmethod
-    async def handle_errors(ctx, error, print_stack_traceback: tuple = (True, sys.stderr)):
+    async def handle_errors(
+        ctx, error, print_stack_traceback: tuple = (True, sys.stderr)
+    ):
         """Function called when a slash command errors"""
 
         if print_stack_traceback[0]:
@@ -57,8 +63,6 @@ class ErrorHandlerCog(HelperCog):
         if isinstance(error, NotOwner):
             await ctx.reply(embed=ErrorEmbed("You are not the owner of this bot."))
             return
-
-
 
         error_traceback = "\n".join(error_traceback_as_obj)
 

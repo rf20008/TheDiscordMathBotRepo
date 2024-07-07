@@ -27,13 +27,15 @@ from copy import deepcopy
 from typing import Optional
 
 import disnake
+import orjson
 
 from .dict_convertible import DictConvertible
 from .errors import *
-import orjson
+
 MAX_ANSWERS_PER_PROBLEM = 30
 ANSWER_CHAR_LIMIT = 1000
 QUESTION_CHAR_LIMIT = 2000
+
 
 # TODO: finish from_dict so that it knows to convert to a ComputationalProblem or a LinearAlgebraProblem or some other kind of problem
 class BaseProblem(DictConvertible):
@@ -53,7 +55,7 @@ class BaseProblem(DictConvertible):
         answers: list = None,
         tolerance: float = None,
         type: str = "BaseProblem",
-        extra_stuff: dict = {}
+        extra_stuff: dict = {},
     ):
         self.type = type
         if voters is None:
@@ -71,7 +73,7 @@ class BaseProblem(DictConvertible):
         if id != problem_id and problem_id is not None and id is not None:
             raise ValueError("id and problem_id do not match")
         if id is None:
-            id=problem_id
+            id = problem_id
         if not isinstance(question, str):
             raise TypeError("question is not a string")
         if (
@@ -196,6 +198,7 @@ class BaseProblem(DictConvertible):
         )
         if self._cache is not None:
             await self._cache.update_problem(self.id, self)
+
     @staticmethod
     def try_to_convert_to_list(thing):
         if isinstance(thing, bytes):
@@ -205,8 +208,10 @@ class BaseProblem(DictConvertible):
         else:
             if not isinstance(thing, list):
                 raise TypeError(
-                    f"{thing} is not of an expected type, but is of type {thing.__class__.__name__}. By the way, its value is {thing}.")
+                    f"{thing} is not of an expected type, but is of type {thing.__class__.__name__}. By the way, its value is {thing}."
+                )
             return thing
+
     @classmethod
     def from_row(cls, row: dict, cache=None):
         """Convert a dictionary-ified row into a MathProblem"""
@@ -214,16 +219,18 @@ class BaseProblem(DictConvertible):
             raise TypeError("The problem has not been dictionary-ified")
         try:
             answers = cls.try_to_convert_to_list(row["answers"])
-            voters = cls.try_to_convert_to_list(row["voters"]) # DO the same for voters and solvers
+            voters = cls.try_to_convert_to_list(
+                row["voters"]
+            )  # DO the same for voters and solvers
             solvers = cls.try_to_convert_to_list(row["solvers"])
             our_row = dict()
             our_row.update(row)
             del our_row["problem_id"]
             our_row["id"] = row["problem_id"]
-            our_row["answers"]=answers
-            our_row["voters"]=voters
-            our_row["solvers"]=solvers
-            our_row["tolerance"] = row.get("tolerance", None),
+            our_row["answers"] = answers
+            our_row["voters"] = voters
+            our_row["solvers"] = solvers
+            our_row["tolerance"] = (row.get("tolerance", None),)
             our_row.update(orjson.loads(row.get("extra_stuff", "{}").replace("'", '"')))
             try:
                 del our_row["extra_stuff"]
@@ -241,18 +248,31 @@ class BaseProblem(DictConvertible):
     @classmethod
     def from_dict(cls, _dict: dict, cache=None):
         """Convert a dictionary to a math problem. cache must be a valid MathProblemCache"""
-        #print(cls)
+        # print(cls)
         assert isinstance(_dict, dict)
         assert _dict["guild_id"] is None or isinstance(_dict["guild_id"], int)
         problem = _dict
         # Remove the guild_id null (used for global problems), which is not used any more because of conflicts with sql.
-        other_stuff = {key: value for key,value in problem.items() if key not in {"question", "answers", "id","problem_id", "voters", "guild_id", "solvers", "author"}}
+        other_stuff = {
+            key: value
+            for key, value in problem.items()
+            if key
+            not in {
+                "question",
+                "answers",
+                "id",
+                "problem_id",
+                "voters",
+                "guild_id",
+                "solvers",
+                "author",
+            }
+        }
         problem_id = -1
         if "problem_id" in problem.keys():
             problem_id = problem["problem_id"]
         elif "id" in problem.keys():
             problem_id = problem["id"]
-
 
         if "extra_stuff" in other_stuff.keys():
             other_stuff.update(other_stuff["extra_stuff"])
@@ -457,16 +477,17 @@ class BaseProblem(DictConvertible):
     def get_extra_stuff(self):
         """Return the extra stuff for this dictionary, that doesn't go in just a BaseProblem. Override this if you're in a subclass"""
         return {"type": "BaseProblem"}
+
     def __eq__(self, other: "BaseProblem"):
         if not isinstance(other, type(self)):
             return False
         return (
-                self.question == other.question and
-                self.answers == other.answers and
-                self.id == other.id and
-                self.guild_id == other.guild_id and
-                self.voters == other.voters and
-                self.solvers == other.solvers and
-                self.author == other.author and
-                self.get_extra_stuff() == other.get_extra_stuff()
+            self.question == other.question
+            and self.answers == other.answers
+            and self.id == other.id
+            and self.guild_id == other.guild_id
+            and self.voters == other.voters
+            and self.solvers == other.solvers
+            and self.author == other.author
+            and self.get_extra_stuff() == other.get_extra_stuff()
         )

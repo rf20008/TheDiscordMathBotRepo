@@ -31,11 +31,11 @@ class ErrorEmbed(SimpleEmbed):
         footer=None,
     ):
         if title is None and custom_title is None:
-            custom_title="Error!"
+            custom_title = "Error!"
         if title != custom_title and (title is not None and custom_title is not None):
             raise ValueError("Titles don't match")
         if custom_title is None:
-            custom_title=title
+            custom_title = title
         elif title is None:
             pass
         super().__init__(title=custom_title, description=description, color=color)
@@ -56,7 +56,7 @@ class SuccessEmbed(SimpleEmbed):
         if title != successTitle and (title is not None and successTitle is not None):
             raise ValueError("Titles don't match")
         if successTitle is None:
-            successTitle=title
+            successTitle = title
         elif title is None:
             pass
         super().__init__(title=successTitle, description=description, color=color)

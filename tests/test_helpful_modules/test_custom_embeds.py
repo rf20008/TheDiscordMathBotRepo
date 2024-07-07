@@ -16,15 +16,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import unittest
 from unittest.mock import patch
+
+from disnake import Color, Embed
+
 from helpful_modules.custom_embeds import (
-    SimpleEmbed,
     ErrorEmbed,
+    SimpleEmbed,
     SuccessEmbed,
     generate_random_color,
 )
-from disnake import Color, Embed
 
 
 class TestEmbeds(unittest.TestCase):

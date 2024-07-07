@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import typing
 
 import disnake
@@ -23,7 +24,7 @@ from disnake import Option, OptionChoice, OptionType
 from disnake.ext import commands, tasks
 
 from helpful_modules import custom_bot, custom_embeds, the_documentation_file_loader
-from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
+from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
 from helpful_modules.paginator_view import PaginatorView
 
 TYPES_TO_NAMES = {
@@ -259,7 +260,9 @@ class HelpCog(HelperCog):
                 text = "".join(file.readlines())
 
             await inter.send(
-                view=await PaginatorView.paginate(text=text, user_id=inter.author.id, max_page_length=2300)
+                view=await PaginatorView.paginate(
+                    text=text, user_id=inter.author.id, max_page_length=2300
+                )
             )  # Concatenate the lines in the file and send them
             return
         elif documentation_type == "terms_of_service":
@@ -267,7 +270,9 @@ class HelpCog(HelperCog):
                 text = "".join(file.readlines())
 
             await inter.send(
-                view=await PaginatorView.paginate(text=text, user_id=inter.author.id, max_page_length=2300)
+                view=await PaginatorView.paginate(
+                    text=text, user_id=inter.author.id, max_page_length=2300
+                )
             )  # Concatenate the lines in the file and send them
             return
         else:

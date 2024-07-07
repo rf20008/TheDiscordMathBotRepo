@@ -16,19 +16,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-import typing
-import disnake
-import time
+
 import asyncio
-import heapq
 import fractions
+import heapq
 import logging
 import math
+import time
+import typing
+
+import disnake
 
 logging.basicConfig(level=logging.INFO)
 
+
 class NotStartedError(RuntimeError):
     """An exception raised when trying to stop a MessageQueue that isn't started"""
+
     pass
 
 
@@ -161,7 +165,9 @@ class MessageThing(ThingToDo):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return super().__eq__(other) and self.to == other.to and self.stuff == other.stuff
+        return (
+            super().__eq__(other) and self.to == other.to and self.stuff == other.stuff
+        )
 
 
 class MessageQueue:
@@ -177,7 +183,7 @@ class MessageQueue:
     lock: asyncio.Lock
     act_task: typing.Optional[asyncio.Task]
     decrement_task: typing.Optional[asyncio.Task]
-    __slots__ = ('heap', 'lock', 'act_task', 'decrement_task')
+    __slots__ = ("heap", "lock", "act_task", "decrement_task")
 
     def __init__(self):
         """
@@ -279,10 +285,14 @@ class MessageQueue:
         C = len(things)
         N = len(self.heap)
         if not isinstance(things, list):
-            raise TypeError(f"things is not a list, but an instance of {things.__class__.__name__}")
+            raise TypeError(
+                f"things is not a list, but an instance of {things.__class__.__name__}"
+            )
         for thing in things:
             if not isinstance(thing, ThingToDo):
-                raise TypeError(f"thing is not an instance of ThingToDo, but an instance of {thing.__class__.__name__}")
+                raise TypeError(
+                    f"thing is not an instance of ThingToDo, but an instance of {thing.__class__.__name__}"
+                )
         if 2 * (C + N) > 4 * (C * math.log(N + C, base=2)):
             # strategy: re-heapify
             async with self.lock:
@@ -294,7 +304,14 @@ class MessageQueue:
                 for thing in things:
                     heapq.heappush(self.heap, thing)
 
-    async def empty(self, *, act: bool = True, timeout: float = 0.0, limit: int = -1, delete_undone_tasks: bool = True):
+    async def empty(
+        self,
+        *,
+        act: bool = True,
+        timeout: float = 0.0,
+        limit: int = -1,
+        delete_undone_tasks: bool = True,
+    ):
         """
         Empties the queue by executing and removing all tasks.
 
@@ -331,24 +348,28 @@ class MessageQueue:
             async with self.lock:
                 self.heap.clear()
 
-    async def start(self, *, send_interval=1, decrement_intervals_periodically_interval=60):
-        self.act_task = asyncio.create_task(self.act_periodically(interval=send_interval))
+    async def start(
+        self, *, send_interval=1, decrement_intervals_periodically_interval=60
+    ):
+        self.act_task = asyncio.create_task(
+            self.act_periodically(interval=send_interval)
+        )
         self.decrement_task = asyncio.create_task(
             self.decrement_priorities_periodically(
                 interval=decrement_intervals_periodically_interval
             )
         )
 
-    async def stop(self,
-             *,
-             msg: str = "",
-             empty: bool = True,
-             act: bool = False,
-             timeout: float = 0.0,
-             limit: int = -1,
-             delete_undone_tasks: int = -1
-
-        ):
+    async def stop(
+        self,
+        *,
+        msg: str = "",
+        empty: bool = True,
+        act: bool = False,
+        timeout: float = 0.0,
+        limit: int = -1,
+        delete_undone_tasks: int = -1,
+    ):
         """
         Stops the MessageQueue by canceling periodic tasks and optionally emptying the queue.
 
@@ -371,4 +392,9 @@ class MessageQueue:
         self.act_task.cancel(msg)
         self.decrement_task.cancel(msg)
         if empty:
-            await self.empty(act=act, timeout=timeout, limit=limit, delete_undone_tasks=delete_undone_tasks)
+            await self.empty(
+                act=act,
+                timeout=timeout,
+                limit=limit,
+                delete_undone_tasks=delete_undone_tasks,
+            )

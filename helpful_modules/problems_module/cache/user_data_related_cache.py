@@ -131,7 +131,6 @@ class UserDataRelatedCache(QuizRelatedCache):
                 log.debug("Finished!")
                 return
 
-
     async def del_user_data(self, user_id: int):
         """Delete user data given the user id"""
         assert isinstance(user_id, int)
@@ -159,27 +158,31 @@ class UserDataRelatedCache(QuizRelatedCache):
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
                 cursor = await conn.cursor()
-                await cursor.execute("""
+                await cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS user_data (
                         user_id INTEGER PRIMARY KEY,
                         trusted INTEGER,
                         denylisted INTEGER
                     )
-                """)
-                await cursor.commit()
+                """
+                )
+                await conn.commit()
         else:
             with mysql_connection(
-                    host=self.mysql_db_ip,
-                    password=self.mysql_password,
-                    user=self.mysql_username,
-                    database=self.mysql_db_name,
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
             ) as connection:
                 cursor = connection.cursor()
-                cursor.execute("""
+                cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS user_data (
                         user_id INT PRIMARY KEY,
                         trusted BOOLEAN,
                         denylisted BOOLEAN
                     )
-                """)
+                """
+                )
                 connection.commit()

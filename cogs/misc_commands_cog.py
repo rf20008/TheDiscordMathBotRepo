@@ -13,11 +13,11 @@ from disnake import *
 from disnake.ext import commands
 
 from helpful_modules import checks, cooldowns, problems_module
+from helpful_modules.base_on_error import get_git_revision_hash
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_buttons import *
 from helpful_modules.custom_embeds import SimpleEmbed
 from helpful_modules.save_files import FileSaver
-from helpful_modules.base_on_error import get_git_revision_hash
 
 from .helper_cog import HelperCog
 
@@ -307,8 +307,6 @@ class MiscCommandsCog(HelperCog):
         )
         return
 
-
-
     @commands.slash_command(
         name="submit_a_request",
         description="Submit a request. I will know!",
@@ -500,13 +498,15 @@ class MiscCommandsCog(HelperCog):
                 name="guild_id",
                 description="The ID of the guild to denylist",
                 type=OptionType.string,
-                required=True
+                required=True,
             )
-        ]
+        ],
     )
     @checks.trusted_users_only()
     @checks.is_not_denylisted()
-    async def guild_denylist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
+    async def guild_denylist(
+        self, inter: disnake.ApplicationCommandInteraction, guild_id: str
+    ):
         """
         /guild_denylist [guild_id: int]
         denylist a guild from TheDiscordMathProblemBot. Only trusted users can run this command.
@@ -515,31 +515,41 @@ class MiscCommandsCog(HelperCog):
         print(issubclass(type(self.cache), problems_module.cache.GuildDataRelatedCache))
         # Check if the user is denylisted from using this command
         if await self.bot.is_user_denylisted(inter.author):
-            await inter.send(embed=SimpleEmbed(
-                title="Insufficient permissions",
-                description="You cannot add guilds to the denylist without proper permissions.",
-                color=disnake.Color.red()
-            ))
+            await inter.send(
+                embed=SimpleEmbed(
+                    title="Insufficient permissions",
+                    description="You cannot add guilds to the denylist without proper permissions.",
+                    color=disnake.Color.red(),
+                )
+            )
             return
 
         # Check if the user is trusted to perform this action
         if not await self.bot.is_trusted(inter.author):
-            await inter.send(embed=SimpleEmbed(
-                title="Insufficient permissions",
-                description="You cannot add guilds to the denylist without proper permissions.",
-                color=disnake.Color.red()
-            ))
+            await inter.send(
+                embed=SimpleEmbed(
+                    title="Insufficient permissions",
+                    description="You cannot add guilds to the denylist without proper permissions.",
+                    color=disnake.Color.red(),
+                )
+            )
             return
         try:
             guild_id = int(guild_id)
         except ValueError:
-            await inter.send(embed=ErrorEmbed("The guild ID you provided isn't actually an integer"))
+            await inter.send(
+                embed=ErrorEmbed("The guild ID you provided isn't actually an integer")
+            )
         # Fetch current data of the guild
         old_data = await self.bot.cache.get_guild_data(guild_id=guild_id)
 
         # Check if the guild is already denylisted
         if old_data.denylisted:
-            await inter.send(embed=ErrorEmbed("The guild you're trying to denylist is already on the denylist"))
+            await inter.send(
+                embed=ErrorEmbed(
+                    "The guild you're trying to denylist is already on the denylist"
+                )
+            )
             return
 
         # Perform the denylist operation
@@ -550,13 +560,17 @@ class MiscCommandsCog(HelperCog):
 
         # Notify the user that the guild has been successfully denylisted
         await inter.send(
-            embed=SuccessEmbed(f"The guild with ID {guild_id} has successfully been added to the denylist"))
-
+            embed=SuccessEmbed(
+                f"The guild with ID {guild_id} has successfully been added to the denylist"
+            )
+        )
 
         # Notify the bot's owner or admins about the action
         just_denylisted_guild = self.bot.get_guild(guild_id)
         if just_denylisted_guild is not None:
-            await self.bot.notify_guild_on_guild_leave_because_guild_denylist(just_denylisted_guild)
+            await self.bot.notify_guild_on_guild_leave_because_guild_denylist(
+                just_denylisted_guild
+            )
 
     @commands.slash_command(
         name="guild_undenylist",
@@ -566,45 +580,56 @@ class MiscCommandsCog(HelperCog):
                 name="guild_id",
                 description="The ID of the guild to un-denylist",
                 type=OptionType.string,
-                required=True
+                required=True,
             )
-        ]
+        ],
     )
     @checks.trusted_users_only()
     @checks.is_not_denylisted()
-    async def guild_undenylist(self, inter: disnake.ApplicationCommandInteraction, guild_id: str):
+    async def guild_undenylist(
+        self, inter: disnake.ApplicationCommandInteraction, guild_id: str
+    ):
         """
         /guild_undenylist [guild_id: int]
         Remove a guild from the denylist of this bot. Only trusted users can run this command.
         """
         # Check if the user is denylisted from using this command
         if await self.bot.is_user_denylisted(inter.author):
-            await inter.send(embed=SimpleEmbed(
-                title="Insufficient permissions",
-                description="You cannot remove guilds from the denylist without proper permissions.",
-                color=disnake.Color.red()
-            ))
+            await inter.send(
+                embed=SimpleEmbed(
+                    title="Insufficient permissions",
+                    description="You cannot remove guilds from the denylist without proper permissions.",
+                    color=disnake.Color.red(),
+                )
+            )
             return
 
         # Check if the user is trusted to perform this action
         if not await self.bot.is_trusted(inter.author):
-            await inter.send(embed=SimpleEmbed(
-                title="Insufficient permissions",
-                description="You cannot remove guilds from the denylist without proper permissions.",
-                color=disnake.Color.red()
-            ))
+            await inter.send(
+                embed=SimpleEmbed(
+                    title="Insufficient permissions",
+                    description="You cannot remove guilds from the denylist without proper permissions.",
+                    color=disnake.Color.red(),
+                )
+            )
             return
         try:
             guild_id = int(guild_id)
         except ValueError:
-            await inter.send(embed=ErrorEmbed("The guild ID you provided isn't actually an integer"))
+            await inter.send(
+                embed=ErrorEmbed("The guild ID you provided isn't actually an integer")
+            )
         # Fetch current data of the guild
         old_data = await self.bot.cache.get_guild_data(guild_id=guild_id)
 
         # Check if the guild is not already denylisted
         if not old_data.denylisted:
             await inter.send(
-                embed=ErrorEmbed("The guild you're trying to remove from the denylist is not on the denylist!"))
+                embed=ErrorEmbed(
+                    "The guild you're trying to remove from the denylist is not on the denylist!"
+                )
+            )
             return
 
         # Perform the undenylist operation
@@ -615,4 +640,7 @@ class MiscCommandsCog(HelperCog):
 
         # Notify the user that the guild has been successfully undenylisted
         await inter.send(
-            embed=SuccessEmbed(f"The guild with ID {guild_id} has successfully been removed from the denylist"))
+            embed=SuccessEmbed(
+                f"The guild with ID {guild_id} has successfully been removed from the denylist"
+            )
+        )

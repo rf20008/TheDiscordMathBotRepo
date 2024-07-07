@@ -5,8 +5,8 @@ from disnake import abc, ui
 from disnake.ext import commands
 
 from helpful_modules import custom_bot, problems_module
-from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.base_on_error import base_on_error
+from helpful_modules.custom_bot import TheDiscordMathProblemBot
 
 
 class GuildDataDeletionView(ui.View):
@@ -42,15 +42,21 @@ class GuildDataDeletionView(ui.View):
         """Check that only guild owners can run this command in guilds that they own
         This cannot be static."""
         if inter.guild_id is None or inter.guild is None:
-            raise commands.CheckFailure("This is not in a guild. You can only get GuildDataDeletionViews in a guild.")
+            raise commands.CheckFailure(
+                "This is not in a guild. You can only get GuildDataDeletionViews in a guild."
+            )
 
-        return inter.guild.owner_id == inter.author.id # return whether they own the guild
+        return (
+            inter.guild.owner_id == inter.author.id
+        )  # return whether they own the guild
 
     @ui.button(label="Delete the data! This is irreversible")
     async def delete_data(self, _: disnake.Button, inter: disnake.MessageInteraction):
         """Actually delete data"""
         if not await self.interaction_check(inter):
-            return await inter.send("You don't have permission to delete all the guild's data")
+            return await inter.send(
+                "You don't have permission to delete all the guild's data"
+            )
         if inter.guild_id is None:
             raise RuntimeError("This should not be running globally")
         await self.bot.cache.delete_all_by_guild_id(inter.guild_id)

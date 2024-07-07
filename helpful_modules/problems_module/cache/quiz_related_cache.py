@@ -220,9 +220,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                         "There are too many quiz sessions with this special id"
                     )
                 else:
-                    return QuizSolvingSession.from_sqlite_dict(
-                        potential_sessions[0]
-                    )
+                    return QuizSolvingSession.from_sqlite_dict(potential_sessions[0])
         else:
             with mysql_connection(
                 host=self.mysql_db_ip,
@@ -248,8 +246,6 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     return QuizSolvingSession.from_mysql_dict(
                         potential_sessions[0], cache=self
                     )
-
-
 
     async def add_quiz(self, quiz: Quiz) -> Quiz:
         """Add a quiz"""
@@ -738,10 +734,10 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 await conn.commit()
         else:
             with mysql_connection(
-                    host=self.mysql_db_ip,
-                    password=self.mysql_password,
-                    user=self.mysql_username,
-                    database=self.mysql_db_name,
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
             ) as connection:
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(

@@ -16,6 +16,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
+import asyncio
+import copy
+import io
+import json
 import typing
 from typing import *
 
@@ -23,14 +28,12 @@ import disnake
 from disnake.ext import commands
 
 from helpful_modules import checks, custom_bot, problems_module
-from helpful_modules.custom_buttons import ConfirmationButton, BasicButton, MyView
-from helpful_modules.custom_embeds import SimpleEmbed, SuccessEmbed, ErrorEmbed
+from helpful_modules.custom_buttons import BasicButton, ConfirmationButton, MyView
+from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
 from helpful_modules.threads_or_useful_funcs import file_version_of_item
+
 from .helper_cog import HelperCog
-import io
-import copy
-import json
-import asyncio
+
 PAGE_SIZE = 3000
 
 
@@ -208,7 +211,7 @@ class DataModificationCog(HelperCog):
             view=view,
         )
         return view
-    
+
     async def _get_json_data_by_user(
         self, author: Union[disnake.User, disnake.Member]
     ) -> typing.Dict[str, typing.Any]:
@@ -233,7 +236,9 @@ class DataModificationCog(HelperCog):
         is_denylisted = user_data.denylisted
 
         new_data = {
-            "Problems": [problem.to_dict(show_answer=True) for problem in raw_data["problems"]],
+            "Problems": [
+                problem.to_dict(show_answer=True) for problem in raw_data["problems"]
+            ],
             "Quiz Problems": [
                 quiz_problem.to_dict() for quiz_problem in raw_data["quiz_problems"]
             ],
@@ -266,7 +271,6 @@ class DataModificationCog(HelperCog):
             ],
         }
         return new_data
-
 
     @disnake.ext.commands.cooldown(1, 100, disnake.ext.commands.BucketType.user)
     @user_data.sub_command(

@@ -31,14 +31,15 @@ import aiosqlite
 import disnake
 
 from helpful_modules.dict_factory import dict_factory
-from ..parse_problem import convert_dict_to_problem, convert_row_to_problem
 
 from ..base_problem import BaseProblem
 from ..errors import *
 from ..mysql_connector_with_stmt import mysql_connection
+from ..parse_problem import convert_dict_to_problem, convert_row_to_problem
 from ..quizzes import QuizProblem
 
 log = logging.getLogger(__name__)
+
 
 # TODO: make a function that takes into account the 3 types of problems, and make a function that given a problem dictionary, converts the problem to the right type
 class ProblemsRelatedCache:
@@ -104,10 +105,17 @@ class ProblemsRelatedCache:
         self.cached_quizzes = []
         self.guild_problems = dict()
         self._guilds: typing.List[disnake.Guild] = []
-        #asyncio.run(self.update_cache())
+        # asyncio.run(self.update_cache())
         self.cached_sessions = {}
 
-    async def bgsave(self, schedule: bool = True, path: str = None, wait: bool = False, raise_on_error: bool = False, replace: bool = False):
+    async def bgsave(
+        self,
+        schedule: bool = True,
+        path: str = None,
+        wait: bool = False,
+        raise_on_error: bool = False,
+        replace: bool = False,
+    ):
         """
         Perform a background save operation.
 
@@ -255,9 +263,10 @@ class ProblemsRelatedCache:
                             "Uh oh... 2 problems exist with the same guild id and the same problem id"
                         )
                     return convert_row_to_problem(cache=copy(self), row=rows[0])
+
     async def cache_all_problems(self):
         self.guild_ids = set()
-        self.guild_problems={}
+        self.guild_problems = {}
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
                 conn.row_factory = dict_factory
@@ -287,17 +296,17 @@ class ProblemsRelatedCache:
             return
 
         with mysql_connection(
-                host=self.mysql_db_ip,
-                password=self.mysql_password,
-                user=self.mysql_username,
-                database=self.mysql_db_name,
+            host=self.mysql_db_ip,
+            password=self.mysql_password,
+            user=self.mysql_username,
+            database=self.mysql_db_name,
         ) as connection:
             cursor = connection.cursor(dictionaries=True)
             cursor.execute("SELECT * FROM problems")  # Get all problems
             for row in cursor.fetchall():
                 problem = convert_row_to_problem(row, cache=None)
                 if (
-                        problem.guild_id not in self.guild_ids
+                    problem.guild_id not in self.guild_ids
                 ):  # Similar logic: Make sure it's there!
                     self.guild_ids.add(problem.guild_id)
                     self.guild_problems[problem.guild_id] = (
@@ -313,16 +322,16 @@ class ProblemsRelatedCache:
     @property
     def global_problems(self):
         return self.guild_problems.get(None, {})
+
     @global_problems.setter
     def global_problems(self, value):
         self.guild_problems[None] = value
-    async def get_all_problems(
-        self,
-        replace_cache: bool = False
-    ):
+
+    async def get_all_problems(self, replace_cache: bool = False):
         if replace_cache:
             await self.cache_all_problems()
         return self.guild_problems
+
     async def get_guild_problems(
         self, guild: disnake.Guild, replace_cache: bool = False
     ) -> typing.Dict[int, BaseProblem]:
@@ -356,7 +365,6 @@ class ProblemsRelatedCache:
         replace_cache: bool = False,
         args: typing.Optional[typing.Union[tuple, list]] = None,
         kwargs: Optional[dict] = None,
-
     ) -> typing.List[BaseProblem]:
         """Returns the list of all problems that match the given function. args and kwargs are extra parameters to give to the function"""
         if args is None:
@@ -382,7 +390,9 @@ class ProblemsRelatedCache:
         problems_that_meet_the_criteria.extend(guild_problems_that_meet_the_criteria)
         return problems_that_meet_the_criteria
 
-    async def get_global_problems(self: "MathProblemCache", replace_cache: bool = False) -> typing.List[BaseProblem]:
+    async def get_global_problems(
+        self: "MathProblemCache", replace_cache: bool = False
+    ) -> typing.List[BaseProblem]:
         """Returns global problems"""
         if replace_cache:
             await self.cache_all_problems()
@@ -425,7 +435,7 @@ class ProblemsRelatedCache:
                 raise MathProblemsModuleException(
                     "Problem already exists! Use update_problem instead"
                 )
-        except (ProblemNotFound):
+        except ProblemNotFound:
             # an exception raised when the problem does not exist! That means we're good to add the problem!
             pass
 
@@ -648,7 +658,9 @@ class ProblemsRelatedCache:
                     conn.row_factory = dict_factory  # Make sure the row_factory can be set to dict_factory
                 except BaseException as exc:
                     # Not writeable?
-                    raise SQLException("The row factory can't be set to dict_factory") from exc
+                    raise SQLException(
+                        "The row factory can't be set to dict_factory"
+                    ) from exc
                 cursor = await conn.cursor()
                 # We will raise if the problem already exists!
                 await cursor.execute(
@@ -692,11 +704,9 @@ class ProblemsRelatedCache:
                         int(new.author),
                         str(new.get_extra_stuff()),
                         problem_id,
-
                     ),
                 )
                 connection.commit()
-
 
     @property
     def max_question_length(self):
@@ -737,10 +747,10 @@ class ProblemsRelatedCache:
                 await conn.commit()
         else:
             with mysql_connection(
-                    host=self.mysql_db_ip,
-                    password=self.mysql_password,
-                    user=self.mysql_username,
-                    database=self.mysql_db_name,
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
             ) as connection:
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
@@ -759,3 +769,30 @@ class ProblemsRelatedCache:
                     """
                 )
                 connection.commit()
+
+    async def run_sql(
+        self, sql: str, placeholders: typing.Optional[typing.List[Any]] = None
+    ) -> dict:
+        """Run arbitrary SQL. Only used in /sql"""
+        assert isinstance(sql, str)
+        assert isinstance(placeholders, list) or placeholders is None
+        if placeholders is None:
+            placeholders = []
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db_name) as conn:
+                conn.row_factory = dict_factory
+                cursor = await conn.cursor()
+                await cursor.execute(sql, placeholders)
+                await conn.commit()
+                return await cursor.fetchall()
+        else:
+            with mysql_connection(
+                host=self.mysql_db_ip,
+                password=self.mysql_password,
+                user=self.mysql_username,
+                database=self.mysql_db_name,
+            ) as connection:
+                cursor = connection.cursor(dictionaries=True)
+                cursor.execute(sql, placeholders)
+                connection.commit()
+                return cursor.fetchall()

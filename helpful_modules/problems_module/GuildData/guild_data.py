@@ -13,8 +13,6 @@ class GuildData:
     can_create_quizzes_check: CheckForUserPassage
     mods_check: CheckForUserPassage
 
-
-
     def __init__(
         self,
         guild_id: int | None,
@@ -90,7 +88,7 @@ class GuildData:
                     f"I was able to parse {can_create_quizzes_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
                 ) from exc
         else:
-            self.can_create_problems_check=can_create_problems_check
+            self.can_create_problems_check = can_create_problems_check
 
         if isinstance(mods_check, str):
             try:
@@ -104,7 +102,7 @@ class GuildData:
                     f"I was able to parse {mods_check} into a dictionary, but I couldn't find the key called {str(exc)}!"
                 ) from exc
         else:
-            self.mods_check=mods_check
+            self.mods_check = mods_check
 
     @classmethod
     def default(cls, guild_id: int):
@@ -115,22 +113,22 @@ class GuildData:
                 denylisted_users=[],
                 allowlisted_users=[],
                 roles_allowed=[guild_id],
-                permissions_needed=[]
+                permissions_needed=[],
             ),
             can_create_problems_check=CheckForUserPassage(
                 denylisted_users=[],
                 allowlisted_users=[],
                 roles_allowed=[guild_id],
-                permissions_needed=["administrator"]
+                permissions_needed=["administrator"],
             ),
             mods_check=CheckForUserPassage(
                 denylisted_users=[],
                 allowlisted_users=[],
                 roles_allowed=[],
-                permissions_needed=["administrator"]
-            )
-
+                permissions_needed=["administrator"],
+            ),
         )
+
     @classmethod
     def from_dict(cls, data: dict) -> "GuildData":
         return cls(

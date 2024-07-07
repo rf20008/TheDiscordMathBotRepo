@@ -1,5 +1,6 @@
-from tests.utils import generate_many_randoms
 import unittest
+
+from tests.utils import generate_many_randoms
 
 
 class TestGenerateManyRandoms(unittest.TestCase):

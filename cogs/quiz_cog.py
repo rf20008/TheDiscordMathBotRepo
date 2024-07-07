@@ -363,7 +363,7 @@ JSON error: {e}"""
         question: str,
         answer: typing.Optional[str] = None,
         is_written: bool = False,
-        points: typing.Optional[float] = 0.5
+        points: typing.Optional[float] = 0.5,
         # ...
     ) -> None:
         """/quiz edit add_problem (quiz_id: int) (problem_to_insert_before: int) (question: str) [answer: str = None], [is_written: bool = False] [points: float = 0.5]
@@ -561,12 +561,12 @@ JSON error: {e}"""
                 # The question if there's a new question, otherwise the original question
                 answers=[new_answer] if new_answer is not None else problem.answer,
                 # The new answer (which replaces all the other answers) if there is a new answer. Otherwise, use the original answer!
-                max_score=points_worth
-                if points_worth is not None
-                else problem.max_score,  # Similar logic
-                is_written=is_written
-                if is_written is not None
-                else is_written,  # Similarly here
+                max_score=(
+                    points_worth if points_worth is not None else problem.max_score
+                ),  # Similar logic
+                is_written=(
+                    is_written if is_written is not None else is_written
+                ),  # Similarly here
             )  # Edit the problem
             return await inter.send("You have successfully modified the problem!")
 

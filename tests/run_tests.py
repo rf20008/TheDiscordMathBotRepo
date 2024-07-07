@@ -29,8 +29,11 @@ def discover_and_import_tests(start_dir="."):
                     # Check if the attribute is a class and a subclass of unittest.TestCase
                     if isinstance(obj, type) and issubclass(obj, unittest.TestCase):
                         # Add the test class to the suite
-                        suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(obj))
+                        suite.addTest(
+                            unittest.defaultTestLoader.loadTestsFromTestCase(obj)
+                        )
     return suite
+
 
 if __name__ == "__main__":
     # Run the dynamically discovered test suite

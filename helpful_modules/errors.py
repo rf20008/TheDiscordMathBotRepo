@@ -16,8 +16,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
+
 class NotInSupportServerWarning(Warning):
     """A warning when the bot's not in the support server"""
+
     pass
 
 

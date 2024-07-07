@@ -16,17 +16,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-import asyncio
 
-import disnake
-#from .my_modals import MyModal
-from .custom_embeds import ErrorEmbed
+import asyncio
 import os
 from typing import List
+
+import disnake
+
+# from .my_modals import MyModal
+from .custom_embeds import ErrorEmbed
+
+
 class PaginatorPageViewModal(disnake.ui.Modal):
     paginator: "PaginatorView"
     page_num_custom_id: str
     original_inter: disnake.Interaction
+
     def __init__(self, paginator, page_num_custom_id, original_inter, *args, **kwargs):
         self.paginator = paginator
         self.page_num_custom_id = page_num_custom_id
@@ -41,9 +46,8 @@ class PaginatorPageViewModal(disnake.ui.Modal):
             ephemeral=True,
         )
         raise asyncio.TimeoutError
-    async def callback(
-            self: "PaginatorPageViewModal", inter: disnake.ModalInteraction
-    ):
+
+    async def callback(self: "PaginatorPageViewModal", inter: disnake.ModalInteraction):
         page_num = inter.text_values.get(self.page_num_custom_id, None)
         if page_num is None:
             await inter.send(
@@ -68,48 +72,87 @@ class PaginatorPageViewModal(disnake.ui.Modal):
             return
         # yay! we can now go to that page
         self.paginator.page_num = (
-                page_num - 1
+            page_num - 1
         )  # remember, lists are 0-indexed, but they will enter 1-indexed pages
-        #await inter.send("Hello!")
+        # await inter.send("Hello!")
         await inter.edit_original_message(
             embed=self.paginator.create_embed(), view=self.paginator
         )
+
+
 DEFAULT_BREAKING_CHARS = " .!?;,:;-\n\t"
+
+
 class PaginatorView(disnake.ui.View):
     user_id: int
     page_num: int
     pages: list[str]
     special_color: disnake.Color
 
-    def __init__(self, user_id: int, pages: list[str], special_color: disnake.Color = None, *args, **kwargs):
+    def __init__(
+        self,
+        user_id: int,
+        pages: list[str],
+        special_color: disnake.Color = None,
+        *args,
+        **kwargs,
+    ):
         if special_color is None:
-            special_color = disnake.Color.from_rgb(50,50,255)
+            special_color = disnake.Color.from_rgb(50, 50, 255)
         self.special_color = special_color
         super().__init__(*args, **kwargs)
         self.user_id = user_id
         self.pages = pages
         self.page_num = 0
+
     def add_page(self, page_content: str):
         if not isinstance(page_content, str):
-            raise TypeError(f"page_content is not a str but an instance of {page_content.__class__.__name__}")
+            raise TypeError(
+                f"page_content is not a str but an instance of {page_content.__class__.__name__}"
+            )
         self.pages.append(page_content)
+
     def add_pages(self, pages: list[str]):
         if not isinstance(pages, list):
-            raise TypeError(f'pages is not a list, but an instance of {pages.__class__.__name__}')
+            raise TypeError(
+                f"pages is not a list, but an instance of {pages.__class__.__name__}"
+            )
         page_num = 0
         for page in pages:
 
             if not isinstance(page, str):
-                raise TypeError(f"page#{page_num} is not a str, but an instance of {page.__class__.__name__}")
+                raise TypeError(
+                    f"page#{page_num} is not a str, but an instance of {page.__class__.__name__}"
+                )
             page_num += 1
         self.pages.extend(pages)
+
     @classmethod
-    def paginate(cls, user_id: int, text: str, max_page_length: int = 1500, breaking_chars: str = None, special_color: disnake.Color | None = None, **kwargs) -> 'PaginatorView':
-        pages = cls.break_into_pages(text, max_page_length, breaking_chars=(breaking_chars if breaking_chars else DEFAULT_BREAKING_CHARS))
+    def paginate(
+        cls,
+        user_id: int,
+        text: str,
+        max_page_length: int = 1500,
+        breaking_chars: str = None,
+        special_color: disnake.Color | None = None,
+        **kwargs,
+    ) -> "PaginatorView":
+        pages = cls.break_into_pages(
+            text,
+            max_page_length,
+            breaking_chars=(
+                breaking_chars if breaking_chars else DEFAULT_BREAKING_CHARS
+            ),
+        )
         return cls(user_id, pages, special_color)
 
     @staticmethod
-    def break_into_pages(text: str, max_page_length: int = 1500, *, breaking_chars: str = DEFAULT_BREAKING_CHARS) -> List[str]:
+    def break_into_pages(
+        text: str,
+        max_page_length: int = 1500,
+        *,
+        breaking_chars: str = DEFAULT_BREAKING_CHARS,
+    ) -> List[str]:
         """
         Breaks a long text into smaller pages suitable for pagination.
 
@@ -158,7 +201,9 @@ class PaginatorView(disnake.ui.View):
                     cur_length = 0
 
                 for i in range(0, len(cur_token), max_page_length):
-                    pages.append(cur_token[i:i + max_page_length])  # let's debug this (a token might not snugly fit)
+                    pages.append(
+                        cur_token[i : i + max_page_length]
+                    )  # let's debug this (a token might not snugly fit)
             else:
                 # If adding the current token exceeds the max page length, start a new page
                 if cur_length + len(cur_token) > max_page_length:
@@ -181,7 +226,9 @@ class PaginatorView(disnake.ui.View):
 
     @disnake.ui.button(emoji="⬅")
     async def prev_page_button(
-        self: "PaginatorView", button: disnake.ui.Button, inter: disnake.MessageInteraction
+        self: "PaginatorView",
+        button: disnake.ui.Button,
+        inter: disnake.MessageInteraction,
     ) -> None:
         await inter.response.defer()
         if inter.author.id != self.user_id:
@@ -196,7 +243,7 @@ class PaginatorView(disnake.ui.View):
 
     @disnake.ui.button(emoji="➡️")
     async def next_page_button(
-            self: "PaginatorView", _: disnake.ui.Button, inter: disnake.MessageInteraction
+        self: "PaginatorView", _: disnake.ui.Button, inter: disnake.MessageInteraction
     ) -> None:
         await inter.response.defer()
         if inter.author.id != self.user_id:
@@ -236,9 +283,6 @@ class PaginatorView(disnake.ui.View):
         )
         page_num_custom_id = component.custom_id
 
-
-
-
         modal: disnake.ui.Modal = PaginatorPageViewModal(
             paginator=self,
             page_num_custom_id=page_num_custom_id,
@@ -247,12 +291,12 @@ class PaginatorView(disnake.ui.View):
             components=[component],
             timeout=15.0,
         )
-        #modal.on_timeout = on_timeout
-        #modal.callback = callback
+        # modal.on_timeout = on_timeout
+        # modal.callback = callback
 
         try:
             await inter.response.send_modal(modal)
-            return modal # this helps me test because without this i can't test
+            return modal  # this helps me test because without this i can't test
         except asyncio.TimeoutError:
             await inter.followup.send(
                 embed=ErrorEmbed(

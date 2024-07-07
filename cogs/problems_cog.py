@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
 import threading
 import typing
 from asyncio import run
@@ -27,9 +28,10 @@ from disnake.ext import commands
 from helpful_modules import checks, problems_module
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import ErrorEmbed, SimpleEmbed, SuccessEmbed
+from helpful_modules.paginator_view import PaginatorView
 from helpful_modules.problems_module import *
 from helpful_modules.threads_or_useful_funcs import generate_new_id
-from helpful_modules.paginator_view import PaginatorView
+
 from .helper_cog import HelperCog
 
 # TODO: implement /edit_problem remove_answer (but only for authors. Warn the user and confirm using buttons if they are removing the last answer of a problem)
@@ -286,13 +288,18 @@ class ProblemsCog(HelperCog):
 
             if raw:
                 await inter.send(
-                    embed=SuccessEmbed(str(problem.to_dict(show_answer=True))), ephemeral=True
+                    embed=SuccessEmbed(str(problem.to_dict(show_answer=True))),
+                    ephemeral=True,
                 )
                 return
-            await inter.send(embed=SuccessEmbed(problem.__str__(include_answer=True)), ephemeral=True)
+            await inter.send(
+                embed=SuccessEmbed(problem.__str__(include_answer=True)), ephemeral=True
+            )
         if raw:
             await inter.send(embed=SuccessEmbed(problem.to_dict(show_answer=False)))
-        await inter.send(embed=SuccessEmbed(problem.__str__(include_answer=False)), ephemeral=True)
+        await inter.send(
+            embed=SuccessEmbed(problem.__str__(include_answer=False)), ephemeral=True
+        )
 
     @commands.cooldown(1, 2.5, commands.BucketType.user)
     @commands.slash_command(
@@ -342,6 +349,7 @@ class ProblemsCog(HelperCog):
             global_problems = global_problems.values()
         thing_to_write = "\n".join([str(problem.id) for problem in global_problems])
         await inter.send(embed=SuccessEmbed(thing_to_write))
+
     @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.slash_command(
         name="list_all_problems",
@@ -379,7 +387,9 @@ class ProblemsCog(HelperCog):
         List all problems.
         If show_solved_problems is set to true,"""
         if inter.guild is None and show_guild_problems:
-            await inter.send(embed=ErrorEmbed("You must be in a guild to see guild problems!"))
+            await inter.send(
+                embed=ErrorEmbed("You must be in a guild to see guild problems!")
+            )
             return
         if show_only_guild_problems and not show_guild_problems:
             await inter.send(
@@ -391,11 +401,14 @@ class ProblemsCog(HelperCog):
             )
             return
 
-
         guilds_to_append_from = []
         if show_guild_problems:
             if inter.guild is None:
-                await inter.send(embed=ErrorEmbed("You can not show guild problems if you are in an embed"))
+                await inter.send(
+                    embed=ErrorEmbed(
+                        "You can not show guild problems if you are in an embed"
+                    )
+                )
             guilds_to_append_from.append(inter.guild_id)
         if not show_only_guild_problems:
             guilds_to_append_from.append(None)
@@ -405,8 +418,10 @@ class ProblemsCog(HelperCog):
         pages = []
         await self.cache.get_all_problems(replace_cache=True)
         for guild_id in guilds_to_append_from:
-            #await self.cache.cache_all_problems()
-            for problem in (await self.cache.get_problems_by_guild_id(guild_id, replace_cache=False)).values():
+            # await self.cache.cache_all_problems()
+            for problem in (
+                await self.cache.get_problems_by_guild_id(guild_id, replace_cache=False)
+            ).values():
                 # the user solved the problem, so don't show it
                 if (not show_solved_problems) and problem.is_solver(inter.author):
                     continue
@@ -414,8 +429,8 @@ class ProblemsCog(HelperCog):
         if len(pages) == 0:
             await inter.send(embed=ErrorEmbed("No problems match the filter..."))
             return
-        view =PaginatorView(user_id = inter.author.id, pages=pages)
-        await inter.send(view=view, embed = view.create_embed())
+        view = PaginatorView(user_id=inter.author.id, pages=pages)
+        await inter.send(view=view, embed=view.create_embed())
 
     @commands.slash_command(
         name="delallbotproblems",
@@ -792,7 +807,8 @@ class ProblemsCog(HelperCog):
         try:
             guild_id = inter.guild_id if is_guild_problem else None
             problem = await self.bot.cache.get_problem(
-                guild_id, problem_id=int(problem_id),
+                guild_id,
+                problem_id=int(problem_id),
             )
         except problems_module.ProblemNotFound:
             await inter.send(  # The problem doesn't exist
@@ -810,8 +826,11 @@ class ProblemsCog(HelperCog):
             return  # Exit the command
 
         # did they already vote? we have to prevent them from voting again
-        if inter.author.id in problem.voters: #
-            await inter.send(embed=ErrorEmbed("You already voted, and you cannot vote again"), ephemeral=True)
+        if inter.author.id in problem.voters:  #
+            await inter.send(
+                embed=ErrorEmbed("You already voted, and you cannot vote again"),
+                ephemeral=True,
+            )
             return
 
         problem.voters.append(inter.author.id)

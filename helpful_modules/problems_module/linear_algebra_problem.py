@@ -18,10 +18,13 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 import numbers
-from .errors import MathProblemsModuleException, LinearAlgebraUserInputErrorException
-import mpmath
-from .base_problem import BaseProblem
 from copy import deepcopy
+
+import mpmath
+
+from .base_problem import BaseProblem
+from .errors import LinearAlgebraUserInputErrorException, MathProblemsModuleException
+
 BOT_ID = 845751152901750824
 TOLERANCE = 1e-3
 FORMAT_HELP = """To answer this question, give your answer in the form var1 var2 var3 ... varN. You must put the 
@@ -188,7 +191,12 @@ class LinearAlgebraProblem(BaseProblem):
         Returns:
             dict: A dictionary containing extra information.
         """
-        return {"coeffs": self.coeffs, "equal_to": self.equal_to, "type": "LinearAlgebraProblem"}
+        return {
+            "coeffs": self.coeffs,
+            "equal_to": self.equal_to,
+            "type": "LinearAlgebraProblem",
+        }
+
     def __deepcopy__(self, memodict: dict):
         return LinearAlgebraProblem(
             question=deepcopy(self.question),

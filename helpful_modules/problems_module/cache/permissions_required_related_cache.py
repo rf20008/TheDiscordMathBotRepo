@@ -65,4 +65,6 @@ class PermissionsRequiredRelatedCache(UserDataRelatedCache):
     async def initialize_sql_table(self) -> None:
         """Initialize file dictionary from config.json."""
         await super().initialize_sql_table()
+        if not hasattr(self, "_async_file_dict"):
+            self._async_file_dict = AsyncFileDict("config.json")
         await self._async_file_dict.read_from_file()

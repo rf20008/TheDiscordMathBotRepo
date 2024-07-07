@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+import logging
 # Written by @rf20008
 # Licensed under GPLv3 (or later)
 # Feel free to contribute! :-)
@@ -28,7 +29,7 @@ import traceback
 import warnings
 from asyncio import sleep as asyncio_sleep
 from copy import copy
-from sys import argv, exc_info, exit, stdout, stderr
+from sys import argv, exc_info, exit, stderr, stdout
 from time import sleep
 
 # Imports - 3rd party
@@ -43,12 +44,13 @@ from helpful_modules import (
     save_files,
     the_documentation_file_loader,
 )
+from helpful_modules._error_logging import log_error, log_error_to_file
+from helpful_modules.base_on_error import base_on_error
 from helpful_modules.constants_loader import *
-from helpful_modules.custom_bot import TheDiscordMathProblemBot, SUPPORT_SERVER_GUILD_ID
+from helpful_modules.custom_bot import SUPPORT_SERVER_GUILD_ID, TheDiscordMathProblemBot
 from helpful_modules.StatsTrack import StreamWrapperStorer
 from helpful_modules.threads_or_useful_funcs import *
-from helpful_modules.base_on_error import base_on_error
-from helpful_modules._error_logging import log_error, log_error_to_file
+
 # Imports - My own files
 
 
@@ -71,7 +73,9 @@ if DISCORD_TOKEN is None:
     raise RuntimeError("Cannot start bot; no discord_token environment variable")
 
 # TODO: use logging + changelog.json + debugging :-)
-warnings.filterwarnings(action="always", category=problems_module.errors.PMDeprecationWarning)
+warnings.filterwarnings(
+    action="always", category=problems_module.errors.PMDeprecationWarning
+)
 should_we_connect = True
 if len(argv) >= 3:
     if argv[2] == "DO_NOT_CONNECT":
@@ -92,7 +96,8 @@ disnake_log = logging.getLogger("disnake")
 log.addHandler(TRFHB)
 disnake_log.addHandler(TRFHD)
 log.setLevel(-1)
-disnake_log.setLevel(logging.INFO)
+disnake_log.setLevel(logging.DEBUG)
+log.setLevel(logging.DEBUG)
 
 
 def the_daemon_file_saver():
@@ -196,10 +201,14 @@ async def on_ready(bot: TheDiscordMathProblemBot):
     try:
         await bot.register_appeal_views()
     except BaseExceptionGroup as begroup:
-        bot.log.exception("Exceptions happened while trying to register appeal views:", begroup)
+        bot.log.exception(
+            "Exceptions happened while trying to register appeal views:", begroup
+        )
         await log_error(begroup)
     except Exception as e:
-        bot.log.exception("The following exception happened while trying to register appeal views:", e)
+        bot.log.exception(
+            "The following exception happened while trying to register appeal views:", e
+        )
         await log_error(e)
 
 
@@ -219,7 +228,7 @@ bot = TheDiscordMathProblemBot(
     trusted_users=copy(trusted_users),
     tasks={},
     on_ready_func=on_ready,
-    loop=loop
+    loop=loop,
     # activity = nextcord.CustomActivity(name="Making sure that the bot works!", emoji = "🙂") # This didn't work anyway, will set the activity in on_connect
 )
 bot._sync_commands_debug = True
@@ -263,11 +272,13 @@ bot.add_cog(ProblemsCog(bot))
 bot.add_cog(QuizCog(bot))
 bot.add_cog(MiscCommandsCog(bot))
 bot.add_cog(HelpCog(bot))
+bot.load_extension("cogs.quiz_ext")
 bot.CONSTANTS = bot_constants
 bot.add_check(checks.is_not_denylisted())
 bot.add_cog(InterestingComputationCog(bot))
 bot.add_cog(DataModificationCog(bot))
 bot.add_cog(ProblemGenerationCog(bot))
+bot.add_cog(VerificationCog(bot))
 bot.add_check(checks.not_is_closing())
 # Events
 
@@ -330,13 +341,13 @@ async def on_slash_command_error(inter, error):
         print(traceback.format_exception(e))
         raise e
 
-    #print(dict_args)
+    # print(dict_args)
     try:
         await inter.send(**dict_args)
         return
     except BaseException as be:
         await log_error(be)
-        #os._exit(1)
+        # os._exit(1)
     try:
         if inter.response.is_done():
             await inter.followup.send(**dict_args)
