@@ -20,7 +20,8 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 # The test_cogs folder! This contains all my test_cogs
 """A folder containing all the test_cogs!"""
 from . import *
-from .appeals_cog import AppealsCog
+from .appeals_ext import *
+from .appeals_ext.appeals_cog import AppealsCog
 from .config_cog import GuildConfigCog
 from .data_modification_cog import DataModificationCog
 from .debug_cog import DebugCog

@@ -19,10 +19,13 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 
 import asyncio
 import os
+import traceback
 from typing import List
 
 import disnake
+from disnake import ModalInteraction
 
+from ._error_logging import log_error
 # from .my_modals import MyModal
 from .custom_embeds import ErrorEmbed
 
@@ -37,6 +40,12 @@ class PaginatorPageViewModal(disnake.ui.Modal):
         self.page_num_custom_id = page_num_custom_id
         self.original_inter = original_inter
         super().__init__(*args, **kwargs)
+
+    async def on_error(self, error: Exception, interaction: ModalInteraction) -> None:
+        error_tb = "".join(traceback.format_exc(error))
+
+        await log_error(error)
+        await self.original_inter.send(embed=ErrorEmbed(f"An error occured! The error was {e} and its traceback is error_tb"))
 
     async def on_timeout(self: "PaginatorPageViewModal"):
         await self.original_inter.send(

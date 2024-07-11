@@ -93,11 +93,20 @@ if __name__ == "__main__":
 else:
     log = logging.getLogger(__name__)
 disnake_log = logging.getLogger("disnake")
+print(disnake_log)
 log.addHandler(TRFHB)
 disnake_log.addHandler(TRFHD)
+#del disnake_log.handlers[0]
+handlers_to_remove = []
+for handler in log.handlers:
+    if isinstance(handler, logging.StreamHandler) and handler.stream == stderr:
+        handlers_to_remove.append(handler)
+for handler in handlers_to_remove:
+    log.removeHandler(handler)
 log.setLevel(-1)
-disnake_log.setLevel(logging.DEBUG)
-log.setLevel(logging.DEBUG)
+TRFHD.setLevel(logging.DEBUG)
+TRFHB.setLevel(logging.DEBUG)
+print(disnake_log.handlers)
 
 
 def the_daemon_file_saver():

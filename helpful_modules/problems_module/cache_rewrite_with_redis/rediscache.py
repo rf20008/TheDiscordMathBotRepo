@@ -36,12 +36,13 @@ from ..errors import (
     ProblemNotFoundException,
     SQLNotSupportedInRedisException,
     ThingNotFound,
+    VerificationCodeInfoNotFound
 )
 from ..GuildData import GuildData
 from ..parse_problem import convert_dict_to_problem
 from ..quizzes import Quiz
 from ..user_data import UserData
-
+from ..verification_code_info import VerificationCodeInfo
 
 class RedisCache:
     """A class that is supposed to handle the problems, and have the same API as problems_related_cache"""
@@ -402,9 +403,27 @@ class RedisCache:
         if default is not None:
             return default
         raise ThingNotFound("I could not find any appeal")
+    async def get_all_appeals(self):
+        results = await self.redis.hgetall("Appeal:")
+        actual_results = []
+        errors = []
+        for result in results:
+            try:
+                actual_results.append(orjson.loads(result))
+            except orjson.JSONDecodeError:
+                errors.append(InvalidDictionaryInDatabaseException("We have a non-dictionary on our hands"))
+            except FormatException as fe:
+                errors.append(fe)
+            except Exception as e:
+                errors.append(e)
+        if errors:
+            raise BaseExceptionGroup("Errors happened while processing appeals:", errors)
+        return actual_results
 
     async def add_appeal(self, thing: Appeal):
         await self.set_key(f"Appeal:{thing.special_id}", thing.to_dict())
+    async def set_appeal(self, thing: Appeal):
+        return await self.add_appeal(thing)
 
     async def remove_appeal(self, thing: Appeal):
         await self.del_key(f"Appeal:{thing.special_id}")
@@ -636,6 +655,10 @@ class RedisCache:
             raise FormatException(
                 "Failed to decode JSON data into AppealViewInfo"
             ) from jde
+    async def del_appeal_view_info(self, message_id: int):
+        if not isinstance(message_id, int):
+            raise TypeError("message_id is not an int")
+        await self.del_key(f"AppealViewInfo:{message_id}")
 
     async def get_appeal_view_infos(self):
         """
@@ -670,6 +693,26 @@ class RedisCache:
                 "Formatting exceptions occurred during result processing", errors
             )
 
+    async def set_verification_code_info(self, code_info: VerificationCodeInfo):
+        if not isinstance(code_info, VerificationCodeInfo):
+            raise TypeError(
+                f"code_info is not a VerificationCodeInfo, but an instance of {code_info.__class__.__name__}"
+            )
+        await self.set_key(f"vcode:{code_info.user_id}", orjson.dumps(code_info.to_dict()))
+
+    async def get_verification_code_info(self, user_id: int) -> VerificationCodeInfo:
+        if not isinstance(user_id, int):
+            raise TypeError(f"user_id is not an int, but is {user_id.__class__.__name__} and is {user_id}")
+        result = await self.get_key(f"vcode:{user_id}")
+        if not result:
+            raise VerificationCodeInfoNotFound(
+                f"The user with id {user_id} has no verification code info"
+            )
+        return VerificationCodeInfo.from_dict(orjson.loads(result))
+    async def delete_verification_code_info(self, user_id: int):
+        if not isinstance(user_id, int):
+            raise TypeError(f"user_id is not an int, but is {user_id.__class__.__name__} and is {user_id}")
+        await self.del_key(f"vcode:{user_id}")
 
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

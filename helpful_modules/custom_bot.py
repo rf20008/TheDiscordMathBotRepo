@@ -105,7 +105,10 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     @property
     def support_server(self):
-        return self.get_guild(SUPPORT_SERVER_GUILD_ID)
+        guild = self.get_guild(SUPPORT_SERVER_GUILD_ID)
+        if not guild:
+            warnings.warn("The bot is not in the support server", stacklevel=-1, category=NotInSupportServerWarning)
+        return guild
 
     def get_task(self, task_name):
         return self.tasks[task_name]
@@ -124,12 +127,15 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
     async def on_ready(self):
         self.timeStarted = time.time()
+        self.app_info = await self.application_info()
+        if self.app_info.team:
+            self.owner_ids = {member.id for member in self.app_info.team.members}
+        else:
+            self.owner_id = self.app_info.owner
         await self._on_ready_func(self)
 
-    def owns_and_is_trusted(self, user: disnake.User):
-        if not hasattr(self, "owner_id") or not self.owner_id or self.owner_id is None:
-            return False
-        return user.id in self.trusted_users and user.id == self.owner_id
+    async def owns_and_is_trusted(self, user: disnake.User):
+        return await self.is_trusted(user) and await self.is_owner(user)
 
     def add_task(self, task):
         assert isinstance(task, disnake.ext.tasks.Loop)
@@ -350,24 +356,36 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self.total_stats = self.storer.return_stats()
         self.this_session = CommandStats(usages=[], unique_users=set(), total_cmds=0)
 
-    async def _is_owner(self, user: disnake.User) -> bool:
+    async def is_owner(self, user: disnake.User) -> bool:
         """Helper function to determine whether user qualifies as an owner"""
-        if await self.is_owner(user):
-            return True
-        if self.owner_ids is None or self.owner_id in [None, [], set()]:
-            return False
-        if self.bot.owner_id == user.id:
-            return True
-        try:
-            if (
-                self.bot.owner_ids not in [None, [], set()]
-                and user.id in self.owner_ids
-            ):
-                return True
-            return False  # nope
-        except AttributeError:
-            # not an owner
-            return False
+        #print("Is owner: ", await self.is_owner(user))
+        #print(await self.fetch_user(1259194910465331274))
+        #print(self.owner_id)
+        if self.owner_ids:
+            return user.id in self.owner_ids
+        elif self.owner_id:
+            return user.id == self.owner_id
+        else:
+            try:
+                app = await self.application_info()  # type: ignore
+                if app.team:
+                    self.owners = set(app.team.members)
+                    self.owner_ids = ids = {m.id for m in app.team.members}
+                    return user.id in ids
+                else:
+                    self.owner = app.owner
+                    self.owner_id = owner_id = app.owner.id
+                    return user.id == owner_id
+
+            except disnake.HTTPException as he:
+                await log_error(he)
+                self.log.exception("An HTTP error happened while trying to know whether {user} owns this bot: ", e)
+                raise
+            except Exception as e:
+
+                await log_error(e)
+                self.log.exception("An error happened while trying to know whether {user} owns this bot: ", e)
+                raise e
 
     async def register_appeal_views(self):
         """
@@ -386,8 +404,11 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             - Logs errors encountered during message retrieval and view registration.
         """
         # Get the appeals channel
-        appeals_channel = self.support_server.get_channel(APPEALS_CHANNEL_ID)
-
+        appeals_channel = self.appeals_channel
+        try:
+            all_infos = self.cache.get_all_appeal_view_infos()
+        except problems_module.AppealViewInfoNotFound:
+            return # there aren't any appeal view infos
         # Fetch recent message history and store in a dictionary for quick lookup
         history = {
             msg.id: msg for msg in await appeals_channel.history(limit=200).flatten()
@@ -397,45 +418,58 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         errors = []
 
         # Iterate over all appeal view infos stored in cache
-        for appeal_view in await self.cache.get_all_appeal_view_infos():
-            try:
-                # Check if the message ID exists in the fetched history
-                msg = history.get(appeal_view.message_id)
 
-                # If the message is not found in history, fetch it
-                if msg is None:
-                    msg = await appeals_channel.fetch_message(appeal_view.message_id)
+        try:
+            async for appeal_view in all_infos:
+                msg = None
+                try:
+                    # Check if the message ID exists in the fetched history
+                    msg = history.get(appeal_view.message_id)
 
-            # Handle exceptions if message is not found or access is forbidden
-            except disnake.NotFound as nf:
-                err = AppealViewMessageNotFoundException(
-                    f"Appeal message for the appeal {appeal_view} is not found; maybe it's not in the appeals channel"
-                )
-                err.__cause__ = nf
-                errors.append(err)
+                    # If the message is not found in history, fetch it
+                    if msg is None:
+                        msg = await appeals_channel.fetch_message(appeal_view.message_id)
 
-            except disnake.Forbidden as forb:
-                err = AppealViewChannelCantSeeException(
-                    f"I can't see #appeals; I can't see the appeal with message {appeal_view.message_id}"
-                )
-                err.__cause__ = forb
-                errors.append(forb)
+                # Handle exceptions if message is not found or access is forbidden
+                except disnake.NotFound as nf:
+                    # we'll try to delete this appeal
+                    await self.cache.del_appeal_view_info(appeal_view.message_id)
+                    continue
 
-            # Catch any other unexpected exceptions
-            except BaseException as be:
-                errors.append(be)
-
-            # If message is still None, log an error
-            if msg is None:
-                errors.append(
-                    AppealViewMessageNotFoundException(
-                        f"Appeal message for the appeal {appeal_view} is not found; maybe it's not in the appeals channel"
+                except disnake.Forbidden as forb:
+                    err = AppealViewChannelCantSeeException(
+                        f"I can't see #appeals; I can't see the appeal with message {appeal_view.message_id}"
                     )
-                )
+                    err.__cause__ = forb
+                    errors.append(forb)
 
+                # Catch any other unexpected exceptions
+                except BaseException as be:
+                    errors.append(be)
+
+                # If message is still None, log an error
+                if msg is None:
+                    errors.append(
+                        AppealViewMessageNotFoundException(
+                            f"Appeal message for the appeal {appeal_view} is not found; maybe it's not in the appeals channel"
+                        )
+                    )
+                view = disnake.ui.View.from_message(msg)
+                view.user_id = appeal_view.user_id
+                view.guild_id = appeal_view.guild_id
+                view.message_id = appeal_view.message_id
+                view.cache = self.cache
+                view.pages = appeal_view.pages
+                self.add_view(view, msg.id)
+        except problems_module.AppealViewInfoNotFound as avinf:
+            return # there are no appeal view infos
             # Add the view from the message to the UI
-            self.add_view(disnake.ui.View.from_message(msg), msg.id)
+
 
         # Raise an exception if any errors occurred during the process
         if errors:
             raise BaseExceptionGroup("Appeal fetching failed!!!!", errors)
+
+    @property
+    def appeals_channel(self) -> disnake.abc.Messageable:
+        return self.support_server.get_channel(APPEALS_CHANNEL_ID)

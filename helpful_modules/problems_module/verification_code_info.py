@@ -144,10 +144,10 @@ class VerificationCodeInfo(DictConvertible):
         Returns:
             tuple[VerificationCodeInfo, str]: A tuple containing the VerificationCodeInfo object and the plaintext verification code.
         """
-        secret_code = str(secrets.randbelow(10**19))
-        if len(secret_code) < 19:
-            secret_code = "0" * (19 - len(secret_code)) + secret_code
-        salt = secrets.randbytes(32)
+        secret_code = secrets.token_urlsafe(33)
+        if len(secret_code) < 33:
+            secret_code = "0" * (33 - len(secret_code)) + secret_code
+        salt = secrets.token_bytes(32)
         created_at = time.time()
         expiry = created_at + duration
         hashed_code = hashlib.sha512(secret_code.encode("utf-8") + salt).digest()

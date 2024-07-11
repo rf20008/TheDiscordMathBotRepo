@@ -36,6 +36,7 @@ Note: This language of this document is quite informal.
 * "NSFW" stands for *N*ot *S*afe *F*or *W*ork. 
 * "NSFL" stands for *N*ot *S*afe *F*or *L*ife.
 * "Pull Request"/"PR" refers to a proposed change submitted to a repository on GitHub or similar platform. PRs are used to suggest and discuss modifications to the codebase, documentation, or other project files.
+* "Verification Code(s)" refer to codes created by the bot for the purpose of verifying account identity.
 ## 2: Rules/things I have the right to do.
 
 Trusted users (including me) reserve the right to deny-list users from the official instance of the bot for many reasons, including: 
@@ -304,7 +305,7 @@ You may not use my email to send me phishing emails, scam emails, junk emails, e
 
 You may not harass, abuse, or threaten anyone using my DMCA inbox. Also, it is strongly discouraged to send off-topic things to my DMCA inbox.
 
-Finally, you must not use my DMCA inbox for marketing purposes.
+Finally, you must not use my DMCA inbox for marketing purposes, and you must only send me things at a reasonable rate (not millions of emails per second).
 
 
 #### 12.5.1: What happens if you misuse my DMCA inbox
@@ -312,7 +313,8 @@ Finally, you must not use my DMCA inbox for marketing purposes.
 Misusing my DMCA inbox is a bannable offense. Depending on your abuse, you may also be subject to legal penalties.
 #### 12.5.2: Safe harbor for actual DMCA notices
 
-You are not violating section 12.5.0 if you send me in good faith a real, actual DMCA notice (or a real, actual DMCA counter-notice), and you try in good faith to fufill the requirements set out by the DMCA, no matter whether your notice is legitimate or not. 
+You are not violating section 12.5.0 if you send me in good faith a real, actual DMCA notice (or a real, actual DMCA counter-notice), and you try in good faith to fufill the requirements set out by the DMCA, no matter whether your notice is legitimate or not.
+You are not violating Section 12.5.0 if you send me in good faith an appeal related to my Discord bot.
 You are also not violating section 12.5.0 if you send me something along the lines of "Hello! I am [Name] from [Entity], and I found content at [PLACES] that we own. Please remove such content immediately or we will send a DMCA notice to you. Thank you!"
 
 Section 12.5.2 applies only to the extent that it is a safe harbor protecting you from the provisions of section 12.5.0, and does not supercede the DMCA, federal law, Discord's ToS, or other related provisions.
@@ -326,6 +328,5 @@ Section 12.5.2 does not protect you, or transfer any liability away from you, or
 Finally: If you commit perjury by submitting a false DMCA notice, Section 12.5.2 will not protect you or aid you in any way, shape, or form.
 
 
-
-
+## Section 13: Verification codes
 

@@ -23,23 +23,16 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    """INSERT INTO appeals (special_id, appeal_str, appeal_num, user_id, timestamp,type) 
+                    """INSERT OR REPLACE INTO appeals (special_id, appeal_msg, appeal_num, user_id, timestamp,type) 
                     VALUES (?,?,?,?,?,?) 
-                    ON CONFLICT REPLACE 
-                    special_id=?, appeal_str=?, appeal_num=?, user_id=?, timestamp=?, type=?""",
+                    """,
                     (
                         data.special_id,
-                        data.appeal_str,
+                        data.appeal_msg,
                         data.appeal_num,
                         data.user_id,
                         data.timestamp,
-                        data.type,
-                        data.special_id,
-                        data.appeal_str,
-                        data.appeal_num,
-                        data.user_id,
-                        data.timestamp,
-                        data.type,
+                        int(data.type),
                     ),
                 )  # TODO: test
                 await conn.commit()
@@ -47,19 +40,19 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             with self.get_a_connection() as connection:
                 cursor = await connection.cursor(DictCursor)
                 await cursor.execute(
-                    """INSERT INTO appeals (special_id, appeal_str, appeal_num, user_id, timestamp,type) 
+                    """INSERT INTO appeals (special_id, appeal_msg appeal_num, user_id, timestamp,type) 
                     VALUES (%s,%s,%s,%s,%s,%s) 
                     ON DUPLICATE KEY UPDATE 
-                    special_id=%s, appeal_str=%s, appeal_num=%s, user_id=%s, timestamp=%s, type=%s""",
+                    special_id=%s, appeal_msg=%s, appeal_num=%s, user_id=%s, timestamp=%s, type=%s""",
                     (
                         data.special_id,
-                        data.appeal_str,
+                        data.appeal_msg,
                         data.appeal_num,
                         data.user_id,
                         data.timestamp,
                         data.type,
                         data.special_id,
-                        data.appeal_str,
+                        data.appeal_msg,
                         data.appeal_num,
                         data.user_id,
                         data.timestamp,
@@ -96,6 +89,26 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             raise SQLException(
                 "There were too many rows with the same special id in the appeals table!"
             )
+    async def get_all_appeals(self):
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db) as conn:
+                conn.row_factory = dict_factory
+                cursor = await conn.cursor()
+                await cursor.execute(
+                    "SELECT * FROM appeals"
+                )
+                results = list(await cursor.fetchall())
+
+        else:
+            async with self.get_a_connection() as connection:
+                cursor = await connection.cursor(DictCursor)
+
+                await cursor.execute(
+                    "SELECT * FROM appeals"
+                )
+                results = list(await cursor.fetchall())
+
+        return [Appeal.from_dict(appeal) for appeal in results]
 
     async def initialize_sql_table(self) -> None:
         """Initialize SQL table for appeals."""
@@ -106,12 +119,12 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                 await cursor.execute(
                     """CREATE TABLE IF NOT EXISTS appeals (
                         special_id INTEGER PRIMARY KEY,
-                        appeal_str TEXT,
+                        appeal_msg TEXT,
                         appeal_num INTEGER,
                         user_id INTEGER,
                         timestamp INTEGER,
-                        type TEXT
-                    )"""
+                        type INTEGER
+                    );"""
                 )
                 await conn.commit()
                 await cursor.execute(
@@ -119,7 +132,9 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                         message_id INTEGER PRIMARY KEY,
                         user_id INTEGER NOT NULL,
                         guild_id INTEGER,
-                        done TEXT
+                        done TEXT,
+                        pages TEXT,
+                        appeal_type INTEGER
                         ); 
                     """
                 )
@@ -129,12 +144,12 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                 await cursor.execute(
                     """CREATE TABLE IF NOT EXISTS appeals (
                         special_id BIGINT PRIMARY KEY,
-                        appeal_str TEXT,
+                        appeal_msg TEXT,
                         appeal_num INT,
                         user_id BIGINT,
                         timestamp BIGINT,
-                        type TEXT
-                    )"""
+                        type INTEGER
+                    );"""
                 )
                 await cursor.execute(
                     """CREATE TABLE IF NOT EXISTS appeal_view_info (
@@ -142,6 +157,8 @@ class AppealsRelatedCache(GuildDataRelatedCache):
                         user_id INTEGER NOT NULL,
                         guild_id INTEGER,
                         done TEXT,
+                        pages TEXT,
+                        appeal_type INTEGER,
                         ); 
                     """
                 )
@@ -192,6 +209,24 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             raise SQLException(
                 f"Too many ({len(results)} of them) appeal view infos exist with message id {message_id}"
             )
+    async def del_appeal_view_info(self, message_id: int):
+        if not isinstance(message_id, int):
+            raise TypeError("Message ID is not an integer")
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute("DELETE FROM appeal_view_info WHERE message_id=?", (message_id,))
+                await conn.commit()
+        else:
+            async with mysql_connection(
+                    host=self.mysql_db_ip,
+                    password=self.mysql_password,
+                    user=self.mysql_username,
+                    database=self.mysql_db_name,
+            ) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute("DELETE FROM appeal_view_info WHERE message_id=%s", (message_id,))
+                await conn.commit()
 
     async def set_appeal_view_info(self, view_info: AppealViewInfo):
         if not isinstance(view_info, AppealViewInfo):
@@ -202,17 +237,21 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    """INSERT INTO appeal_view_info (message_id, user_id, guild_id, done) VALUES (?,?,?,?) 
-                    ON CONFLICT (message_id) DO UPDATE SET message_id=?, user_id=?, guild_id=?, done=?""",
+                    """INSERT INTO appeal_view_info (message_id, user_id, guild_id, done, pages, appeal_type) VALUES (?,?,?,?,?,?) 
+                    ON CONFLICT (message_id) DO UPDATE SET message_id=?, user_id=?, guild_id=?, done=?,pages=?, appeal_type=?""",
                     (
                         view_info.message_id,
                         view_info.user_id,
                         view_info.guild_id,
                         view_info.done,
+                        int(view_info.appeal_type),
+                        orjson.dumps(view_info.pages),
                         view_info.message_id,
                         view_info.user_id,
                         view_info.guild_id,
                         view_info.done,
+                        orjson.dumps(view_info.pages),
+                        int(view_info.appeal_type)
                     ),
                 )
                 await conn.commit()
@@ -225,17 +264,21 @@ class AppealsRelatedCache(GuildDataRelatedCache):
             ) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
-                    """INSERT INTO appeal_view_info (message_id, user_id, guild_id, done) VALUES (?,?,?,?) 
-                    ON DUPLICATE KEY UPDATE message_id=?, user_id=?, guild_id=?, done=?""",
+                    """INSERT INTO appeal_view_info (message_id, user_id, guild_id, done,pages, appeal_type) VALUES (?,?,?,?,?,?) 
+                    ON DUPLICATE KEY UPDATE message_id=?, user_id=?, guild_id=?, done=?,pages=?, appeal_type=?""",
                     (
                         view_info.message_id,
                         view_info.user_id,
                         view_info.guild_id,
                         view_info.done,
+                        orjson.dumps(view_info.pages),
+                        int(view_info.appeal_type),
                         view_info.message_id,
                         view_info.user_id,
                         view_info.guild_id,
                         view_info.done,
+                        orjson.dumps(view_info.pages),
+                        int(view_info.appeal_type),
                     ),
                 )
                 conn.commit()
@@ -258,7 +301,7 @@ class AppealsRelatedCache(GuildDataRelatedCache):
         errors = []
         for result in results:
             try:
-                yield AppealViewInfo.from_dict(orjson.loads(result))
+                yield AppealViewInfo.from_dict(result)
             except orjson.JSONDecodeError as jde:
                 err = InvalidDictionaryInDatabaseException.from_invalid_data(result)
                 err.__cause__ = jde

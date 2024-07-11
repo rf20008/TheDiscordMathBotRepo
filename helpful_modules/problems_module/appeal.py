@@ -1,18 +1,38 @@
+"""
+The Discord Math Problem Bot Repo - AppealType/Appeal/AppealViewInfo
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 from enum import Enum
 from typing import *
 
+import orjson
 from disnake.utils import format_dt
 
 from .dict_convertible import DictConvertible
 
 
 class AppealType(Enum):
-    DENYKLIST_APPEAL = 0
+    DENYLIST_APPEAL = 0
     GUILD_DENYLIST_APPEAL = 1
     SUPPORT_SERVER_BAN = 2
     SUPPORT_SERVER_MISC_PUNISHMENT = 3
     OTHER = 4
-
+    NOT_SET = 5
+    def __int__(self):
+        return self.value
 
 class Appeal(DictConvertible):
     __slots__ = (
@@ -44,7 +64,6 @@ class Appeal(DictConvertible):
         self.timestamp = timestamp
         self.appeal_num = appeal_num
         self.special_id = special_id
-
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
@@ -53,7 +72,7 @@ class Appeal(DictConvertible):
             timestamp=data["timestamp"],
             appeal_num=data["appeal_num"],
             special_id=data["special_id"],
-            type=data["type"],
+            type=AppealType(data["type"]),
         )
 
     def to_dict(self) -> dict:
@@ -63,7 +82,7 @@ class Appeal(DictConvertible):
             "timestamp": self.timestamp,
             "appeal_num": self.appeal_num,
             "special_id": self.special_id,
-            "appeal_type": str(self.type.name),
+            "appeal_type": int(self.type),
         }
 
     def __str__(self):
@@ -81,12 +100,20 @@ class Appeal(DictConvertible):
 
 class AppealViewInfo(DictConvertible):
     def __init__(
-        self, message_id: int, user_id: int, guild_id: int, done: bool = False
+        self, message_id: int, user_id: int, guild_id: int, done: bool = False, pages: list[str] = None, appeal_type: AppealType | int = AppealType.NOT_SET
     ):
         self.message_id = message_id
         self.user_id = user_id
         self.guild_id = guild_id
         self.done = done
+        if not pages:
+            pages = []
+        if isinstance(pages, str):
+            pages = orjson.loads(pages)
+        self.pages = pages
+        if isinstance(appeal_type, int):
+            appeal_type = AppealType(appeal_type)
+        self.appeal_type = appeal_type
 
     def mark_done(self):
         self.done = True
@@ -97,6 +124,8 @@ class AppealViewInfo(DictConvertible):
             "user_id": self.user_id,
             "guild_id": self.guild_id,
             "done": self.done,
+            "pages": self.pages,
+            "type": int(self.appeal_type)
         }
 
     @classmethod
@@ -106,7 +135,9 @@ class AppealViewInfo(DictConvertible):
             user_id=data["user_id"],
             guild_id=data["guild_id"],
             done=data.get("done", False),
+            pages = data.get("pages", []),
+            appeal_type = AppealType(data.get("appeal_type", AppealType.NOT_SET.value))
         )
 
     def __repr__(self):
-        return f"AppealViewInfo(message_id={self.message_id}, user_id={self.user_id}, guild_id={self.guild_id}, done={self.done})"
+        return f"AppealViewInfo(message_id={self.message_id}, user_id={self.user_id}, guild_id={self.guild_id}, done={self.done} type={self.appeal_type})"

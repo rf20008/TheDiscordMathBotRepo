@@ -35,12 +35,12 @@ class VerificationCog(HelperCog):
     @commands.slash_command(
         name="verification_codes", description="Manage your verification codes", options=[]
     )
-    async def verification_codes(self, inter: disnake.Interaction):
+    async def verification_codes(self, inter: disnake.ApplicationCommandInteraction):
         """
         /verification_codes
         This subclass is used to manage your verification codes
         """
-        await inter.send("Use a subcommand!")
+        pass
 
     @verification_codes.sub_command(
         name="generate",
@@ -62,7 +62,7 @@ class VerificationCog(HelperCog):
         ]
         # TODO: add a WHERE option
     )
-    async def generate(self, inter: disnake.Interaction, duration: float = ONE_WEEK, here: bool = True):
+    async def generate(self, inter: disnake.ApplicationCommandInteraction, duration: float = ONE_WEEK, here: bool = True):
         """/verification_codes generate [duration: float = 604800] [here: bool = True]
         Generate a verification code, valid for `duration` seconds.
         Your code will be sent as an ephemeral message if `here` is true; otherwise, it will be sent to your DMs.
@@ -88,7 +88,7 @@ class VerificationCog(HelperCog):
             await inter.send(embed=SuccessEmbed("I have sent your code to your DMs!"))
             await inter.author.send(embed=SuccessEmbed(
                 f"Your secret code is {code}. Keep it secret OR ELSE PEOPLE CAN IMPERSONATE YOU!!!!!!"
-            )
+            ))
             return
 
     @verification_codes.sub_command(
@@ -103,7 +103,7 @@ class VerificationCog(HelperCog):
             )
         ]
     )
-    async def info(self, inter: disnake.Interaction, detailed: bool):
+    async def info(self, inter: disnake.ApplicationCommandInteraction, detailed: bool):
         raise NotImplementedError("I didn't impelment this yet. TODO: implement this")
 
     @commands.cooldown(2, 15.0, type=commands.BucketType.user)
@@ -125,7 +125,7 @@ class VerificationCog(HelperCog):
             )
         ]
     )
-    async def check(self, inter: disnake.Interaction, possible_code: str, person: int | None = None):
+    async def check(self, inter: disnake.ApplicationCommandInteraction, possible_code: str, person: int | None = None):
         """/verification_codes check (possible_code: str) [person: int]
         Check whether the code of `person` is `possible_code`.
         Rate limit: 2 times per 15.0 seconds.
@@ -138,17 +138,21 @@ class VerificationCog(HelperCog):
             return
         # who's the target?
         target = inter.author.id
-        if person is None:
+        print(person)
+        if person is not None:
             target = person
 
         # get the code
         try:
             code_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(user_id=target)
         except problems_module.VerificationCodeInfoNotFound:
-            if person != inter.author.id:
+            if person != inter.author.id and person is not None:
                 await inter.send(embed=ErrorEmbed(f"The user with user id {person} does not have a verification code set."), ephemeral=True)
             else:
                 await inter.send(embed=ErrorEmbed("You don't have a verification code set. Try setting one!"), ephemeral=True)
+
+            # try to remove their code
+            await self.bot.cache.delete_verification_code_info(user_id=target)
             return
 
         # check the code now!
@@ -160,7 +164,7 @@ class VerificationCog(HelperCog):
             return
         except problems_module.VerificationCodeExpiredException:
             # the code is expired
-            if person != inter.author.id: # is it for someone else?
+            if person is not None: # is it for someone else?
                 await inter.send(embed=ErrorEmbed(f"The user with user id {person}'s verification code has expired."), ephemeral=True)
             else:
                 await inter.send(embed=ErrorEmbed("Your verification code has expired. Please generate a new one"), ephemeral=True)
@@ -176,7 +180,7 @@ class VerificationCog(HelperCog):
                 type=disnake.OptionType.integer
             )]
     )
-    async def delete(self, inter: disnake.Interaction, person: int | None = None):
+    async def delete(self, inter: disnake.ApplicationCommandInteraction, person: int | None = None):
         """/verification_codes
         Delete your (or someone else's) verification code.
         If you don't own this bot, you can only delete your own verification code!"""
@@ -190,14 +194,14 @@ class VerificationCog(HelperCog):
         try:
             code_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(user_id=target)
         except problems_module.VerificationCodeInfoNotFound:
-            if person != inter.author.id:
+            if person is not None:
                 await inter.send(embed=ErrorEmbed(f"The user with user id {person} does not have a verification code set."), ephemeral=True)
             else:
                 await inter.send(embed=ErrorEmbed("You don't have a verification code set. Try setting one!"), ephemeral=True)
             return
 
         # actually delete
-        await self.bot.cache.delete_verification_code(user_id=person)
+        await self.bot.cache.delete_verification_code_info(user_id=target)
 
         # and tell them
         if person:

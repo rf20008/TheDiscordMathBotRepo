@@ -24,7 +24,7 @@ from ..errors import SQLException, VerificationCodeInfoNotFound
 from ..mysqlcontextmanager import mysql_connection
 from ..verification_code_info import VerificationCodeInfo
 from .appeals_related_cache import AppealsRelatedCache
-
+from ...dict_factory import dict_factory
 
 class VerificationCodesRelatedCache(AppealsRelatedCache):
 
@@ -129,23 +129,23 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
             raise SQLException(
                 f"The user with id {user_id} has {len(results)} verification code infos; only 1 is expected"
             )
-async def delete_verification_code_info(self, user_id: int):
-    if not isinstance(user_id, int):
-        raise TypeError(
-            f"user_id is not an int, but an instance of {user_id.__class__.__name__} and is {user_id}"
-        )
-    if self.use_sqlite:
-        async with aiosqlite.connect(self.db) as conn:
-            cursor = await conn.cursor()
-            await cursor.execute("DELETE * FROM verification_code_infos WHERE user_id = ?", (user_id,))
-            await conn.commit()
-    else:
-        async with mysql_connection(
-                host=self.mysql_db_ip,
-                password=self.mysql_password,
-                user=self.mysql_username,
-                database=self.mysql_db_name,
-        ) as conn:
-            cursor = await conn.cursor()
-            await cursor.execute("DELETE * FROM verification_code_infos WHERE user_id = %s", (user_id,))
-            await conn.commit()
+    async def delete_verification_code_info(self, user_id: int):
+        if not isinstance(user_id, int):
+            raise TypeError(
+                f"user_id is not an int, but an instance of {user_id.__class__.__name__} and is {user_id}"
+            )
+        if self.use_sqlite:
+            async with aiosqlite.connect(self.db) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute("DELETE FROM verification_code_infos WHERE user_id = ?", (user_id,))
+                await conn.commit()
+        else:
+            async with mysql_connection(
+                    host=self.mysql_db_ip,
+                    password=self.mysql_password,
+                    user=self.mysql_username,
+                    database=self.mysql_db_name,
+            ) as conn:
+                cursor = await conn.cursor()
+                await cursor.execute("DELETE FROM verification_code_infos WHERE user_id = %s", (user_id,))
+                await conn.commit()

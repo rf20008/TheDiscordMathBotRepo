@@ -148,7 +148,7 @@ class DebugCog(HelperCog):
         self, inter: disnake.ApplicationCommandInteraction
     ):
         """A check that makes sure only bot owners can use this cog!"""
-        if not await self.bot._is_owner(inter.author):
+        if not await self.bot.is_owner(inter.author):
             raise commands.CheckFailure("You are not the owner of this bot!")
         return True
         # if self.bot.owner_id in [None, [], set()] and self.bot.owner_ids is None:
@@ -195,7 +195,6 @@ class DebugCog(HelperCog):
         """/sql [query: str]
         A debug command to run SQL!
         You must own this bot to run this command!"""
-        print("hello!")
         try:
             assert await self.cog_slash_command_check(inter)
         except AssertionError:
