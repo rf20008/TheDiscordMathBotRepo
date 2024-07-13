@@ -6,6 +6,7 @@ from disnake.ext import commands
 from helpful_modules import checks, problems_module
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.my_modals import MyModal
+from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
 from helpful_modules.problems_module import *
 
 from ..helper_cog import HelperCog
@@ -50,6 +51,7 @@ class GradingQuizzesCog(HelperCog):
             return False
         return True
 
+    @checks.is_not_denylisted()
     @commands.slash_command(name="quiz_grade", description="Grade quizzes!")
     async def quiz_grade(self, inter: disnake.ApplicationCommandInteraction):
         """This is a slash command that is meant to be used to grade quizzes!"""

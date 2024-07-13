@@ -50,12 +50,13 @@ class PermissionsRequiredRelatedCache(UserDataRelatedCache):
                 return False
 
         if "denylisted" in permissions_required.keys():
-            if user_data.denylisted != permissions_required["denylisted"]:
+            if user_data.is_denylisted() != permissions_required["denylisted"]:
                 return False
         UDTD = user_data.to_dict()
         for key, val in permissions_required.items():
             try:
-                if UDTD[key] != val:
+
+                if key != 'denylisted' and UDTD[key] != val: # we have to treat 'denylisted` specially
                     return False
             except KeyError:
                 pass

@@ -73,12 +73,13 @@ class AppealModal(MyModal):
         highest_appeal_num += 1
 
         appeals_channel = bot.appeals_channel
+        reason = f"This appeal is from {modal_inter.author.mention} and is appeal#{appeal.appeal_num}. The reason they appealed is below:. \n\n **Their reason:**\n" + reason
         pages = AppealView.break_into_pages(reason)
 
         our_view = AppealView(cache=bot.cache, user_id=modal_inter.author.id,
                               pages=pages, guild_id = None, appeal_type = AppealType.DENYLIST_APPEAL)
         msg = await appeals_channel.send(view=our_view, embed=our_view.create_embed())
-        our_view.register_msg(msg)
+        our_view.message_id = msg.id
         await cache.set_appeal_view_info(AppealViewInfo(
             message_id=msg.id,
             user_id=modal_inter.author.id,

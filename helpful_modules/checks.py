@@ -113,16 +113,26 @@ def is_not_denylisted():
             user_id=inter.author.id,
             default=UserData(user_id=inter.author.id, trusted=False, denylisted=False),
         )
-        if user_data.denylisted:
+        if user_data.is_denylisted():
+            until_str = ""
+            if user_data.denylist_reason == float('inf'):
+                until_str='never'
+            else:
+                if user_data.denylist_expiry < time.time():
+                    until_str = f"{disnake.utils.format_dt(user_data.denylist_expiry, 'R')} ago"
+                else:
+                    until_str = f'in {disnake.utils.format_dt(user_data.denylist_expiry, "R")}'
             raise DenylistedException(
                 "You are denylisted from the bot! "
                 "To appeal, you must use /appeal. "
-                "Note that appeals are seen very rarely..."
+                "Note that appeals are seen very rarely...",
+                f"The reason you've been denylisted is {user_data.denylist_reason}. This ban expires" + until_str
             )
         return True
 
     return commands.check(predicate)
 
+user_not_denylisted = is_not_denylisted
 
 def guild_not_denylisted():
     """Check to make sure a command isn't being executed in a denylisted guild -- instead, we will say the guild has been denylisted & leave the guild"""

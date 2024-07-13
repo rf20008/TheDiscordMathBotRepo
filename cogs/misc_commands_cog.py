@@ -131,7 +131,11 @@ class MiscCommandsCog(HelperCog):
         # This is to respect the API rate limit.
 
         # We don't need a try/except
-        result = await self.cache.run_sql("SELECT * FROM user_data")
+        try:
+            result = await self.cache.run_sql("SELECT * FROM user_data")
+        except problems_module.SQLNotSupportedInRedisException as err:
+            raise NotImplementedError("Redis cache implementation is not yet implemented") from err
+
         trusted_users = []
         for item in result:
             if item["trusted"]:
@@ -418,6 +422,19 @@ class MiscCommandsCog(HelperCog):
                 description="The user to denylist",
                 type=OptionType.user,
                 required=True,
+            ),
+            Option(
+                name="reason",
+                description="Why you're denylisting this user",
+                type=OptionType.string,
+                required=True
+            ),
+            Option(
+                name="duration",
+                description="The length of the denylist",
+                type=OptionType.number,
+                required=False,
+                min_value=0.0
             )
         ],
     )
@@ -428,21 +445,20 @@ class MiscCommandsCog(HelperCog):
         self: "MiscCommandsCog",
         inter: disnake.ApplicationCommandInteraction,
         user: typing.Union[disnake.User, disnake.Member],
+        reason: str,
+        duration: float = float('inf')
     ):
         """/denylist [user: user]
         denylist someone from the bot. You must be a trusted user to do this!
         There is a 1-second cooldown."""
         user_data = await self.cache.get_user_data(
             user_id=user.id,
-            default=problems_module.UserData(
-                user_id=user.id, trusted=False, denylisted=False
-            ),
         )
-        if user_data.denylisted:
+        if user_data.is_denylisted():
             self.bot.log.debug("Can't denylist user; user already denylisted")
-            return await inter.send("Can't denylist user; user already denylisted")
+            return await inter.send(embed=ErrorEmbed("Can't denylist user; user already denylisted"))
         else:
-            user_data.denylisted = True
+            user_data.denylist(reason=reason, duration=duration)
             await self.cache.set_user_data(user_id=user.id, new=user_data)
 
             self.bot.log.info(f"Successfully denylisted the user with id {user.id}")
@@ -469,6 +485,7 @@ class MiscCommandsCog(HelperCog):
         self: "MiscCommandsCog",
         inter: disnake.ApplicationCommandInteraction,
         user: typing.Union[disnake.User, disnake.Member],
+
     ):
         """/undenylist [user: user]
         Remove a user's bot denylist. You must be a trusted user to do this!
@@ -479,11 +496,11 @@ class MiscCommandsCog(HelperCog):
                 user_id=user.id, trusted=False, denylisted=False
             ),
         )
-        if not user_data.denylisted:
+        if not user_data.is_denylisted():
             self.bot.log.debug("Can't un-denylist user; user not denylisted")
             return await inter.send("Can't un-denylist user; user not denylisted")
         else:
-            user_data.denylisted = False
+            user_data.undenylist()
             await self.cache.set_user_data(user_id=user.id, new=user_data)
             self.bot.log.info(f"Successfully un-denylisted the user with id {user.id}")
             await inter.send("Successfully un-denylisted the user!")
@@ -499,20 +516,32 @@ class MiscCommandsCog(HelperCog):
                 description="The ID of the guild to denylist",
                 type=OptionType.string,
                 required=True,
+            ),
+            Option(
+                name="reason",
+                description="Why you're denylisting this user",
+                type=OptionType.string,
+                required=True
+            ),
+            Option(
+                name="duration",
+                description="The length of the denylist",
+                type=OptionType.number,
+                required=False,
+                min_value=0.0
             )
         ],
     )
     @checks.trusted_users_only()
     @checks.is_not_denylisted()
     async def guild_denylist(
-        self, inter: disnake.ApplicationCommandInteraction, guild_id: str
+        self, inter: disnake.ApplicationCommandInteraction, guild_id: str, reason: str, duration: float = float('inf')
     ):
         """
         /guild_denylist [guild_id: int]
         denylist a guild from TheDiscordMathProblemBot. Only trusted users can run this command.
         Also, reasons are not shared.
         """
-        print(issubclass(type(self.cache), problems_module.cache.GuildDataRelatedCache))
         # Check if the user is denylisted from using this command
         if await self.bot.is_user_denylisted(inter.author):
             await inter.send(
@@ -544,7 +573,7 @@ class MiscCommandsCog(HelperCog):
         old_data = await self.bot.cache.get_guild_data(guild_id=guild_id)
 
         # Check if the guild is already denylisted
-        if old_data.denylisted:
+        if old_data.is_denylisted():
             await inter.send(
                 embed=ErrorEmbed(
                     "The guild you're trying to denylist is already on the denylist"
@@ -553,7 +582,7 @@ class MiscCommandsCog(HelperCog):
             return
 
         # Perform the denylist operation
-        old_data.denylisted = True
+        old_data.denylist(reason=reason, duration=duration)
 
         # Update the guild's data in storage or cache
         await self.bot.cache.set_guild_data(data=old_data)

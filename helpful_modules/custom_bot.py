@@ -217,13 +217,13 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
                 user_id=user_id, trusted=False, denylisted=False
             ),
         )
-        return data.denylisted
+        return data.is_denylisted()
 
     async def mods_can_view(self, channel: disnake.abc.Messageable):
         guild_data: problems_module.GuildData = await self.cache.get_guild_data(
             guild_id=channel.guild.id
         )
-        for role_id in guild_data.mod_check.roles_allowed:
+        for role_id in guild_data.mods_check.roles_allowed:
             role: disnake.Role = channel.guild.get_role(role_id)
             if channel.permissions_for(role).view_channel:
                 return True
@@ -242,7 +242,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             guild_id=guild_id,
             default=GuildData.default(guild_id=guild_id),
         )
-        return data.denylisted
+        return data.is_denylisted()
 
     async def notify_guild_on_guild_leave_because_guild_denylist(
         self, guild: disnake.Guild
@@ -258,8 +258,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         Raises:
             RuntimeError: If the guild is not actually denylisted.
         """
-
-        if not await self.is_guild_denylisted(guild):
+        guild_data = await self.cache.get_guild_data(guild_id=guild.id, default=GuildData.default(guild_id=guild.id))
+        if not guild_data.is_denylisted():
             raise RuntimeError("The guild isn't denylisted!")
 
         me: disnake.Member = guild.me
@@ -306,10 +306,18 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
             else:
                 # If no suitable channels found, choose randomly from all channels
                 channel_to_send_to = random.choice(channels_that_we_could_send_to)
-
+        if guild_data.denylist_reason == float('inf'):
+            until_str = 'indefinitely'
+        else:
+            denylist_dt = disnake.utils.format_dt(guild_data, 'R')
+            if guild.denylist_expiry < time.time():
+                until_str = f"in the past (since it expired {denylist_dt})"
+            else:
+                until_str = f'until {denylist_dt}'
         await channel_to_send_to.send(
             f"""I have left the guild because the guild is denylisted, under my terms and conditions.
             However, I'm available under the GPL. My source code is at {self.constants.SOURCE_CODE_LINK}, so you could self-host the bot if you wish.
+            The reason this guild has been denylisted is {guild_data.denylist_reason} and lasts {until_str}
             """
         )
         await guild.leave()

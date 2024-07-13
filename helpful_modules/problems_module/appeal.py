@@ -125,7 +125,7 @@ class AppealViewInfo(DictConvertible):
             "guild_id": self.guild_id,
             "done": self.done,
             "pages": self.pages,
-            "type": int(self.appeal_type)
+            "appeal_type": int(self.appeal_type)
         }
 
     @classmethod

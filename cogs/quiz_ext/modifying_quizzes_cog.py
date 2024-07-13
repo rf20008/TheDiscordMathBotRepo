@@ -264,9 +264,7 @@ class ModifyingQuizzesCog(HelperCog):
             if not can_delete:
                 user_data: UserData = await self.bot.cache.get_user_data(
                     user_id=inter.author.id,
-                    default=UserData(
-                        trusted=False, denylisted=False, user_id=inter.author.id
-                    ),
+                    default=UserData.default(user_id=inter.author.id)
                 )
                 if user_data.trusted:
                     can_delete = True

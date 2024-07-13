@@ -34,7 +34,7 @@ class UserDataRelatedCache(QuizRelatedCache):
             isinstance(default, UserData) or default is None or isinstance(default, str)
         )
         if default is None:
-            default = UserData(user_id=user_id, trusted=False, denylisted=False)
+            default = UserData.default(user_id=user_id)
             # To avoid mutable default arguments
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
@@ -69,7 +69,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                 log.debug("Connected to MySQL")
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
-                    "SELECT * FROM user_data WHERE user_id=?",
+                    "SELECT * FROM user_data WHERE user_id=%s",
                     (user_id,),  # TODO: fix placeholders
                 )
                 results = list(cursor.fetchall())
@@ -97,19 +97,10 @@ class UserDataRelatedCache(QuizRelatedCache):
                 denylisted_int = int(new.denylisted)
                 trusted_int = int(new.trusted)
                 cursor = await conn.cursor()
-                if await self.get_user_data(user_id, default="Okay") == "Okay":
-                    await cursor.execute(
-                        "INSERT INTO user_data (user_id, denylisted, trusted) VALUES (?, ?, ?)",
-                        (user_id, denylisted_int, trusted_int),
-                    )
-                else:
-                    await cursor.execute(
-                        """UPDATE user_data 
-                    SET user_id=?, denylisted=?, trusted=?
-                    WHERE user_id=?;""",
-                        (user_id, denylisted_int, trusted_int, user_id),
-                    )
-
+                await cursor.execute(
+                    "INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry) VALUES (?, ?, ?, ?, ?)",
+                    (user_id, denylisted_int, trusted_int, new.denylist_reason, new.denylist_expiry),
+                )
                 await conn.commit()
                 log.debug("Finished!")
         else:
@@ -122,10 +113,8 @@ class UserDataRelatedCache(QuizRelatedCache):
                 log.debug("Connected to MySQL")
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
-                    """UPDATE user_id
-                   SET user_id = %s, trusted=%s, denylisted=%s
-                   WHERE user_id = %s""",
-                    (user_id, new.trusted, new.denylisted, user_id),
+                    """INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry) VALUES (%s, %s, %s, %s, %s)""",
+                    (user_id, new.trusted, new.denylisted, new.denylist_reason, new.denylist_expiry),
                 )
                 connection.commit()
                 log.debug("Finished!")
@@ -163,7 +152,10 @@ class UserDataRelatedCache(QuizRelatedCache):
                     CREATE TABLE IF NOT EXISTS user_data (
                         user_id INTEGER PRIMARY KEY,
                         trusted INTEGER,
-                        denylisted INTEGER
+                        denylisted INTEGER,
+                        denylist_reason TEXT,
+                        denylist_expiry DOUBLE,
+                        
                     )
                 """
                 )
@@ -181,7 +173,9 @@ class UserDataRelatedCache(QuizRelatedCache):
                     CREATE TABLE IF NOT EXISTS user_data (
                         user_id INT PRIMARY KEY,
                         trusted BOOLEAN,
-                        denylisted BOOLEAN
+                        denylisted BOOLEAN,
+                        denylist_reason TEXT,
+                        denylist_expiry DOUBLE,
                     )
                 """
                 )

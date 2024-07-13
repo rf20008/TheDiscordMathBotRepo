@@ -55,10 +55,7 @@ class HelperCog(ext.commands.Cog):
             )
             if not self.cache.get_user_data(
                 ctx.author.id,
-                default=problems_module.UserData(
-                    trusted=False, denylisted=False, user_id=ctx.author.id
-                ),
-            ):
+            ).trusted:
                 raise RuntimeError(
                     f"Sadly, you're not allowed to do this, {ctx.author.mention} ☹️"
                 )
@@ -86,7 +83,7 @@ class HelperCog(ext.commands.Cog):
                 ctx,
                 (disnake.ext.commands.Context, disnake.ApplicationCommandInteraction),
             )
-            if ctx.author.id not in self.trusted_users:
+            if not self.bot.is_trusted(ctx.author):
                 raise RuntimeError(
                     f"Sadly, you're not allowed to do this, {ctx.author.mention} ☹️"
                 )

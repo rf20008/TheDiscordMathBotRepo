@@ -1,5 +1,5 @@
 """
-The Discord Math Problem Bot Repo - DictConvertible
+The Discord Math Problem Bot Repo - VerificationCodeInfo
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or

@@ -7,7 +7,7 @@ from disnake.ext import commands
 from helpful_modules import problems_module as pm
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.my_modals import MyModal
-from helpful_modules.threads_or_useful_funcs import base_on_error
+from helpful_modules.base_on_error import base_on_error
 
 
 class GradingQuizView(ui.View):

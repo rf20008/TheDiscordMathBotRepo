@@ -272,9 +272,6 @@ class DeveloperCommands(HelperCog):
         You must also share a server with the new trusted user."""
         user_data = await self.bot.cache.get_user_data(
             user_id=user.id,
-            default=problems_module.UserData(
-                user_id=user.id, trusted=False, denylisted=False
-            ),
         )
 
         # if inter.author.id not in self.bot.trusted_users: # Should work
@@ -325,9 +322,6 @@ class DeveloperCommands(HelperCog):
         There is also a 10-minute cooldown to prevent raids!"""
         my_user_data = await self.cache.get_user_data(
             inter.author.id,
-            default=problems_module.UserData(
-                user_id=inter.author.id, trusted=False, denylisted=False
-            ),
         )
         if not my_user_data.trusted:
             await inter.send(
@@ -346,12 +340,7 @@ class DeveloperCommands(HelperCog):
             )
             return
         their_user_data.trusted = False
-        try:
-            await self.cache.set_user_data(user_id=user.id, new=their_user_data)
-        except problems_module.UserDataNotExistsException:
-            await self.cache.add_user_data(
-                user_id=user.id, thing_to_add=their_user_data
-            )
+        await self.cache.set_user_data(user_id=user.id, new=their_user_data)
         await inter.send(
             embed=SuccessEmbed(
                 f"Successfully made {user.global_name} no longer a trusted user!"
