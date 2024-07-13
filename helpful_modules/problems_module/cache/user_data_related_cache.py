@@ -154,8 +154,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                         trusted INTEGER,
                         denylisted INTEGER,
                         denylist_reason TEXT,
-                        denylist_expiry DOUBLE,
-                        
+                        denylist_expiry DOUBLE
                     )
                 """
                 )
@@ -175,7 +174,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                         trusted BOOLEAN,
                         denylisted BOOLEAN,
                         denylist_reason TEXT,
-                        denylist_expiry DOUBLE,
+                        denylist_expiry DOUBLE
                     )
                 """
                 )
