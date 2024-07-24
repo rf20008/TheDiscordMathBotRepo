@@ -132,7 +132,7 @@ class MiscCommandsCog(HelperCog):
 
         # We don't need a try/except
         try:
-            result = await self.cache.run_sql("SELECT * FROM user_data")
+            result = await self.cache.run_sql("SELECT * FROM user_data") # TODO: support redis + other caches
         except problems_module.SQLNotSupportedInRedisException as err:
             raise NotImplementedError("Redis cache implementation is not yet implemented") from err
 
@@ -266,6 +266,7 @@ class MiscCommandsCog(HelperCog):
             )
         ],
     )
+    @checks.is_not_denylisted()
     @checks.trusted_users_only()
     @commands.cooldown(
         1, 50, commands.BucketType.user
@@ -291,6 +292,7 @@ class MiscCommandsCog(HelperCog):
         #    )
         #    return
         # Unnecessary because the type is an integer
+        print(threshold, inter, self)
         if threshold < 1:  # Threshold must be greater than 1!
             await inter.send(
                 embed=ErrorEmbed("You can't set the threshold to smaller than 1."),

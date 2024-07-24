@@ -93,7 +93,6 @@ if __name__ == "__main__":
 else:
     log = logging.getLogger(__name__)
 disnake_log = logging.getLogger("disnake")
-print(disnake_log)
 log.addHandler(TRFHB)
 disnake_log.addHandler(TRFHD)
 #del disnake_log.handlers[0]
@@ -106,7 +105,6 @@ for handler in handlers_to_remove:
 log.setLevel(-1)
 TRFHD.setLevel(logging.DEBUG)
 TRFHB.setLevel(logging.DEBUG)
-print(disnake_log.handlers)
 
 
 def the_daemon_file_saver():
@@ -116,22 +114,25 @@ def the_daemon_file_saver():
     FileSaverObj = save_files.FileSaver(
         name="The Daemon File Saver", enabled=True, printSuccessMessagesByDefault=True
     )
+    bot.file_saver = FileSaverObj
     print("Loading files...")
     FileSaverDict = FileSaverObj.load_files(bot.cache, True)
-    (guildMathProblems, bot.trusted_users, bot.vote_threshold) = (
+    (guildMathProblems, bot.trusted_users, bot.vote_threshold, bot.appeal_questions) = (
         FileSaverDict["guildMathProblems"],
         FileSaverDict["trusted_users"],
         int(FileSaverDict["vote_threshold"]),
+        FileSaverDict["appeal_questions"]
     )
     while True:
         sleep(45)
         print("Saving files")
         FileSaverObj.save_files(
             bot.cache,
-            False,
-            guildMathProblems,
-            bot.vote_threshold,
-            bot.trusted_users,
+            printSuccessMessages=False,
+            guild_math_problems_dict=guildMathProblems,
+            vote_threshold=bot.vote_threshold,
+            trusted_users_list=bot.trusted_users,
+            questionnaire=bot.appeal_questions,
         )
 
 
@@ -283,14 +284,17 @@ bot.add_cog(MiscCommandsCog(bot))
 bot.add_cog(HelpCog(bot))
 bot.load_extension("cogs.quiz_ext")
 bot.CONSTANTS = bot_constants
-bot.add_check(checks.is_not_denylisted())
+bot.add_app_command_check(checks.is_not_denylisted(), slash_commands=True, call_once=True, message_commands=True, user_commands=True)
 bot.add_cog(InterestingComputationCog(bot))
 bot.add_cog(DataModificationCog(bot))
 bot.add_cog(ProblemGenerationCog(bot))
 bot.add_cog(VerificationCog(bot))
-bot.add_check(checks.not_is_closing())
+bot.add_app_command_check(checks.not_is_closing(), slash_commands=True, call_once=True, message_commands=True)
 # Events
 
+@bot.event
+async def on_application_command(inter):
+    await bot.process_application_commands(inter)
 
 # TODO: (general) add changelog.json
 @bot.event
@@ -417,4 +421,5 @@ if __name__ == "__main__":
         if len(command.name) > 100:
             raise Exception(f"This command: {command.name} is too long!")
     if should_we_connect:
+
         bot.run(DISCORD_TOKEN)

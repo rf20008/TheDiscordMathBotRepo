@@ -122,11 +122,9 @@ def is_not_denylisted():
                     until_str = f"{disnake.utils.format_dt(user_data.denylist_expiry, 'R')} ago"
                 else:
                     until_str = f'in {disnake.utils.format_dt(user_data.denylist_expiry, "R")}'
+            msg = f"""You are denylisted from the bot! To appeal, you must use /appeal. Note that appeals are seen very rarely..., The reason you've been denylisted is {user_data.denylist_reason}. This ban expires {until_str}"""
             raise DenylistedException(
-                "You are denylisted from the bot! "
-                "To appeal, you must use /appeal. "
-                "Note that appeals are seen very rarely...",
-                f"The reason you've been denylisted is {user_data.denylist_reason}. This ban expires" + until_str
+                msg
             )
         return True
 

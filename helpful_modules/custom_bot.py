@@ -34,9 +34,10 @@ from disnake.ext import commands, tasks
 import helpful_modules
 from helpful_modules import problems_module
 from helpful_modules.constants_loader import BotConstants
-from helpful_modules.problems_module import GuildData
-from helpful_modules.problems_module.cache import MathProblemCache
+from helpful_modules.problems_module import GuildData, AppealQuestion
+from helpful_modules.problems_module import MathProblemCache, RedisCache
 from helpful_modules.restart_the_bot import RestartTheBot
+from helpful_modules.save_files import FileSaver
 
 from ._error_logging import log_error
 from .errors import (
@@ -58,9 +59,25 @@ APPEALS_CHANNEL_ID = 944693665899630592
 
 
 class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
+    is_closing: bool
+    file_saver: FileSaver | None
+    appeal_questions: dict[str, list[AppealQuestion]]
+    tasks: list[str: disnake.ext.tasks.Loop]
+    config_json: AsyncFileDict
+    trusted_users: list[int] | None
+    _on_ready_func: typing.Callable
+    cache: MathProblemCache | RedisCache
+    constants: BotConstants
+    restart: RestartTheBot
+    time_started: float
+    total_stats: CommandStats | None
+    queue: MessageQueue
+    closing_things: list[typing.Callable]
+
     def __init__(self, *args, **kwargs):
         self.is_closing = False
-
+        self.file_saver = None
+        self.appeal_questions = {}
         self.tasks = kwargs.pop("tasks")
         self.config_json = AsyncFileDict("config.json")
         self.storer = kwargs.pop("storer")

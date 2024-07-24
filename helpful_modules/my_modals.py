@@ -23,6 +23,7 @@ import disnake
 from disnake.ui import Modal
 
 from .base_on_error import base_on_error
+from .threads_or_useful_funcs import generate_custom_id
 
 
 class MyModal(Modal):
@@ -40,7 +41,7 @@ class MyModal(Modal):
         kwargs["custom_id"] = (
             kwargs["custom_id"]
             if "custom_id" in kwargs.keys()
-            else os.urandom(20).hex()
+            else generate_custom_id()
         )
         self._check = kwargs.pop("check", _check)
         self._extra_args = kwargs.pop("extra_args", [])

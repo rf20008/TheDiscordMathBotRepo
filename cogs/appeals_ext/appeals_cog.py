@@ -16,78 +16,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-
-import time
+import asyncio
 from os import urandom
 
 import disnake
 from disnake.ext import commands
 
-from helpful_modules import problems_module
 from helpful_modules.checks import has_privileges
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.custom_embeds import ErrorEmbed, SuccessEmbed
-from helpful_modules.my_modals import MyModal
-from helpful_modules.problems_module import Appeal, AppealViewInfo, AppealType
-from .appeal_views import AppealView
-from helpful_modules.threads_or_useful_funcs import generate_new_id
+from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
 
 from cogs.helper_cog import HelperCog
+from .appeal_modals import UserDenylistAppealModal, GuildDenylistAppealModal
+from .errors import NoAppealQuestionsException
+from helpful_modules.problems_module import AppealType, APPEAL_QUESTION_TYPE_NAMES
 
-
-class AppealModal(MyModal):
-    async def callback(self, modal_inter: disnake.ModalInteraction):
-        bot = modal_inter.bot
-        assert isinstance(bot, TheDiscordMathProblemBot)
-        assert hasattr(bot, 'cache')
-        cache = bot.cache
-        # nonlocal reason
-        reason = modal_inter.text_values[self.undenylist_custom_id]
-        await modal_inter.send("Thanks! I'm now going to add this to the database :)")
-
-        # Create an appeal
-        # find the appeal
-        highest_appeal_num = 0
-        try:
-            await cache.update_cache()
-        except NotImplementedError:
-            pass
-        appeal: Appeal = Appeal(
-            timestamp=time.time(),
-            appeal_msg=reason,
-            special_id=generate_new_id(),
-            appeal_num=highest_appeal_num,
-            user_id=modal_inter.author.id,
-            type=problems_module.AppealType.DENYLIST_APPEAL.value,
-        )
-        await cache.set_appeal_data(appeal)
-        await modal_inter.send(embed=SuccessEmbed("Appeal should be sent?"))
-
-        # raise NotImplementedError("The program that finds the highest appeal number is not yet implemented. However, your appeal should have been sent")
-        all_appeals = await cache.get_all_appeals()
-        for appeal in all_appeals:
-            if appeal.user_id != modal_inter.author.id:
-                continue
-            if appeal.appeal_num > highest_appeal_num:
-                highest_appeal_num = appeal.appeal_num
-        highest_appeal_num += 1
-
-        appeals_channel = bot.appeals_channel
-        reason = f"This appeal is from {modal_inter.author.mention} and is appeal#{appeal.appeal_num}. The reason they appealed is below:. \n\n **Their reason:**\n" + reason
-        pages = AppealView.break_into_pages(reason)
-
-        our_view = AppealView(cache=bot.cache, user_id=modal_inter.author.id,
-                              pages=pages, guild_id = None, appeal_type = AppealType.DENYLIST_APPEAL)
-        msg = await appeals_channel.send(view=our_view, embed=our_view.create_embed())
-        our_view.message_id = msg.id
-        await cache.set_appeal_view_info(AppealViewInfo(
-            message_id=msg.id,
-            user_id=modal_inter.author.id,
-            guild_id = None,
-            done = False,
-            pages = pages,
-            appeal_type= AppealType.DENYLIST_APPEAL
-        ))
 
 class AppealsCog(HelperCog):
     def __init__(self, bot: TheDiscordMathProblemBot):
@@ -103,6 +46,12 @@ class AppealsCog(HelperCog):
         Appeal your punishments! It uses a modal.
         There are subcommands!"""
         pass
+    def load_questions(self):
+        if not self.bot.appeal_questions:
+            self.bot.appeal_questions = self.bot.file_saver.load_appeal_questions()
+            # are there questions?
+            if not self.bot.appeal_questions:
+                raise NoAppealQuestionsException("There are no appeal questions")
 
     @has_privileges(denylisted=True)
     @commands.cooldown(2, 86400, commands.BucketType.user)
@@ -112,23 +61,24 @@ class AppealsCog(HelperCog):
         /appeal
         Appeal your denylists!
 
-        You should write out your reasoning beforehand. However, you have 20 minutes to type.
+        You should write out your reasoning beforehand. However, you have 14m30s to type.
         The sole appeal question is "Why should I undenylist you?". You can respond in at most 4k chars.
         If you close the modal without saving your work somewhere else, YOUR WORK WILL BE LOST!!!!
         """
-
+        # make sure appeal questions are loaded
+        self.load_questions()
         async def callback(s, modal_inter: disnake.ModalInteraction):
             s.view.stop()
             nonlocal reason
             reason = modal_inter.text_values[undenylist_custom_id]
             await modal_inter.send(
-                "Thanks! I'm now going to add this to the database :)"
+                embed=SuccessEmbed("Thanks! I'm now going to add this to the database :)")
             )
 
         # Make sure they are denylisted because if they're not denylisted, they can't appeal
         # Get the info from the user
         modal_custom_id = str(inter.id) + urandom(10).hex()
-        undenylist_custom_id = str(inter.id) + urandom(10).hex()
+        undenylist_custom_id = urandom(1).hex()
         text_inputs = [
             disnake.ui.TextInput(
                 label="Why should I undenylist you? ",
@@ -139,14 +89,14 @@ class AppealsCog(HelperCog):
         ]
         reason: str = ""
 
-        modal = AppealModal(
-            callback=callback,
-            title="Why should I un-denylist you? (20m limit)",
-            components=[text_inputs],
-            timeout=1200,
+        modal = UserDenylistAppealModal(
+            #callback=callback,
+            title="Why should I un-denylist you? (14m limit)",
+            components=[question.to_textinput() for question in self.bot.appeal_questions["user_denylist"]],
+            timeout=870,
             custom_id=modal_custom_id,
         )
-        modal.undenylist_custom_id = undenylist_custom_id
+        modal.undenylist_custom_id = modal.components[0].children[0].custom_id
         # modal.append_component(text_inputs)
         await inter.response.send_modal(modal)
         modal_inter = None
@@ -157,9 +107,61 @@ class AppealsCog(HelperCog):
                 return True
             return False
 
-        _ = await self.bot.wait_for("modal_submit", check=check)
+        try:
+            _ = await self.bot.wait_for("modal_submit", check=check, timeout = 870.0)
+        except asyncio.TimeoutError:
+            await inter.send(embed=ErrorEmbed("You did not submit the modal in time"))
+            return
+    @commands.cooldown(2,15,commands.BucketType.user)
+    @appeal.sub_command(
+        name="guild_denylist",
+        description="Appeal your guild denylists"
+    )
+    async def guild_denylist(self, inter: disnake.ApplicationCommandInteraction):
+        """/appeal guild_denylist
+        Appeal Guild Denylists
+        Like /appeal denylist, this gives you a questionnaire. We'll provide you the 3 questions, and you still have 20m to answer the questions.
+        You can still take as much time as you need to prepare, and you should take as much time as you need to prepare.
+        Here are the questions:
+        1) What is your Guild ID (short answer, 100 chars)
+            Enter *only* your GUILD ID, which is also your server ID, so I can know what guild you're appealing for.
+            You must enter an integer or it won't be accepted by my bot
+        2) "Why can *YOU* appeal for your guild/server?"
+            Explain in as much or as little detail as you want why you have the authority to submit this appeal on behalf of your guild/server.
+            The character limit is 4000, but that does not mean you need to write a whole essay.
+            Be concise if all other things are equal.
+
+        3) Why should I undenylist your guild?
+            Explain why I should undenylist your guild.
+            Things you can include is how you've improved or changes in my rules, etc.
+            The character limit is 4000, but you don't need to write a whole essay. Be concise (sometimes a single sentence is enough!)
+        """
+        self.load_questions()
+        modal_custom_id = str(inter.id) + urandom(10).hex()
+        questions = self.bot.appeal_questions[APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL]]
+        textinputs = [q.to_textinput() for q in questions]
+        question_custom_ids = {question: textinput for question, textinput in zip(questions, textinputs)}
+        modal = GuildDenylistAppealModal(
+            timeout=870.0,
+            title="Guild Denylist Appeal Questionnaire (14m max)",
+            components=textinputs,
+            custom_id=modal_custom_id
+        )
+        modal.guild_id_custom_id = textinputs[0].custom_id
+        modal.custom_ids = question_custom_ids
+        await inter.response.send_modal(modal)
+        try:
+            _ = await self.bot.wait_for("modal_submit", check=lambda minter: minter.author.id == inter.author.id, timeout=870.0)
+            return
+        except asyncio.TimeoutError:
+            await inter.send(embed=ErrorEmbed("You did not fill out the form in time"))
+            return
 
 
+        # TODO: add logic to make sure the guild denylist is sent
+        # TODO: send the modal
+        # TODO: tell the modals all the question id and the custom ids of each modal
+        # TODO: test!!!
 def setup(bot):
     bot.add_cog(AppealsCog(bot))
 

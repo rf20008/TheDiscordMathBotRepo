@@ -315,15 +315,20 @@ class RedisCache:
 
     async def get_user_data(self, user_id: int, default: UserData | None = None):
         result = await self.get_key(f"UserData:{user_id}")
-        if result is not None:
+        return parse_user_data(result, default)
+    def parse_user_data(self, data: dict | str, default: UserData | None = None):
+
+        if data is not None:
             try:
-                return UserData.from_dict(orjson.loads(result))
+                return UserData.from_dict(orjson.loads(data))
             except orjson.JSONDecodeError:
                 raise InvalidDictionaryInDatabaseException(
                     "We have a non-dictionary on our hands"
                 )
             except FormatException as fe:
                 raise FormatException("Oh no, the formatting is bad") from fe
+        else:
+            raise 
         if default is not None:
             return default
         raise ThingNotFound("I could not find any user data")

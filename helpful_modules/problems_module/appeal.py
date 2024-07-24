@@ -31,6 +31,7 @@ class AppealType(Enum):
     SUPPORT_SERVER_MISC_PUNISHMENT = 3
     OTHER = 4
     NOT_SET = 5
+    UNKNOWN = 6
     def __int__(self):
         return self.value
 

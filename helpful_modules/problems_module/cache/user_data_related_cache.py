@@ -51,7 +51,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                     dict_to_use = cursor_results[0]
                     dict_to_use["trusted"] = bool(dict_to_use["trusted"])
                     dict_to_use["denylisted"] = bool(dict_to_use["denylisted"])
-                    dict_to_use["user_id"] = int(dict_to_use["USER_ID"])
+                    dict_to_use["user_id"] = int(dict_to_use["user_id"])
                     log.debug("Data successfully returned!")
                     return UserData.from_dict(dict_to_use)
                 else:

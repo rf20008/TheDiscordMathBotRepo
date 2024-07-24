@@ -1,5 +1,24 @@
+"""
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import asyncio
 import json
+import warnings
 
 import aiofiles
 
@@ -21,6 +40,7 @@ class AsyncFileDict:
         self.filename = filename
         self.dict = {}
         if overwrite:
+            warnings.warn("`overwrite` calls asyncio.run. Use with caution (since you can only run `asyncio.run` a few times)", category=RuntimeWarning)
             asyncio.run(self.update_my_file())
 
     async def update_my_file(self):
@@ -47,7 +67,7 @@ class AsyncFileDict:
             self.dict = json.loads(stuff)
         return self.dict
 
-    async def get_key(self, key):
+    async def get_key(self, key, use_cached=False):
         """
         Asynchronously get the value associated with the given key.
 
@@ -58,9 +78,11 @@ class AsyncFileDict:
         - The value associated with the key.
 
         """
+        if use_cached:
+            return self.dict[key]
         return (await self.read_from_file())[key]
 
-    async def set_key(self, key, val):
+    async def set_key(self, key, val, update_file_behind: bool=True):
         """
         Asynchronously set a key-value pair and update the file.
 
@@ -73,9 +95,10 @@ class AsyncFileDict:
 
         """
         self.dict[key] = val
-        await self.update_my_file()
+        if update_file_behind:
+            await self.update_my_file()
 
-    async def del_key(self, key):
+    async def del_key(self, key, update_file_behind: bool=True):
         """
         Asynchronously delete a key-value pair and update the file.
 
@@ -87,21 +110,23 @@ class AsyncFileDict:
 
         """
         del self.dict[key]
-        await self.update_my_file()
+        if update_file_behind:
+            await self.update_my_file()
 
     def __iter__(self):
         """
-        Return an iterator for the keys in the internal dictionary.
+        Return an iterator for the keys in the internal dictionary. Note: this uses the cached dictionary
 
         Returns:
         - Iterator for keys.
+
 
         """
         return self.dict.__iter__()
 
     def keys(self):
         """
-        Return a view of the keys in the internal dictionary.
+        Return a view of the keys in the internal dictionary. Note: this uses the cached dictionary
 
         Returns:
         - View of keys.
@@ -111,7 +136,7 @@ class AsyncFileDict:
 
     def values(self):
         """
-        Return a view of the values in the internal dictionary.
+        Return a view of the values in the internal dictionary. Note: this uses the cached dictionary
 
         Returns:
         - View of values.
