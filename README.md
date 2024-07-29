@@ -39,7 +39,7 @@ However, this bot is mainly for **my fun** and may not be supported that often.
 <li> As of July 28, 2024, I have migrated to the AGPLv3 since my bot is a Discord Bot and it inherently works over a network</li>
 <li> CC-BY-SA 4.0 is no longer a valid license to use this bot under! You **must** license the bot under GPLv3 (or a later version.)
 (CC-BY-SA 4.0 has a one way migration to GPLv3, so you are allowed to do this. </li>
-<li> **Everything (even things that do not explicitly say they are licensed under GPLv3) in this repository except for things that are ignored in .gitignore are licensed under GPLv3. This includes every python file.** </li>
+<li> **Everything (even things that do not explicitly say they are licensed under AGPLv3) in this repository except for things that are ignored in .gitignore are licensed under AGPLv3. This includes every python file.** </li>
 </ol>
 
 
