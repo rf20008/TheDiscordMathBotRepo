@@ -18,12 +18,13 @@
       "question": "Why can you file this for your guild?",
       "char_limit": 4000,
       "long_prompt": "Explain in as much or as little detail as you want why you have the authority to submit this appeal on behalf of your guild/server. The character limit is 4000, but that does not mean you need to write a whole essay. Be concise if all other things are equal",
-      "style": 1
+      "style": 2
     },
     {
       "question": "Why should I undenylist your guild?",
       "char_limit": 4000,
-      "long_prompt": "Explain why I should undenylist your guild. Things you can include is how you've improved or changes in my rules, etc. The character limit is 4000, but you don't need to write a whole essay. Be concise (sometimes a single sentence is enough!)"
+      "long_prompt": "Explain why I should undenylist your guild. Things you can include is how you've improved or changes in my rules, etc. The character limit is 4000, but you don't need to write a whole essay. Be concise (sometimes a single sentence is enough!)",
+      "style": 2
     }
   ]
 }

@@ -1,33 +1,48 @@
-"""
+"""You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
 The Discord Math Problem Bot Repo - VerificationCodeInfo
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Affero General Public License for more details.
 
-Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
-"""
+You should have received a copy of the GNU Affero General Public License along with this program.
+If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import base64
 import datetime
 import hashlib
+import concurrent.futures
 import secrets
 import time
 from typing import Dict
 
+import cryptography
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
 from .dict_convertible import DictConvertible
 from .errors import VerificationCodeExpiredException
-
+from ..threads_or_useful_funcs import async_wait_for_future
 ONE_WEEK = datetime.timedelta(weeks=1).seconds
+SCRYPT_N = 1<<13
+SCRYPT_R = 8
+SCRYPT_P = 1
 
+
+class VerificationCodeThreadHashingManager(concurrent.futures.ThreadPoolExecutor):
+    async def submit_hashing_operation(self, key: bytes, salt: bytes, scrypt_n: int = SCRYPT_N, scrypt_r: int = SCRYPT_R, scrypt_p: int = SCRYPT_P):
+        KDF = Scrypt(salt=salt, N = scrypt_n, r=scrypt_r, p=scrypt_p)
+        future = self.submit(fn = KDF.derive, args=(key+salt))
+        return await async_wait_for_future(future)
+    async def check_hashing_operation(self, key: bytes, salt: bytes, scrypt_n: int = SCRYPT_N, scrypt_r: int = SCRYPT_R, scrypt_p: int = SCRYPT_P):
 
 class VerificationCodeInfo(DictConvertible):
     """

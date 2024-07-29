@@ -1,8 +1,14 @@
 """
-This file is part of The Discord Math Problem Bot Repo
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+TheDiscordMathProblemRepo - AppealView
+
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -11,18 +17,21 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
+
+import warnings
 
 import disnake
 from helpful_modules.base_on_error import base_on_error
 from helpful_modules.paginator_view import PaginatorView
 from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.problems_module import RedisCache, MathProblemCache, Appeal, AppealViewInfo, AppealType, GuildData, UserData
+from helpful_modules.problems_module import RedisCache, MathProblemCache, Appeal, AppealViewInfo, AppealType, GuildData, UserData, PastWarning
+
 class AppealView(PaginatorView):
     def __init__(
             self,
@@ -52,6 +61,7 @@ class AppealView(PaginatorView):
         self.message_id = message_id
         await cache.set_appeal_view_info(AppealViewInfo(message_id=message_id, user_id=self.user_id, guild_id=self.guild_id, done=False, pages=self.pages))
     async def interaction_check(self, interaction: disnake.Interaction) -> bool:
+        warnings.warn("The interaction check does not check whether they are the appealant, but checks whether they are trusted", category=UserWarning)
         if not isinstance(interaction.bot, TheDiscordMathProblemBot):
             raise TypeError("interaction.bot is not an instance of `TheDiscordMathProblemBot`")
 

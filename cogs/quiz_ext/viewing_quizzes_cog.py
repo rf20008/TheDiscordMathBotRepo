@@ -1,4 +1,30 @@
+"""
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+This file is part of TheDiscordMathProblemBotRepo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
+import asyncio
+from io import BytesIO
 import typing
+import json
 
 import disnake
 from disnake.ext import commands
@@ -9,7 +35,7 @@ from helpful_modules.custom_embeds import *
 from helpful_modules.problems_module import *
 
 from ..helper_cog import HelperCog
-from ._utils import get_attempt_num_for_user, get_quiz_submission
+from ._utils import get_quiz_submission
 
 
 class ViewingQuizzesCog(HelperCog):
@@ -54,11 +80,10 @@ class ViewingQuizzesCog(HelperCog):
         can_view_quiz: bool = False
         if await self.bot.is_trusted(inter.author):
             # Trusted users are global moderators, so they can view quizzes
-            can_view_quiz = True
             return True
         else:
             data = await self.cache.get_guild_data(
-                inter.guild.id, default=problems_module.GuildData.default()
+                inter.guild.id, default=problems_module.GuildData.default(guild_id=inter.guild_id)
             )
             if data.mod_check.check_for_user_passage(inter.author):
                 # Mods can view quizzes
@@ -171,17 +196,17 @@ class ViewingQuizzesCog(HelperCog):
                 # Did they solve it?
                 try:
                     quiz: Quiz = await self.cache.get_quiz(quiz_id)
-                except QuizNotFoundException:
+                except problems_module.errors.QuizNotFound:
                     await inter.send(embed=ErrorEmbed("Quiz not found"))
                     return
                 solved_quiz: bool = (
                     len(
                         filter(
-                            lambda submission: submission.user_id == inter.author.id,
+                            lambda submission: submission.user_id == inter.author.id, # filter over all submissions they own
                             quiz.submissions,
                         )
                     )
-                    != 0
+                    != 0 # do they have one?
                 ) or (
                     len(
                         filter(
@@ -192,7 +217,7 @@ class ViewingQuizzesCog(HelperCog):
                             quiz.existing_sessions,
                         )
                     )
-                    != 0
+                    != 0 # overtime session?
                 )
                 if quiz.description.solvers_can_view_quiz and solved_quiz:
                     allowed = True
@@ -314,7 +339,7 @@ class ViewingQuizzesCog(HelperCog):
                 required=True,
             ),
             disnake.Option(
-                name="problem_num",
+                name="problem_id",
                 description="The problem #",
                 type=disnake.OptionType.integer,
                 required=True,
@@ -337,7 +362,7 @@ class ViewingQuizzesCog(HelperCog):
         self,
         inter: disnake.ApplicationCommandInteraction,
         quiz_id: int,
-        problem_num,
+        problem_id: int,
         show_all_info: bool = False,
         raw: bool = False,
     ):
@@ -366,7 +391,7 @@ class ViewingQuizzesCog(HelperCog):
             else:
                 if inter.guild is not None:
                     data: GuildData = await self.cache.get_guild_data(
-                        guild_id, default=problems_module.GuildData.default()
+                        inter.guild_id, default=problems_module.GuildData.default(guild_id=inter.guild_id)
                     )
                     if data.mod_check.check_for_user_passage(inter.author):
                         allowed = True
@@ -378,13 +403,13 @@ class ViewingQuizzesCog(HelperCog):
         try:
             problem: QuizProblem = quiz.quiz_problems[problem_id]
         except KeyError:
-            await inter.send("Problem number out of range")
+            await inter.send(embed=ErrorEmbed("Problem number out of range"))
             return
 
         if raw is False and show_all_info is False:
             session = await get_quiz_submission(self, inter.author.id, quiz_id)
             if session.done:
-                await inter.send("Your session is done!")
+                await inter.send(embed=ErrorEmbed("Your session is done!"))
                 return
             problem_str = f"""Problem number: {problem_id}
 Question: {problem.question}

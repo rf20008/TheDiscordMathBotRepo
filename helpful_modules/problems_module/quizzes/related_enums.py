@@ -1,12 +1,40 @@
+"""
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+This file is part of The Discord Math Problem Bot Repo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import enum
 from dataclasses import dataclass
 from typing import Dict
 
-# This isn't really used, but it's licensed under GPLv3
-DEFAULT_LICENSE = """This quiz is licensed under a license 
-that allows me to do the processing with this quiz that is needed,
-allows you all to see this quiz, answer it, and see the solutions,
+# This isn't really used, but it's licensed under AGPLv3
+DEFAULT_LICENSE = """This quiz is licensed under a license that allows:
+- TheDiscordMathProblemBot to do the processing required with this quiz
+- everyone to see the quiz
+- everyone to interact with it, including voting for it, trying to solve it, voting against it and talking about it.
+- everyone to see its solutions
+- Discord to do the processing required with this quiz, and the ability for Discord to follow its Terms of Service, Community Guidelines, Privacy Policy, and other related documents,
+
 but nothing else.
+Also, the text of this license is copyrighted by @rf20008 on Github, but is released under the AGPLv3 or any later version (at your option).
 """
 
 

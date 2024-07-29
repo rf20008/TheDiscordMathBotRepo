@@ -1,8 +1,32 @@
+"""
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+The Discord Math Problem Bot Repo - QuizRelatedCache
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
+"""
 import logging
 import pickle
 import typing
 from copy import copy
 from typing import *
+import warnings
 
 import aiosqlite
 
@@ -16,18 +40,18 @@ from .problems_related_cache import ProblemsRelatedCache
 
 log = logging.getLogger(__name__)
 
-
 class QuizRelatedCache(ProblemsRelatedCache):
-    """An extension of ProblemsRelatedCache that contains"""
-
+    """An extension of ProblemsRelatedCache that contains quiz stuff"""
+    # MARK: Quiz Sessions
     async def get_quiz_sessions(self, quiz_id: int) -> List[QuizSolvingSession]:
         """Get the quiz sessions for a quiz"""
         assert isinstance(quiz_id, int)
+
         if self.use_sqlite:
             async with aiosqlite.connect(self.db) as conn:
                 conn.row_factory = dict_factory
                 cursor = await conn.cursor()
-                await cursor.execute("SELECT * WHERE quiz_id = ?", (quiz_id,))
+                await cursor.execute("SELECT * FROM quiz_submissions_sessions WHERE quiz_id = ?", (quiz_id,))
                 # For each row retrieved: use from_sqlite_dict to turn into a QuizSolvingSession and return it
                 return [
                     QuizSolvingSession.from_sqlite_dict(item)
@@ -65,7 +89,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 conn.row_factory = dict_factory
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    """INSERT INTO quiz_submission_sessions (user_id, quiz_id, guild_id, is_finished, answers, start_time, expire_time, special_id, attempt_num)
+                    """INSERT OR REPLACE INTO quiz_submission_sessions (user_id, quiz_id, guild_id, is_finished, answers, start_time, expire_time, special_id, attempt_num)
                     VALUES (?,?,?,?,?,?,?,?)""",
                     (
                         session.user_id,
@@ -90,7 +114,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
             ) as connection:
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
-                    """INSERT INTO quiz_submission_sessions (user_id, quiz_id, guild_id, is_finished, answers, start_time, expire_time, special_id, attempt_num)
+                    """INSERT OR REPLACE INTO quiz_submission_sessions (user_id, quiz_id, guild_id, is_finished, answers, start_time, expire_time, special_id, attempt_num)
                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
                     (
                         session.user_id,
@@ -124,9 +148,8 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 conn.row_factory = dict_factory
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    """UPDATE quiz_submission_sessions 
-                    SET guild_id = ?, quiz_id = ?, user_id = ?, answers = ?, start_time = ?, expire_time = ?, is_finished = ?, special_id = ?, attempt_num = ?
-                    WHERE special_id = ?""",
+                    """INSERT OR REPLACE INTO quiz_submission_sessions (guild_id, quiz_id, user_id, answers, start_time, expire_time, is_finished, special_id, attempt_num)
+                    (?,?,?,?,?,?,?,?,?)""",
                     (
                         session.guild_id,
                         session.quiz_id,
@@ -211,16 +234,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     (special_id,),
                 )
                 potential_sessions = list(await cursor.fetchall())
-                if len(potential_sessions) < 1:
-                    raise QuizSessionNotFoundException(
-                        "There aren't any quiz sessions found with this special id"
-                    )
-                elif len(potential_sessions) > 1:
-                    raise MathProblemsModuleException(
-                        "There are too many quiz sessions with this special id"
-                    )
-                else:
-                    return QuizSolvingSession.from_sqlite_dict(potential_sessions[0])
+
         else:
             with mysql_connection(
                 host=self.mysql_db_ip,
@@ -234,22 +248,24 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     (special_id,),
                 )
                 potential_sessions = list(cursor.fetchall())
-                if len(potential_sessions) < 1:
-                    raise QuizSessionNotFoundException(
-                        "There aren't any quiz sessions found with this special id"
-                    )
-                elif len(potential_sessions) > 1:
-                    raise MathProblemsModuleException(
-                        "There are too many quiz sessions with this special id"
-                    )
-                else:
-                    return QuizSolvingSession.from_mysql_dict(
-                        potential_sessions[0], cache=self
-                    )
 
-    async def add_quiz(self, quiz: Quiz) -> Quiz:
+        if len(potential_sessions) < 1:
+            raise QuizSessionNotFoundException(
+                "There aren't any quiz sessions found with this special id"
+            )
+        elif len(potential_sessions) > 1:
+            raise SQLException(
+                "There are too many quiz sessions with this special id"
+            )
+        else:
+            return QuizSolvingSession.from_sqlite_dict(potential_sessions[0])
+
+    # MARK: Quizzes
+
+    async def add_quiz(self, quiz: Quiz, insert_sessions: bool = True) -> Quiz:
         """Add a quiz"""
         assert isinstance(quiz, Quiz)
+        warnings.warn("add_quiz will not automatically save its sessions in the future", category=FutureWarning, stacklevel=2)
         if not quiz.empty:
             num_already_existing_quizzes = await self.get_quizzes_by_func(
                 func=lambda _quiz: not _quiz.empty and _quiz.guild_id == quiz.guild_id  # type: ignore
@@ -283,7 +299,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 cursor = await conn.cursor()
                 for item in quiz.problems:
                     await cursor.execute(
-                        """INSERT INTO quizzes (guild_id, quiz_id, problem_id, question, answer, voters, solvers, author)
+                        """INSERT OR REPLACE INTO quizzes (guild_id, quiz_id, problem_id, question, answer, voters, solvers, author)
                     VALUES (?,?,?,?,?,?,?,?)""",
                         (
                             item.guild_id,
@@ -296,18 +312,21 @@ class QuizRelatedCache(ProblemsRelatedCache):
                             item.author,
                         ),
                     )
-                for item in quiz.submissions:
-                    await cursor.execute(
-                        """INSERT INTO quiz_submissions (guild_id, quiz_id, user_id, submissions)
-                    VALUES (?,?,?,?)""",
-                        (
-                            item.guild_id,
-                            item.quiz_id,
-                            item.user_id,
-                            pickle.dumps(item.to_dict()),
-                        ),
-                    )
-
+                # TODO: do we need to do this? I don't think so
+                if insert_sessions:
+                    for item in quiz.submissions:
+                        await cursor.execute(
+                            """INSERT OR REPLACE INTO quiz_submissions (guild_id, quiz_id, user_id, submissions)
+                        VALUES (?,?,?,?)""",
+                            (
+                                item.guild_id,
+                                item.quiz_id,
+                                item.user_id,
+                                pickle.dumps(item.to_dict()),
+                            ),
+                        )
+                else:
+                    warnings.warn("The QuizSessions are not being saved", category=UnsavedContentWarning)
                 await conn.commit()
         else:
             with mysql_connection(
@@ -332,24 +351,28 @@ class QuizRelatedCache(ProblemsRelatedCache):
                             item.author,
                         ),
                     )
-                for item in quiz.submissions:
-                    cursor.execute(
-                        """INSERT INTO quiz_submissions (guild_id, quiz_id, user_id, submissions)
-                    VALUES ('%s','%s','%s',%s)""",
-                        (
-                            item.guild_id,
-                            item.quiz_id,
-                            item.user_id,
-                            pickle.dumps(item.to_dict()),
-                        ),
-                    )
+                if insert_sessions:
+                    for item in quiz.submissions:
+                        cursor.execute(
+                            """INSERT INTO quiz_submissions (guild_id, quiz_id, user_id, submissions)
+                        VALUES ('%s','%s','%s',%s)""",
+                            (
+                                item.guild_id,
+                                item.quiz_id,
+                                item.user_id,
+                                pickle.dumps(item.to_dict()),
+                            ),
+                        )
+                else:
+                    warnings.warn("The QuizSessions are not being saved", category=UnsavedContentWarning)
         return quiz
 
     def __str__(self):
         raise NotImplementedError
 
-    async def get_quiz(self, quiz_id: int) -> Optional[Quiz]:
+    async def get_quiz(self, quiz_id: int, retrieve_submissions: bool = True) -> Optional[Quiz]:
         """Get the quiz with the id specified. Returns None if not found"""
+        warnings.warn("In the future, quizzes will not retrieve their submissions", category=FutureWarning)
         assert isinstance(quiz_id, int)
         if self.use_sqlite:
             async with aiosqlite.connect(self.db_name) as conn:
@@ -373,16 +396,16 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 )
                 problems = list(await cursor.fetchall())
                 if len(problems) == 0:
-                    raise QuizNotFound(f"Quiz id {quiz_id} not found")
-
-                await cursor.execute(
-                    "SELECT submissions FROM quiz_submissions WHERE quiz_id = ?"
-                )
-                submissions = await cursor.fetchall()
-                submissions = [
-                    QuizSubmission.from_dict(pickle.loads(item[0]), cache=copy(self))
-                    for item in submissions
-                ]
+                    raise QuizNotFound(f"Quiz {quiz_id} not found")
+                if retrieve_submissions:
+                    await cursor.execute(
+                        "SELECT submissions FROM quiz_submissions WHERE quiz_id = ?"
+                    )
+                    submissions = await cursor.fetchall()
+                    submissions = [
+                        QuizSubmission.from_dict(pickle.loads(item[0]), cache=copy(self))
+                        for item in submissions
+                    ]
                 problems = [
                     QuizProblem.from_row(dict_factory(cursor, row), cache=copy(self))
                     for row in problems
@@ -399,20 +422,21 @@ class QuizRelatedCache(ProblemsRelatedCache):
                 problems = [
                     QuizProblem.from_row(row, copy(self)) for row in cursor.fetchall()
                 ]
-                cursor.execute(
-                    "SELECT * FROM submissions WHERE quiz_id = '%s'", (quiz_id,)
-                )
-                submissions = [
-                    QuizSubmission.from_dict(pickle.loads(row[0]), cache=copy(self))
-                    for row in cursor.fetchall()
-                ]
+                if retrieve_submissions:
+                    cursor.execute(
+                        "SELECT * FROM submissions WHERE quiz_id = '%s'", (quiz_id,)
+                    )
+                    submissions = [
+                        QuizSubmission.from_dict(pickle.loads(row[0]), cache=copy(self))
+                        for row in cursor.fetchall()
+                    ]
         authors = set((problem.author for problem in problems))
         sessions = await self.get_quiz_sessions(quiz_id)
         description = await self.get_quiz_description(quiz_id)
         quiz = Quiz(
             quiz_id,
             problems,
-            submissions,
+            submissions if retrieve_submissions else [],
             cache=self,
             authors=authors,  # type: ignore
             existing_sessions=sessions,
@@ -466,6 +490,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     "DELETE FROM quiz_submission_sessions WHERE quiz_id = ?", (quiz_id,)
                 )  # Delete the sessions associated with it
                 connection.commit()
+    # MARK: Quiz Descriptions
 
     async def get_quiz_description(self, quiz_id: int) -> QuizDescription:
         """Get a quiz description from a quiz id"""
@@ -645,7 +670,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
                     "DELETE * FROM quiz_description WHERE quiz_id = ?", (quiz_id,)
                 )  # Delete it
                 connection.commit()
-
+    # MARK: misc
     async def get_quizzes_by_func(
         self: "QuizRelatedCache",
         func: typing.Callable[[Quiz, Any], bool] = lambda quiz: False,
@@ -660,6 +685,7 @@ class QuizRelatedCache(ProblemsRelatedCache):
             args = []
         if kwargs is None:
             kwargs = {}
+        warnings.warn("update_cache hangs", category=PastWarning)
         await self.update_cache()
         return [quiz for quiz in self.cached_quizzes if func(quiz, *args, **kwargs)]  # type: ignore
 

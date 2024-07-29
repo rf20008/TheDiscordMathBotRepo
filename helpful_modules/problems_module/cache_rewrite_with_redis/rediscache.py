@@ -1,7 +1,13 @@
 """
-The Discord Math Problem Bot Repo - DictConvertible
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+The Discord Math Problem Bot Repo - RedisCache
+
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -10,7 +16,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
@@ -718,7 +724,12 @@ class RedisCache:
         if not isinstance(user_id, int):
             raise TypeError(f"user_id is not an int, but is {user_id.__class__.__name__} and is {user_id}")
         await self.del_key(f"vcode:{user_id}")
+    async def initialize_sql_table(self):
+        raise SQLNotSupportedInRedisException("SQL is not supported in Redis, and creating sql tables is not supported in Redis either")
+
+
 
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server
 # TODO: unit tests!
+# TODO: make sure this is a drop-in replacement for the other cache

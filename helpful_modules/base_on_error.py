@@ -1,21 +1,21 @@
-"""
-This file is part of The Discord Math Problem Bot Repo
+"""You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+The Discord Math Problem Bot Repo - BaseOnError
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Affero General Public License for more details.
 
-Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
-"""
+You should have received a copy of the GNU Affero General Public License along with this program.
+If not, see <https://www.gnu.org/licenses/>.
+
+Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import asyncio
 import datetime
@@ -66,19 +66,13 @@ async def base_on_error(
     if error.__context__ is not None:
         cause = error.__context__
     print(cause, error, inter)
-    if isinstance(cause, LockedCacheException) or isinstance(
-        error, LockedCacheException
-    ):
+    if isinstance(error, LockedCacheException):
         return {
             "content": "The bot's cache's lock is currently being held. Please try again later."
         }
     # print(isinstance(cause, LinearAlgebraUserInputErrorException))
     # print(type(cause))
-    if isinstance(cause, LinearAlgebraUserInputErrorException) or isinstance(
-        error, LinearAlgebraUserInputErrorException
-    ):
-        print(cause.args)
-        print(str(cause))
+    if isinstance(error, LinearAlgebraUserInputErrorException):
         return {"embed": ErrorEmbed(str(cause))}
     if isinstance(error, (OnCooldown, disnake.ext.commands.CommandOnCooldown)):
         # This is a cooldown exception
@@ -91,7 +85,14 @@ async def base_on_error(
 
         The error traceback is below."""
         error_traceback = "\n".join(traceback.format_exception(error))
-        return {"content": extra_content + error_traceback}
+        paginator = PaginatorView.paginate(
+            user_id=inter.author.id,
+            text=extra_content + error_traceback,
+            breaking_chars="\n",
+            max_page_length=1900,
+            special_color=disnake.Color.red(),
+        )
+        return {"embed": paginator.create_embed(), "view": paginator}
 
     if isinstance(error, commands.NotOwner):
         return {"embed": ErrorEmbed("You are not the owner of this bot.")}

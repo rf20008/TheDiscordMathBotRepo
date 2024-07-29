@@ -1,8 +1,13 @@
 """
-This file is part of The Discord Math Problem Bot Repo
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+TheDiscordMathProblemRepo - AppealCog
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -11,7 +16,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
@@ -67,13 +72,6 @@ class AppealsCog(HelperCog):
         """
         # make sure appeal questions are loaded
         self.load_questions()
-        async def callback(s, modal_inter: disnake.ModalInteraction):
-            s.view.stop()
-            nonlocal reason
-            reason = modal_inter.text_values[undenylist_custom_id]
-            await modal_inter.send(
-                embed=SuccessEmbed("Thanks! I'm now going to add this to the database :)")
-            )
 
         # Make sure they are denylisted because if they're not denylisted, they can't appeal
         # Get the info from the user
@@ -140,7 +138,7 @@ class AppealsCog(HelperCog):
         modal_custom_id = str(inter.id) + urandom(10).hex()
         questions = self.bot.appeal_questions[APPEAL_QUESTION_TYPE_NAMES[AppealType.GUILD_DENYLIST_APPEAL]]
         textinputs = [q.to_textinput() for q in questions]
-        question_custom_ids = {question: textinput for question, textinput in zip(questions, textinputs)}
+        question_custom_ids = {question: textinput.custom_id for question, textinput in zip(questions, textinputs)}
         modal = GuildDenylistAppealModal(
             timeout=870.0,
             title="Guild Denylist Appeal Questionnaire (14m max)",
@@ -148,7 +146,9 @@ class AppealsCog(HelperCog):
             custom_id=modal_custom_id
         )
         modal.guild_id_custom_id = textinputs[0].custom_id
+        modal.reason_custom_id = textinputs[-1].custom_id
         modal.custom_ids = question_custom_ids
+        print("question custom ids: ", question_custom_ids)
         await inter.response.send_modal(modal)
         try:
             _ = await self.bot.wait_for("modal_submit", check=lambda minter: minter.author.id == inter.author.id, timeout=870.0)
@@ -158,10 +158,9 @@ class AppealsCog(HelperCog):
             return
 
 
-        # TODO: add logic to make sure the guild denylist is sent
-        # TODO: send the modal
-        # TODO: tell the modals all the question id and the custom ids of each modal
-        # TODO: test!!!
+
+    # TODO: more appeals
+
 def setup(bot):
     bot.add_cog(AppealsCog(bot))
 

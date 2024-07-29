@@ -1,8 +1,14 @@
 """
-This file is part of The Discord Math Problem Bot Repo
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+TheDiscordMathProblemRepo - AppealModal
+
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -11,7 +17,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
@@ -88,10 +94,26 @@ async def handle_appeal(
 
     ))
     for question in bot.appeal_questions[APPEAL_QUESTION_TYPE_NAMES[appeal_type]]:
-        our_view.add_pages(
-            our_view.break_into_pages(
-                f"**{question.question}**: \n\n {modal_inter.text_values[custom_ids[question]]}")
-        )
+        try:
+            # Attempt to add pages
+            our_view.add_pages(
+                our_view.break_into_pages(
+                    f"**{question.question}**: \n\n {modal_inter.text_values[custom_ids[question]]}"
+                )
+            )
+        except KeyError as kerr:
+            # Determine what went wrong
+            if question not in custom_ids:
+                # Handle missing question key
+                raise KeyError(f"{question} doesn't have a key in `custom_ids`, which is {custom_ids}") from kerr
+            elif custom_ids[question] not in modal_inter.text_values:
+                # Handle missing text value key
+                raise KeyError(
+                    f"{custom_ids[question]} doesn't have a key in the text values, which are `{modal_inter.text_values}`"
+                ) from kerr
+            else:
+                # Catch any other unexpected KeyError
+                raise RuntimeError("Unexpected KeyError occurred") from kerr
 
     msg = await appeals_channel.send(view=our_view, embed=our_view.create_embed())
     our_view.message_id = msg.id
@@ -103,6 +125,7 @@ async def handle_appeal(
         pages=our_view.pages,
         appeal_type=AppealType.DENYLIST_APPEAL
     ))
+
 
 class AppealModal(MyModal):
     bot: TheDiscordMathProblemBot
@@ -166,6 +189,7 @@ class GuildDenylistAppealModal(AppealModal):
             await modal_inter.send(embed=ErrorEmbed("Your guild ID is not an integer"))
             return
 
+        data = await self.bot.cache.get_guild_data(guild_id=guild_id, default=None)
 
         if not self.bot.is_denylisted_by_guild_id(guild_id):
             await modal_inter.send(embed=ErrorEmbed("Your Guild is not actually denylisted"))

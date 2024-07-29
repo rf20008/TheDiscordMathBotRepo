@@ -187,7 +187,9 @@ venv/*
 
 
 # Ignore the DB
-*.db
+
+potential_bot_names.txt
+
 eval_log/*
 #Whitelists
 #never ignore any python file :)
@@ -201,6 +203,8 @@ eval_log/*
 !**/__init__.py
 #PyCharm-specific, can be ignored
 .idea/**
-
+!requirements.txt
 # sometimes
 stderr.txt
+*.db
+!appeal_questions.json

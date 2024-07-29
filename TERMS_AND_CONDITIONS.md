@@ -1,20 +1,16 @@
-There was a recent update (that is hopefully the most recent update) on June 26, 2024.
+There was a recent update (that is hopefully the most recent update) on July 28, 2024.
 # 0: Terms & Conditions
-Disclaimer: As of January 5, 2024, I am a high school student making this discord bot for fun. I am *not* a lawyer. If you want legal advice, please ask a real lawyer.
-
-Disclaimer 2: I didn't consult any legal advice while writing these Terms, or while modifying them, or revising them, or doing any step in the writing process of these Terms.
-I am *not* experienced in crafting legally binding documents!
-
-Most of this language should be self-explanatory. Please create an issue if it isn't!
-
+## 0.0: AGPL Announcement
+**ANNOUNCEMENT**: As of 23:17:55.00 28 July 2024 GMT-4, my code is now released under the AGPLv3, and any versions released after that datetime will be licensed under the AGPL.
+## 0.1: Disclaimers (Section 0) 
+Disclaimer: As of July 28, 2024, I am still a high school student making this discord bot for fun. I am *not* a lawyer. If you want legal advice, you must ask a real lawyer. <br>
+Disclaimer 2: I didn't consult any legal advice while writing these Terms, or while modifying them, or revising them, or doing any step in the writing process of these Terms. <br>
+Disclaimer 3: I am *not* experienced in crafting legally binding documents! <br>
+Disclaimer 4: This document is provided to be the rules of my bot, and cannot constitute legal advice (since it is provided for informational purposes only). However, I may take action based on the rules that I outline in my Terms. <br>
+## 0.2: Other tidbits
 By using the application (The Discord Math Problem Bot), you agree to these Terms. <br>
 Also, if you use my DMCA inbox with the intent or purpose of sending a DMCA request, or you use my DMCA inbox to send me things using this information, you agree to be bound by section 12
 Note: This language of this document is quite informal.# 0: Terms & Conditions
-Disclaimer: As of January 5, 2024, I am a high school student making this discord bot for fun. I am *not* a lawyer. If you want legal advice, please ask a real lawyer.
-
-Disclaimer 2: I didn't consult any legal advice while writing these Terms, or while modifying them, or revising them, or doing any step in the writing process of these Terms.
-I am *not* experienced in crafting legally binding documents!
-
 Most of this language should be self-explanatory. Please create an issue if it isn't!
 
 By using the application (The Discord Math Problem Bot), you agree to these Terms. <br>
@@ -22,13 +18,16 @@ Note: This language of this document is quite informal.
 
 
 ## 1: Definitions
+(These definitions are in no particular order, and there may be definitions scattered throughout the place)
+* "a real lawyer" means someone who is qualified to practice law
 * "us/we" means the people who develop/maintain The Discord Math Problem Bot (on the official instance, it's @rf20008)
 * "trusted users": people who have the trusted user status in the bot. <br>
 * "these Terms" refer to these Terms and Conditions. <br>
 * "Discord's Terms and Conditions" (or "Discord's Terms") refer to Discord's terms and conditions. <br>
+* "or" is the inclusive or, which means at least one of the things mentioned, or more than one, or any combination of them. For example, "A or B or C or ... or Z" means any one of A, B, C, D, ..., or Z, or any combination of them (like any 2 of them, or any 3 of them, or any 4 of them, etc). 
 * "the bot" means The Discord Math Problem Bot. </br> 
 * "I/me" means @rf20008 (but for *fork instances of the bot*, the pronoun" would not refer to @rf20008, but instead to the owner and runner of the fork. </br>
-* "instances of the bot" refer to individual installations or versions of The Discord Math Problem Bot that are deployed and operated independently by users. Each instance represents a unique iteration of the bot's functionality, tailored to the specific needs or preferences of the user or community managing it. Instances include both the original version of the bot developed by the creator, as well as any forked or modified versions created by users under the terms of the GPLv3 license.
+* "instances of the bot" refer to individual installations or versions of The Discord Math Problem Bot that are deployed and operated independently by users. Each instance represents a unique iteration of the bot's functionality, tailored to the specific needs or preferences of the user or community managing it. Instances include both the original version of the bot developed by the creator, as well as any forked or modified versions created by users under the terms of the (A)GPLv3 license.
 * "The main instance of my bot", or terms like that, refers to the instance of the bot that I run.
 * "fork instances of the bot" refer to instances of my bot that I do not run. If someone forked my repository and ran a version of my bot from their computer, that instance would be considered a "fork instance of the bot". In particular, the main instance of my bot is not a fork instance of the bot. <br>
 * "guild administrators" means people who have the 'administrator' permission in the guild. <br>
@@ -90,6 +89,11 @@ In most serious scenarios, the law would supersede this policy. I would still be
 
 When you submit anything that The Discord Math Problem Bot needs to process (i.e: problems, quizzes, appeals, responses, solutions) to this bot, you (the user of the bot) give me (ay136416 / rf20008) a perpetual, royalty-free, worldwide, non-revocable, etc. license with enough rights to allow me to use this bot to process, store, show, etc. the problem in order for the bot to function properly. However, you don't necessarily transfer ownership to me, and you still get credit for this problem wherever the bot shows it.
 
+
+### 3.4: Reiteration of the disclaimers in section 0
+All the disclaimers of section 0.1 are incorporated here by reference, and are section 3.4.1, section 3.4.2, 3.4.3, etc (where disclaimer number n in Section 0.1 is incorporated as section 3.4.n.)
+
+
 ## 4: When the law complicates stuff
 
 When the law complicates stuff & it invalidates parts of these Terms, only the smallest part that, when removed, makes the law not complicate stuff and makes the rest of the Terms invalid, will be removed from the Terms.
@@ -101,6 +105,7 @@ If this is not allowed, the above section is rendered null. If it's rendered nul
 
 I may change the Terms at any time and for any reason. We won't notify you individually (because we don't store contact data about you with the express purpose of contacting you). However, we might use the bot's status/the official server/other ways to notify you.
 
+
 When the changes are significant, I will try to notify you. I might forget.
 
 
@@ -108,13 +113,15 @@ When the changes are significant, I will try to notify you. I might forget.
 
 Suggestions to this are welcome (as of right now)! If you make any TOS changes that will affect people's usage of the bot, please let me know through the commit message. Pull requests containing changes to my Terms of Service or my Privacy Policy will be considered more strictly.
 
-## 7: GPLv3 disclaimer
+## 7: AGPLv3 disclaimer
 
-These Terms shall not be construed to prevent you from doing anything that the GPLv3 License allows you to do.  
-In other words, if the GPLv3 or later allows you to do something that my terms prevent you from doing, you can still do it.
+These Terms shall not be construed to prevent you from doing anything that the AGPLv3 License allows you to do.  
+In other words, if the AGPLv3 or later allows you to do something that my terms prevent you from doing, you can still do it.
 
-You have the rights to copy, modify, analyze, run, distribute, etc my code, **but only as long as you follow the rules of the GPLv3**.
-If you do not follow the GPLv3, you must not copy my code and take it closed sourced, or do any other interaction with my code.
+You have the rights to copy, modify, analyze, run, distribute, etc my code, **but only as long as you follow the rules of the AGPLv3**.
+If you do not follow the AGPLv3, you must not copy my code and take it closed sourced, or do any other interaction with my code.
+Also, you must follow the AGPLv3, which requires you to distribute copies of your source code to people if they want it, even if you run your instance over a network. Also, you should encourage them to follow the AGPLv3.
+
 ## 8: Remember to follow the Discord ToS
 
 As my bot is being hosted and run according to the Discord API and interacts with Discord in such a way that their terms apply, you must follow [Discord's Terms and Conditions](https://discord.com/tos).
@@ -122,11 +129,11 @@ You must not use my bot to break Discord's Terms of Service.
 
 ## 9: Contributions/ Derivatives / Forks of the project
 
-For legal reasons, those are licensed under GPLv3 or later! The maintainers of the fork have the right to change these Terms, but the modified Terms do not apply to this version unless the changes are merged into the main version!
+For legal reasons, those are licensed under AGPLv3 or later! The maintainers of the fork have the right to change these Terms, but the modified Terms do not apply to this version unless the changes are merged into the main version!
 Note that I am not liable for forks/modifications of this bot as I do not have control over them.
 
-You have the rights to copy, modify, analyze, run, distribute, etc my code, **but only as long as you follow the rules of the GPLv3**.
-If you do not follow the GPLv3, you must not copy my code and take it closed sourced, or do any other interaction with my code.
+You have the rights to copy, modify, analyze, run, distribute, etc my code, **but only as long as you follow the rules of the AGPLv3**.
+If you do not follow the AGPLv3, you must not copy my code and take it closed sourced, or do any other interaction with my code.
 
 ## 10: Termination
 Note the tone change does not mean these following terms are less relevant or less applicable than normal! They still have **the same power** as the rest of these Terms!
@@ -180,20 +187,20 @@ The only way you will know whether you are deny-listed will be when you run a co
 When you are denylisted, you will only be able to interact partially with my bot, but you are not completely banned.
 Therefore, the Terms of Service will still apply to you in the ways that you use this, and the Privacy Policy will still apply to you.
 
-You are **still as free** as you were before to exercise your rights under the GPLv3 to my program. 
+You are **still as free** as you were before to exercise your rights under the AGPLv3 to my program. 
 In particular, you can still make pull requests and issues (until there's a contribution agreement), look at my code as usual, copy it, modify it, run it, distribute it, analyze it.
 
-However, you **must** follow the requirements of the GPLv3.
+However, you **must** follow the requirements of the AGPLv3.
 
 
 ## 11: Selling stuff
-Notwithstanding the relevant portions of the GPLv3 and applicable law, you must not sell things related to my bot.
+Notwithstanding the relevant portions of the AGPLv3 and applicable law, you must not sell things related to my bot.
 This means, for example, that you must not sell problems, solutions, answers, votes, quizzes, answer keys, statuses, or things like that.
 
 Also, even though these Terms do not explicitly disallow selling guild permissions, doing so is **extremely strongly *discouraged***, and may also be prohibited by Discord's Terms and Services (I didn't check).
 
 The following sections go into more detail about selling other things, and why that is prohibited.
-However, as a rule of thumb, you are not allowed to sell anything related to my bot, unless you're exercising your GPLv3 right to sell forks of the bot that you control and own.
+However, as a rule of thumb, you are not allowed to sell anything related to my bot, unless you're exercising your AGPLv3 right to sell forks of the bot that you control and own.
 ### 11.1: Selling trusted user status
 The following rule only applies to instances of my bot that are not fork instances of my bot:
 * You must not sell trusted user status at all. This is because trusted user status is a moderation rank.
@@ -211,9 +218,9 @@ The following section deserves its own section because I said so.
 #### 11.2.1: Rules on selling fork ownership
 The following rules apply *only to fork instances of my bot* that are *not* the main bot.
 * Please contribute to the OSS community. Therefore, it is *discouraged*, but *not banned*, to sell fork instances and make them private.
-* As my bot is licensed under the GPLv3, which is a copyleft license, you must license your forks under the GPLv3 or any later version. Also, if you sell a fork, you must guarantee that they license their fork under the GPLv3 or any later version, and that they never change it.
+* As my bot is licensed under the AGPLv3, which is a copyleft license, you must license your forks under the AGPLv3 or any later version. Also, if you sell a fork, you must guarantee that they license their fork under the GPLv3 or any later version, and that they never change it.
 * You still must provide the source code of your instance of your bot to any user upon request.
-* Finally, you must follow the GPLv3.
+* Finally, you must follow the AGPLv3.
 
 ### 11.3: You MUST NOT sell NSFW/NSFL content.
 These rules apply to all instances of my bot, except those instances where this rule is removed. (If you are forking this bot, **PLEASE, PLEASE, PLEASE, KEEP *AND* ENFORCE* this rule.) 

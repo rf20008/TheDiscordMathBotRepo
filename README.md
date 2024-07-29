@@ -36,6 +36,7 @@ However, this bot is mainly for **my fun** and may not be supported that often.
 # Announcements
 
 <ol>
+<li> As of July 28, 2024, I have migrated to the AGPLv3 since my bot is a Discord Bot and it inherently works over a network</li>
 <li> CC-BY-SA 4.0 is no longer a valid license to use this bot under! You **must** license the bot under GPLv3 (or a later version.)
 (CC-BY-SA 4.0 has a one way migration to GPLv3, so you are allowed to do this. </li>
 <li> **Everything (even things that do not explicitly say they are licensed under GPLv3) in this repository except for things that are ignored in .gitignore are licensed under GPLv3. This includes every python file.** </li>
@@ -72,7 +73,8 @@ Documentation for my bot has been replaced with /documentation. I might set up a
 My code is open source, so you can! There may be bugs, however. Of course, I cannot stop you from self-hosting due to the GPLv3.
 
 I only recommend self-hosting this if you want to help develop the bot or you want to host your own instance of this bot for your server.
-Just follow the GPLv3 and you're fine!
+Just follow the AGPLv3 and you're fine!
+
 ## Steps
 (This assumes you already have knowledge of the command line and how to make a new discord application. If you don't have this knowledge, you probably aren't qualified to self-host a bot.)
 If you don't, you can either help me with my code (if you want to modify the code and help everyone out) or invite my bot.
@@ -89,6 +91,7 @@ Make sure to add the env keys listed below.
 9. __***MAKE SURE YOUR SOURCE CODE IS PUBLIC (OR AVAILABLE TO THE PEOPLE WHO USE IT)!***__ This is for compliance with GPLv3.
 10. Run the main.py file (```poetry install; pip3 install -r requirements.txt; python3 main.py```) Don't use the -O / -OO option (assert statements are necessary to run the bot, and they only run if \_\_debug\_\_ is true, which is not the case if the -O option is given)
 11. Invite the bot  (use the invite link, but replace the client_id field with your bot's client id)
+12. Make sure you follow the AGPL and provide copies of your source code to people who use your bot!
 ## Update the bot with my changes
 
 1. Run ``cd path/to/your/repo/``

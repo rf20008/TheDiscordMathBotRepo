@@ -1,7 +1,13 @@
 """
-The Discord Math Problem Bot Repo - DictConvertible
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+TheDiscordMathProblemBotRepo - Errors
+
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -10,7 +16,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
@@ -108,6 +114,12 @@ class MySQLException(SQLException, aiomysql.Error):
 class QuizNotFound(ThingNotFound):
     """Raised when a quiz isn't found"""
 
+    pass
+
+
+
+class SessionNotFound(ThingNotFound):
+    """Raised when a Session isn't found"""
     pass
 
 
@@ -221,3 +233,10 @@ class VerificationCodeExpiredException(MathProblemsModuleException):
     """Raised when a verification code is expired"""
 
     pass
+
+class UnsavedContentWarning(Warning):
+    """Raised when content is not being saved"""
+    pass
+
+class PastWarning(Warning):
+    """A warning about things that were supported in the past but no longer are"""

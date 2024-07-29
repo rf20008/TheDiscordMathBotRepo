@@ -1,7 +1,13 @@
 """
-The Discord Math Problem Bot Repo - DictConvertible
+You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
+under the GNU General Public License version 3 or at your option, any  later option.
+But versions of the code created and/or distributed *on or after* that date must be distributed
+under the GNU *Affero* General Public License, version 3, or, at your option, any later version.
+
+This file is part of TheDiscordMathProblemBotRepo
+
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
@@ -10,13 +16,15 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
+You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 import datetime
+
+import concurrent.futures
 import disnake
 from disnake.ext import commands
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
@@ -30,8 +38,10 @@ ONE_WEEK = datetime.timedelta(weeks=1).total_seconds()
 # TODO: add the /verification_codes delete command
 # TODO: add stuff to my TOS about verification codes
 
-
 class VerificationCog(HelperCog):
+    def __init__(self, bot):
+        super().__init__(bot)
+
     @commands.slash_command(
         name="verification_codes", description="Manage your verification codes", options=[]
     )
