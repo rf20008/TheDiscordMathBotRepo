@@ -1,5 +1,7 @@
 # Privacy policy
 ## Disclaimers and stuff
+The disclaimers from my Terms of Service, section 3, are incorporated here by reference.
+Also:
 Disclaimer: I am not a lawyer. I am only a high school student, as of January 4, 2024. If you want legal advice, please ask a real lawyer.
 Disclaimer 2: I did not consult any lawyers or get any legal advice while writing this privacy policy.
 
@@ -23,7 +25,7 @@ Storing data you voluntarily submit to the bot, and data from the Discord API, i
 Data I store through this application include data from the Discord API, problems submitted, quizzes submitted, quiz problems submitted, deletion votes to problems, quiz submissions submitted. We may also store quiz gradings (and comments).
 
 # Licenses you give me
-As mentioned in my terms of service, I mentioned that whenever you give me things I or my bot needs to process, you provide me and my bot a perpetual, survival, irrevokable, worldwide, royalty free, license with enough rights to do the things that I and my bot might need to do.
+As mentioned in my terms of service, I mentioned that whenever you give me things I or my bot needs to process, you provide me and my bot a perpetual, irrevocable, worldwide, royalty free, sublicensable, etc. license with enough rights to do the things that I and my bot might need to do.
 However, you don't necessarily transfer ownership to me, and you still get credit for this problem wherever the bot shows it
 Also, the license you give me will survive the termination of this bot and/or your relationship with me.
 
@@ -50,7 +52,7 @@ It is possible to delete data about whether you voted or solved problems, as of 
 
 I may update this policy at any time. We don't store contact information (such as Discord usernames, emails, etc.), so we can't contact users individually. However, we might notify you through the official Discord server or through the bot's status.
 
-If there are significant changes to the Terms, I will try to notify you :-) (but I might forget). However, I often forget; please check the Policy every so often as we won't notify you for every change.
+If there are significant changes to the Terms or my Privacy Policy, I will try to notify you :-) (but I might forget). However, I often forget; please check the Policy every so often as we won't notify you for every change.
 # Contributions
 
 For legal reasons, all contributions to this application *must* be licensed under GPLv3 or later. I am not legally allowed to accept contributions licensed under any other license. I greatly appreciate your contributions!

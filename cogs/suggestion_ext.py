@@ -38,6 +38,10 @@ SUGGESTIONS_AND_FEEDBACK_CHANNEL_ID = 883908866541256805
 
 
 class ConfirmView(disnake.ui.View):
+    bot: TheDiscordMathProblemBot | None
+    suggestions_channel: disnake.abc.Messageable | None = None
+
+
     def __init__(
         self,
         *,
@@ -51,17 +55,30 @@ class ConfirmView(disnake.ui.View):
         self.bot = bot
         self.suggestion = suggestion
 
+    @classmethod
+    async def getch_suggestions_channel(cls):
+        if not isinstance(cls.bot, TheDiscordMathProblemBot):
+            raise RuntimeError("bot is not an instance of TheDiscordMathProblemBot")
+        if cls.suggestions_channel is not None and cls.suggestions_channel.id == SUGGESTIONS_AND_FEEDBACK_CHANNEL_ID:
+            return cls.suggestions_channel
+        else:
+            server = cls.bot.support_server
+            chan = server.get_channel(SUGGESTIONS_AND_FEEDBACK_CHANNEL_ID)
+            if chan is not None:
+                cls.suggestions_channel = chan
+                return chan
+            chan = await server.fetch_channel(SUGGESTIONS_AND_FEEDBACK_CHANNEL_ID)
+            cls.suggestions_channel = chan
+            return chan
+
     async def on_error(self, error, item, interaction):
         await interaction.send(**(await base_on_error(interaction, error, item)))
 
     async def interaction_check(self, inter: disnake.Interaction):
-        async def check():
-            return (
-                self.user_id == inter.author.id
-                and not await self.bot.is_denylisted_by_user_id(inter.author.id)
-            )
 
-        if await check():
+
+        if (self.user_id == inter.author.id
+            and not await self.bot.is_denylisted_by_user_id(inter.author.id)):
             return True
         else:
             await inter.send("This isn't your view!", ephemeral=True, delete_after=15.0)
@@ -73,9 +90,7 @@ class ConfirmView(disnake.ui.View):
     ):
         await inter.response.defer()
         # assume the interaction check has passed, Disnake calls the interaction check before the function is called
-        channel = await self.bot.support_server.fetch_channel(
-            SUGGESTIONS_AND_FEEDBACK_CHANNEL_ID
-        )
+        channel = await ConfirmView.getch_suggestions_channel()
         await channel.send(
             embed=custom_embeds.SimpleEmbed(
                 url=inter.author.display_avatar.url,
@@ -162,6 +177,7 @@ class SuggestionCog(HelperCog):
 
 def setup(bot: TheDiscordMathProblemBot):
     bot.add_cog(SuggestionCog(bot))
+    ConfirmView.bot = bot
 
 
 def teardown(bot: TheDiscordMathProblemBot):

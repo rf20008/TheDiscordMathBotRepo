@@ -50,6 +50,7 @@ from ..quizzes import Quiz
 from ..user_data import UserData
 from ..verification_code_info import VerificationCodeInfo
 
+
 class RedisCache:
     """A class that is supposed to handle the problems, and have the same API as problems_related_cache"""
 
@@ -114,7 +115,7 @@ class RedisCache:
         )
 
     async def get_all_things(self):
-        """Return a list of EVERYTHING in the data base"""
+        """Return a list of EVERYTHING in the database"""
         return list(self.redis.hgetall(""))
 
     async def get_all_problems_by_guild(self, guild_id: int | None):
@@ -187,7 +188,7 @@ class RedisCache:
         :raises TypeError: If 'problem_id' is not an int or 'guild_id' is not an int.
         """
         if not isinstance(problem_id, int) or (
-            guild_id is not None and not isinstance(guild_id, int)
+                guild_id is not None and not isinstance(guild_id, int)
         ):
             raise TypeError("Bad types!")
         await self.del_key(f"BaseProblem:{guild_id}:{problem_id}")
@@ -279,11 +280,11 @@ class RedisCache:
         await self.del_key(f"{thing.__class__.__name__}:{thing.guild_id}:{thing.id}")  # type: ignore
 
     async def get_thing(
-        self,
-        thing_guild_id: int,
-        thing_id: int,
-        cls: typing.Type[DictConvertible],
-        default: DictConvertible | None = None,
+            self,
+            thing_guild_id: int,
+            thing_id: int,
+            cls: typing.Type[DictConvertible],
+            default: DictConvertible | None = None,
     ):
         """
         Retrieves a dictionary convertible object from the cache.
@@ -321,23 +322,26 @@ class RedisCache:
 
     async def get_user_data(self, user_id: int, default: UserData | None = None):
         result = await self.get_key(f"UserData:{user_id}")
-        return parse_user_data(result, default)
+        return self.parse_user_data(result, default)
+
+    @staticmethod
     def parse_user_data(self, data: dict | str, default: UserData | None = None):
 
         if data is not None:
+            if isinstance(data, str):
+                try:
+                    data = orjson.loads(data)
+
+                except orjson.JSONDecodeError:
+                    raise InvalidDictionaryInDatabaseException(
+                        "We have a non-dictionary on our hands"
+                    )
             try:
                 return UserData.from_dict(orjson.loads(data))
-            except orjson.JSONDecodeError:
-                raise InvalidDictionaryInDatabaseException(
-                    "We have a non-dictionary on our hands"
-                )
             except FormatException as fe:
                 raise FormatException("Oh no, the formatting is bad") from fe
         else:
-            raise 
-        if default is not None:
             return default
-        raise ThingNotFound("I could not find any user data")
 
     async def add_user_data(self, thing: UserData):
         await self.set_key(f"UserData:{thing.user_id}", str(thing.to_dict()))
@@ -346,7 +350,7 @@ class RedisCache:
         await self.del_key(f"UserData:{thing.user_id}")
 
     async def get_permissions_required_for_command(
-        self, command_name
+            self, command_name
     ) -> typing.Dict[str, bool]:
         """
         Get the permissions required for a command.
@@ -358,10 +362,10 @@ class RedisCache:
         return self._async_file_dict.dict["permissions_required"][command_name]
 
     async def user_meets_permissions_required_to_use_command(
-        self,
-        user_id: int,
-        permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
-        command_name: str | None = None,
+            self,
+            user_id: int,
+            permissions_required: typing.Optional[typing.Dict[str, bool]] = None,
+            command_name: str | None = None,
     ) -> bool:
         """
         Return whether the user meets permissions required to use the command.
@@ -378,19 +382,19 @@ class RedisCache:
 
         if "trusted" in permissions_required.keys():
             if (
-                await self.get_user_data(
-                    user_id, default=UserData.default(user_id=user_id)
-                )
+                    await self.get_user_data(
+                        user_id, default=UserData.default(user_id=user_id)
+                    )
             ).trusted != permissions_required["trusted"]:
                 return False
 
         if "denylisted" in permissions_required.keys():
             if (
-                (
-                    await self.get_user_data(
-                        user_id, default=UserData.default(user_id=user_id)
+                    (
+                            await self.get_user_data(
+                                user_id, default=UserData.default(user_id=user_id)
+                            )
                     )
-                )
             ).denylisted != permissions_required["denylisted"]:
                 return False
         user_data = await self.get_user_data(user_id)
@@ -399,7 +403,7 @@ class RedisCache:
         )
 
     async def get_appeal(
-        self, special_id: int, default: Appeal | None = None
+            self, special_id: int, default: Appeal | None = None
     ) -> Appeal | None:
         result = await self.get_key(f"Appeal:{special_id}")
         if result is not None:
@@ -414,6 +418,7 @@ class RedisCache:
         if default is not None:
             return default
         raise ThingNotFound("I could not find any appeal")
+
     async def get_all_appeals(self):
         results = await self.redis.hgetall("Appeal:")
         actual_results = []
@@ -433,6 +438,7 @@ class RedisCache:
 
     async def add_appeal(self, thing: Appeal):
         await self.set_key(f"Appeal:{thing.special_id}", thing.to_dict())
+
     async def set_appeal(self, thing: Appeal):
         return await self.add_appeal(thing)
 
@@ -467,7 +473,7 @@ class RedisCache:
         await self.del_key(f"GuildData:{guild_id}")
 
     async def get_guild_data(
-        self, guild_id: int, default: GuildData | None = None
+            self, guild_id: int, default: GuildData | None = None
     ) -> GuildData:
         """
         Get guild data by guild ID.
@@ -510,7 +516,6 @@ class RedisCache:
         things = await self.get_all_things()
         things_authored = []
         for key, value in things.items():
-            dictionarified = None
             try:
                 dictionarified = orjson.loads(value)  # type: ignore
             except orjson.JSONDecodeError:
@@ -548,7 +553,7 @@ class RedisCache:
             await asyncio.sleep(3.0000)
 
     async def get_guild_data(
-        self, guild_id: int, default: GuildData | None = None
+            self, guild_id: int, default: GuildData | None = None
     ) -> GuildData | None:
         result = await self.get_key(f"GuildData:{guild_id}")
         if result is not None:
@@ -574,13 +579,13 @@ class RedisCache:
             await self.del_key(f"GuildData:{thing}")
 
     async def bgsave(
-        self,
-        schedule: typing.Any,
-        path: str = None,
-        wait: bool = False,
-        raise_on_error: bool = False,
-        replace: bool = False,
-        **kwargs,
+            self,
+            schedule: typing.Any,
+            path: str = None,
+            wait: bool = False,
+            raise_on_error: bool = False,
+            replace: bool = False,
+            **kwargs,
     ):
         """
         Perform a background save operation.
@@ -610,13 +615,7 @@ class RedisCache:
         )
 
     async def run_sql(
-        self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
-    ) -> dict:
-        """Run arbitrary SQL. Only used in /sql"""
-        raise SQLNotSupportedInRedisException("SQL is not supported in a Redis Cache")
-
-    async def run_sql(
-        self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
+            self, sql: str, placeholders: typing.Optional[typing.List[typing.Any]] = None
     ) -> dict:
         """
         Run arbitrary SQL.
@@ -666,6 +665,7 @@ class RedisCache:
             raise FormatException(
                 "Failed to decode JSON data into AppealViewInfo"
             ) from jde
+
     async def del_appeal_view_info(self, message_id: int):
         if not isinstance(message_id, int):
             raise TypeError("message_id is not an int")
@@ -720,14 +720,15 @@ class RedisCache:
                 f"The user with id {user_id} has no verification code info"
             )
         return VerificationCodeInfo.from_dict(orjson.loads(result))
+
     async def delete_verification_code_info(self, user_id: int):
         if not isinstance(user_id, int):
             raise TypeError(f"user_id is not an int, but is {user_id.__class__.__name__} and is {user_id}")
         await self.del_key(f"vcode:{user_id}")
+
     async def initialize_sql_table(self):
-        raise SQLNotSupportedInRedisException("SQL is not supported in Redis, and creating sql tables is not supported in Redis either")
-
-
+        raise SQLNotSupportedInRedisException(
+            "SQL is not supported in Redis, and creating sql tables is not supported in Redis either")
 
 # TODO: fix the rest of the commands such that this cache can work
 # TODO: get a redis server

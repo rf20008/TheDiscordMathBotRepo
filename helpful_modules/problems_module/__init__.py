@@ -27,7 +27,7 @@
 
 from . import *
 from .appeal import Appeal, AppealViewInfo, AppealType
-from .appeal_question import AppealQuestion, APPEAL_QUESTION_TYPE_NAME
+from .appeal_question import AppealQuestion, APPEAL_QUESTION_TYPE_NAMES
 from .base_problem import BaseProblem
 from .cache import *
 from .cache_rewrite_with_redis import RedisCache
@@ -40,6 +40,6 @@ from .linear_algebra_problem import LinearAlgebraProblem
 from .parse_problem import convert_dict_to_problem, convert_row_to_problem
 from .quizzes import *
 from .user_data import UserData
-from .verification_code_info import VerificationCodeInfo
+from .verification_code_info import VerificationCodeInfo, VerificationCodeThreadHashingManager, ScryptParameters
 
 __version__ = "0.1.0"

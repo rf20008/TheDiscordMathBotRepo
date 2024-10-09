@@ -42,8 +42,8 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
             hashed_verification_code BLOB,
             salt BLOB,
             expiry DOUBLE,
-            created_at DOUBLE
-            
+            created_at DOUBLE,
+            scrypt_parameters TEXT
         )""")
 
     async def set_verification_code_info(self, code_info: VerificationCodeInfo):
@@ -56,13 +56,14 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
             async with aiosqlite.connect(self.db) as conn:
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    "INSERT OR REPLACE INTO verification_code_infos (user_id, hashed_verification_code, salt, expiry, created_at) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT OR REPLACE INTO verification_code_infos (user_id, hashed_verification_code, salt, expiry, created_at, scrypt_parameters) VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         code_info.user_id,
                         code_info.hashed_verification_code,
                         code_info.salt,
                         code_info.expiry,
                         code_info.created_at,
+                        orjson.dumps(code_info.scrypt_parameters.to_dict())
                     ),
                 )
                 await conn.commit()
@@ -75,19 +76,22 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
             ) as conn:
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    """INSERT INTO verification_code_infos (user_id, hashed_verification_code, salt, expiry, created_at)
-                    VALUES (%s, %s, %s, %s, %s)
+                    """INSERT INTO verification_code_infos (user_id, hashed_verification_code, salt, expiry, created_at, scrypt_parameters)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
                     hashed_verification_code=VALUES(hashed_verification_code),
                     salt=VALUES(salt),
                     expiry=VALUES(expiry),
-                    created_at=VALUES(created_at)""",
+                    created_at=VALUES(created_at),
+                    scrypt_parameters=VALUES(scrypt_parameters)""",
                     (
                         code_info.user_id,
                         code_info.hashed_verification_code,
                         code_info.salt,
                         code_info.expiry,
                         code_info.created_at,
+                        orjson.dumps(code_info.scrypt_parameters.to_dict())
+
                     ),
                 )
                 await conn.commit()
@@ -130,6 +134,7 @@ class VerificationCodesRelatedCache(AppealsRelatedCache):
                 salt=results[0]["salt"],
                 expiry=results[0]["expiry"],
                 created_at=results[0]["created_at"],
+                scrypt_parameters=orjson.loads(results[0]["scrypt_parameters"])
             )
         else:
             raise SQLException(

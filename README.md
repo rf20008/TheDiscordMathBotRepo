@@ -112,7 +112,7 @@ mysql_db_username: Your username to the MySQL database
 mysql_db_pass: Your password to the MySQL database
 mysql_db_name: Your MySQL database name
 source_code_link: link to the place that contains the bot's source code. This must be public and have the actual source code 
- Filling it out __should__ fulfill the "Disclose source" requirement of GPLv3, if it is valid). However, unless I am sued or legally obligated to check if it's valid, I won't check. 
+ Filling it out __should__ fulfill the "Disclose source" requirement of AGPLv3, if it is valid). However, unless I am sued or legally obligated to check if it's valid, I won't check. 
 I might still check
 
 ## Attribution / Contributors
@@ -127,3 +127,4 @@ https://stackoverflow.com/a/21901260 for the get_git_revision_hash :-) <br>
 Disnake: https://github.com/DisnakeDev/disnake <br>
 Bot avatar: https://thumbs.dreamstime.com/z/creative-division-sign-circular-cold-gradient-spectrum-original-152718833.jpg <br>
 And the many un-listed people who contributed ideas/code! <br>
+ChatGPT also helped me write program

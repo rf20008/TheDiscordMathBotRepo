@@ -1,4 +1,5 @@
-"""
+"""Copyright © Samuel Guo / rf20008 (on Github) / ay136416 (on Discord) 2021-present
+
 You can distribute any version of the Software created and distributed *before* 23:17:55.00 July 28, 2024 GMT-4
 under the GNU General Public License version 3 or at your option, any  later option.
 But versions of the code created and/or distributed *on or after* that date must be distributed
@@ -24,8 +25,8 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 
 import datetime
 
-import concurrent.futures
 import disnake
+import cryptography
 from disnake.ext import commands
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules import problems_module
@@ -80,7 +81,7 @@ class VerificationCog(HelperCog):
         if duration < 0:
             await inter.send(embed=ErrorEmbed("Your code must be valid for a positive amount of time"))
             return
-        code_info, code = problems_module.VerificationCodeInfo.generate_verification_code_info(
+        code_info, code = await problems_module.VerificationCodeInfo.generate_verification_code_info(
             user_id=inter.author.id,
             duration=duration
         )
@@ -89,7 +90,8 @@ class VerificationCog(HelperCog):
         if here:
             await inter.send(
                 embed=SuccessEmbed(
-                    f"I have successfully set your code information! Your secret code is {code}. Keep it secret OR ELSE PEOPLE CAN IMPERSONATE YOU!!!!!!"
+                    f"I have successfully set your code information! Your secret code is `{code}`."
+                    f" Keep it secret OR ELSE PEOPLE CAN IMPERSONATE YOU!!!!!!"
                 ),
                 ephemeral=True
             )
@@ -97,7 +99,8 @@ class VerificationCog(HelperCog):
         else:
             await inter.send(embed=SuccessEmbed("I have sent your code to your DMs!"))
             await inter.author.send(embed=SuccessEmbed(
-                f"Your secret code is {code}. Keep it secret OR ELSE PEOPLE CAN IMPERSONATE YOU!!!!!!"
+                f"Your secret code is `{code}`. "
+                f"Keep it secret OR ELSE PEOPLE CAN IMPERSONATE YOU!!!!!!"
             ))
             return
 
@@ -114,6 +117,7 @@ class VerificationCog(HelperCog):
         ]
     )
     async def info(self, inter: disnake.ApplicationCommandInteraction, detailed: bool):
+        # Give them remaining duration, total duration, R, N, P, 
         raise NotImplementedError("I didn't impelment this yet. TODO: implement this")
 
     @commands.cooldown(2, 15.0, type=commands.BucketType.user)
@@ -167,11 +171,11 @@ class VerificationCog(HelperCog):
 
         # check the code now!
         try:
-            if code_info.check_code(possible_code):
-                await inter.send(embed=SuccessEmbed(f"Your verification code is {possible_code}! Keep this a secret."), ephemeral=True)
-            else:
-                await inter.send(embed=SuccessEmbed(f"Your verification code is NOT {possible_code}! Keep this a secret."), ephemeral=True)
+            await code_info.check_code(possible_code)
+            await inter.send(embed=SuccessEmbed(f"Your verification code is {possible_code}! Keep this a secret."),
+                             ephemeral=True)
             return
+
         except problems_module.VerificationCodeExpiredException:
             # the code is expired
             if person is not None: # is it for someone else?
@@ -179,7 +183,9 @@ class VerificationCog(HelperCog):
             else:
                 await inter.send(embed=ErrorEmbed("Your verification code has expired. Please generate a new one"), ephemeral=True)
             return
-
+        except cryptography.exceptions.InvalidKey:
+            await inter.send(f"Your verification code is NOT {possible_code}. Keep this a secret")
+            return
     @verification_codes.sub_command(
         name="delete",
         description="Delete your verification code information",

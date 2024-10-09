@@ -51,13 +51,7 @@ def log_error_to_file(error, file_path=""):
     if file_path == "":
         now = datetime.datetime.now()
         file_path = (
-            "error_logs/"
-            + str(now.year)
-            + " "
-            + str(MONTH_NAMES[now.month])
-            + " "
-            + str(now.day)
-            + ".txt"
+            f"error_logs/{now.year} {MONTH_NAMES[now.month]} {now.day}.txt"
         )
     err_msg = traceback.format_exception(type(error), error, tb=error.__traceback__)
     msg = time.asctime() + "\n\n" + "".join([str(item) for item in err_msg]) + "\n\n"
