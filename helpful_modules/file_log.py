@@ -26,7 +26,9 @@ from .FileDictionaryReader import AsyncFileDict
 import time
 import aiofiles
 import asyncio
-
+import math
+import farmhash
+frac = lambda x: x - math.floor(x)
 
 # that is from ChatGPT
 async def read_last_n_lines(filename, n):
@@ -54,7 +56,7 @@ async def read_last_n_lines(filename, n):
 
         # Capture the last line if it does not end with a newline
         if current_line:
-            lines.append(line)
+            lines.append(current_line[::-1].decode())
 
         # Reverse the lines to get them in the correct order
         return lines[::-1][:n]
@@ -100,3 +102,42 @@ class FileLog:
 
         async for line in read_last_n_lines(self.filename, num_last_lines):
             yield line
+
+class FileDictLog:
+    log: AsyncFileDict
+
+    def __init__(self, filename: str, overwrite: bool = False, max_buffer_size: int = 200):
+        self.log = AsyncFileDict(filename, overwrite=overwrite)
+        self.buffer = []  # Initialize the buffer
+        self.max_buffer_size = max_buffer_size
+
+    async def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+        if extra_info is None:
+            extra_info = {}
+        if not isinstance(extra_info, dict):
+            raise TypeError("extra_info is not a dict")
+        if not isinstance(log_entry, str):
+            raise TypeError("Log entry is not a string")
+
+        cur_time = time.asctime(time.localtime())
+        cur_time_hashed = hex(farmhash.FarmHash128(str(cur_time) + str(frac(time.time()))))
+
+        self.buffer.append((cur_time + cur_time_hashed, {
+            "cur_time": cur_time,
+            "log_msg": log_entry,
+            "priority": priority,
+            "extra_info": extra_info
+        }))
+
+        if len(self.buffer) > self.max_buffer_size:
+            await self.clear_buffer()
+
+    async def clear_buffer(self):
+        if not self.buffer:  # Check if buffer is empty
+            return
+
+        await self.log.read_from_file()
+        old_dict = self.log.dict
+        old_dict.update(dict(self.buffer))  # Update the old dictionary with the new logs
+        await self.log.update_my_file()  # Ensure this method is defined in AsyncFileDict
+        self.buffer.clear()  # Clear the buffer after updating

@@ -40,7 +40,9 @@ class AsyncFileDict:
         self.filename = filename
         self.dict = {}
         if overwrite:
-            warnings.warn("`overwrite` calls asyncio.run. Use with caution (since you can only run `asyncio.run` a few times)", category=RuntimeWarning)
+            warnings.warn(
+                "`overwrite` calls asyncio.run. Use with caution (since you can only run `asyncio.run` a few times)",
+                category=RuntimeWarning)
             asyncio.run(self.update_my_file())
 
     async def update_my_file(self):
@@ -82,7 +84,7 @@ class AsyncFileDict:
             return self.dict[key]
         return (await self.read_from_file())[key]
 
-    async def set_key(self, key, val, update_file_behind: bool=True):
+    async def set_key(self, key, val, update_file_behind: bool = True):
         """
         Asynchronously set a key-value pair and update the file.
 
@@ -98,7 +100,7 @@ class AsyncFileDict:
         if update_file_behind:
             await self.update_my_file()
 
-    async def del_key(self, key, update_file_behind: bool=True):
+    async def del_key(self, key, update_file_behind: bool = True):
         """
         Asynchronously delete a key-value pair and update the file.
 
@@ -153,3 +155,22 @@ class AsyncFileDict:
 
         """
         return self.dict.items()
+
+    async def set_underlying_dict(self, new_dict: dict) -> bool:
+        """
+        Asynchronously set the internal dictionary to a new dictionary 
+        and update the JSON file.
+
+        Parameters:
+        - new_dict (dict): The new dictionary to set.
+
+        Returns:
+        - bool: True if the update was successful, False otherwise.
+        """
+        try:
+            self.dict = new_dict
+            await self.update_my_file()
+            return True
+        except (TypeError, IOError) as e:
+            warnings.warn(f"Failed to update the file: {e}", category=RuntimeWarning)
+            raise e

@@ -68,6 +68,8 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     _on_ready_func: typing.Callable
     cache: MathProblemCache | RedisCache
     constants: BotConstants
+    verification_audit_log: FileLog
+
     restart: RestartTheBot
     time_started: float
     total_stats: CommandStats | None

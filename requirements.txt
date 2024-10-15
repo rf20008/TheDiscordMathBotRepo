@@ -24,3 +24,5 @@ aiomysql>=0.2.0
 numpy>=1.26.4
 cryptography >= 42.0.8a1
 aiobcrypt >= 3.2.0post1
+cityhash >= 0.4.7
+pyfarmhash >= 0.4.0
