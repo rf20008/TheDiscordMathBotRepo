@@ -1,0 +1,21 @@
+#Heavy help was obtained from https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+name: testing-to-make-sure-that-it-compiles
+run-name: test
+on:
+  pull_request:
+    branches:
+      - beta
+    types: [opened, reopened, edited, closed]
+  push:
+    branches:
+      - beta
+      - main
+      - releases/**
+permissions: read-all
+jobs:
+  test-mac:
+    name: This job is to test on a Mac
+    runs-on: macos-latest
+    steps:
+      run:
+        python3.10 main.py DO_NOT_CONNECT
