@@ -28,6 +28,8 @@ import datetime
 import disnake
 import cryptography
 from disnake.ext import commands
+
+import helpful_modules.checks
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules import problems_module
 from helpful_modules.custom_embeds import SuccessEmbed, SimpleEmbed, ErrorEmbed
@@ -228,6 +230,37 @@ class VerificationCog(HelperCog):
             await inter.send(embed=SuccessEmbed("I successfully deleted your verification code!"))
 
         return
+    @commands.slash_command(
+        name="vcode_denylist",
+        description="Denylist someone from the verification code system (for trusted users only)",
+        options=[
+            disnake.Option(
+                name="user",
+                description="The user to denylist",
+                type=disnake.OptionType.user,
+                required=True,
+            ),
+            disnake.Option(
+                name="reason",
+                description="Why you're denylisting this user",
+                type=disnake.OptionType.string,
+                required=True
+            ),
+            disnake.Option(
+                name="duration",
+                description="The length of the denylist",
+                type=disnake.OptionType.number,
+                required=False,
+                min_value=0.0
+            )
+        ]
+    )
+    @helpful_modules.checks.trusted_users_only()
+    async def vcode_denylist(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, reason: str, duration: float = float('inf')):
+        """/vcode_denylist [user: User] [reason] (duration: float=inf)
+        Denylist someone from the verification code system!
+        ONLY for admins!"""
+        raise NotImplementedError
 
 
 def setup(bot: TheDiscordMathProblemBot):
