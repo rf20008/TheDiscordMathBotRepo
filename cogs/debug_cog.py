@@ -21,11 +21,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-
+import asyncio
 import contextlib
 import datetime
 import io
+import math
 import textwrap
+import time
 from os import urandom
 from traceback import format_exception
 
@@ -34,7 +36,7 @@ from disnake.ext import commands
 
 from helpful_modules import checks
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
-from helpful_modules.custom_embeds import SuccessEmbed
+from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
 from helpful_modules.my_modals import MyModal
 from helpful_modules.paginator_view import PaginatorView
 from helpful_modules.problems_module.cache_rewrite_with_redis import RedisCache
@@ -53,7 +55,7 @@ log = get_log(__name__)
 
 class DebugCog(HelperCog):
     """Commands for debugging :-)"""
-
+    bot: TheDiscordMathProblemBot
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
 
@@ -389,3 +391,36 @@ class DebugCog(HelperCog):
         # await modal_inter.send("Yes!")
 
         await self.eval_code(inter, code_to_run, ephemeral=ephemeral)
+    @commands.is_owner()
+    @checks.is_not_denylisted()
+    @disnake.ext.commands.is_owner()
+    @commands.slash_command(
+        name="stop",
+        description="Stop the bot! ONLY FOR OWNERS",
+        options=[
+            disnake.Option(
+                name="delay",
+                description="How long to wait before stopping the bot",
+                type=disnake.OptionType.float,
+                min_value=0.0,
+                max_value=float('inf'),
+                required=False
+            )
+        ],
+    )
+    async def check(self, inter: disnake.ApplicationCommandInteraction, delay: float = 0.0):
+        if delay < 0.0 or math.isnan(delay):
+            raise RuntimeError("Negative or NaN delay encountered")
+        if not await self.bot.is_owner(inter.author):
+            await inter.send(embed=ErrorEmbed("You don't have the permission to stop the bot!", custom_title="Unauthorized"))
+            return
+        if await self.bot.is_user_denylisted(inter.author):
+            raise checks.DenylistedException("You are denylisted from the bot!")
+
+        if delay>0:
+            await inter.send(embed=SuccessEmbed(f"The bot will stop {disnake.utils.format_dt(time.time() + delay, style='R')}."), delete_after=delay)
+            await asyncio.sleep(delay)
+        else:
+            await inter.send("The bot is now stopping!")
+
+        await self.bot.close()

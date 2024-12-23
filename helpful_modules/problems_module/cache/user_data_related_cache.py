@@ -121,8 +121,8 @@ class UserDataRelatedCache(QuizRelatedCache):
                 trusted_int = int(new.trusted)
                 cursor = await conn.cursor()
                 await cursor.execute(
-                    "INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry) VALUES (?, ?, ?, ?, ?)",
-                    (user_id, denylisted_int, trusted_int, new.denylist_reason, new.denylist_expiry),
+                    "INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry, verification_code_denylist) VALUES (?, ?, ?, ?, ?, ?)",
+                    (user_id, denylisted_int, trusted_int, new.denylist_reason, new.denylist_expiry, new.verification_code_denylist),
                 )
                 await conn.commit()
                 log.debug("Finished!")
@@ -136,8 +136,8 @@ class UserDataRelatedCache(QuizRelatedCache):
                 log.debug("Connected to MySQL")
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
-                    """INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry) VALUES (%s, %s, %s, %s, %s)""",
-                    (user_id, new.trusted, new.denylisted, new.denylist_reason, new.denylist_expiry),
+                    """INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry, verification_code_denylist) VALUES (%s, %s, %s, %s, %s, %s)""",
+                    (user_id, new.trusted, new.denylisted, new.denylist_reason, new.denylist_expiry, new.verification_code_denylist),
                 )
                 connection.commit()
                 log.debug("Finished!")
@@ -178,6 +178,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                         denylisted INTEGER,
                         denylist_reason TEXT,
                         denylist_expiry DOUBLE
+                        verfication_code_denylist TEXT
                     )
                 """
                 )
@@ -197,7 +198,8 @@ class UserDataRelatedCache(QuizRelatedCache):
                         trusted BOOLEAN,
                         denylisted BOOLEAN,
                         denylist_reason TEXT,
-                        denylist_expiry DOUBLE
+                        denylist_expiry DOUBLE,
+                        verification_code_denylist TEXT
                     )
                 """
                 )

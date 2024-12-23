@@ -37,6 +37,7 @@ from disnake.ext import commands
 
 from helpful_modules import checks, cooldowns, problems_module
 from helpful_modules.base_on_error import get_git_revision_hash
+from helpful_modules.problems_module.denylistable import DenylistType
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_buttons import *
 from helpful_modules.custom_embeds import SimpleEmbed
@@ -483,7 +484,7 @@ class MiscCommandsCog(HelperCog):
             self.bot.log.debug("Can't denylist user; user already denylisted")
             return await inter.send(embed=ErrorEmbed("Can't denylist user; user already denylisted"))
         else:
-            user_data.denylist(reason=reason, duration=duration)
+            user_data.denylist(reason=reason, duration=duration, denylist_type=DenylistType.GENERAL_USER_DENYLIST, denylisting_moderator=str(inter.author.id))
             await self.cache.set_user_data(user_id=user.id, new=user_data)
 
             self.bot.log.info(f"Successfully denylisted the user with id {user.id}")

@@ -18,16 +18,20 @@ If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import time
-from .denylistable import Denylistable
+from .denylistable import Denylistable, DenylistMetadata, DenylistType
 
 
 class UserData(Denylistable):
     """A dataclass to store user data for the bot!"""
-
-    __slots__ = ('trusted', 'denylisted', 'user_id', 'denylist_expiry', 'denylist_reason')
-
+    verification_code_denylist: DenylistMetadata
+    user_id: int
+    trusted: bool
+    denylisted: bool
+    denylist_expiry: float
+    denylist_reason: str
+    __slots__ = ('trusted', 'denylisted', 'user_id', 'denylist_expiry', 'denylist_reason', 'verification_code')
     def __init__(
-        self, *, user_id: int, trusted: bool = False, denylisted: bool = False, denylist_reason: str = "", denylist_expiry: float = 0.0
+        self, *, user_id: int, trusted: bool = False, denylisted: bool = False, denylist_reason: str = "", denylist_expiry: float = 0.0, verification_code_denylist: DenylistMetadata | dict | None = None
     ):
         if not isinstance(user_id, int):
             raise TypeError("user_id is not an integer")
@@ -45,6 +49,19 @@ class UserData(Denylistable):
         self.denylisted = denylisted
         self.denylist_reason = denylist_reason
         self.denylist_expiry = denylist_expiry
+        if verification_code_denylist is None:
+            verification_code_denylist = DenylistMetadata(
+                denylisted=False,
+                denylist_reason="",
+                denylist_expiry=float("-inf"),
+                denylisting_moderator="",
+                denylist_type=DenylistType.VERIFICATION_CODE_DENYLIST
+            )
+        if isinstance(verification_code_denylist, dict):
+            verification_code_denylist = DenylistMetadata.from_dict(verification_code_denylist)
+        if not isinstance(verification_code_denylist, DenylistMetadata):
+            raise TypeError("verification_code_denylist is not a DenylistMetadata")
+        self.verification_code_denylist = verification_code_denylist
 
     @classmethod
     def from_dict(cls, dict: dict) -> "UserData":
@@ -54,7 +71,8 @@ class UserData(Denylistable):
             trusted=dict["trusted"],
             denylisted=dict["denylisted"],
             denylist_expiry=dict["denylist_expiry"],
-            denylist_reason=dict["denylist_reason"]
+            denylist_reason=dict["denylist_reason"],
+            verification_code_denylist=dict["verification_code_denylist"]
         )
 
     def to_dict(self) -> dict:
@@ -64,12 +82,13 @@ class UserData(Denylistable):
             "trusted": self.trusted,
             "denylisted": self.denylisted,
             "denylist_expiry": self.denylist_expiry,
-            "denylist_reason": self.denylist_reason
+            "denylist_reason": self.denylist_reason,
+            "verification_code_denylist": self.verification_code_denylist
         }
 
     @classmethod
     def default(cls, user_id: int):
         """Return a default UserData instance"""
-        return cls(user_id=user_id, trusted=False, denylisted=False, denylist_reason="", denylist_expiry=0.0)
+        return cls(user_id=user_id, trusted=False, denylisted=False, denylist_reason="", denylist_expiry=0.0, verification_code_denylist=None)
 
 

@@ -38,6 +38,7 @@ from helpful_modules.problems_module import GuildData, AppealQuestion
 from helpful_modules.problems_module import MathProblemCache, RedisCache
 from helpful_modules.restart_the_bot import RestartTheBot
 from helpful_modules.save_files import FileSaver
+from helpful_modules.file_log import FileLog
 
 from ._error_logging import log_error
 from .errors import (
@@ -218,7 +219,14 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self, user: typing.Union[disnake.User, disnake.Member]
     ) -> bool:
         return await self.is_trusted_by_user_id(user.id)
-
+    async def is_denylisted_from_verification_code_system_by_user_id(self, user_id: int) -> bool:
+        data = await self.cache.get_user_data(
+            user=user_id,
+            default=problems_module.UserData.default(user_id)
+        )
+        return data.verification_code_denylist.is_denylisted()
+    async def is_denylisted_from_verification_code_system(self, user: typing.Union[disnake.User, disnake.Member]):
+        return await self.is_denylisted_from_verification_code_system_by_user_id(user.id)
     async def is_trusted_by_user_id(self, user_id: int) -> bool:
 
         data = await self.cache.get_user_data(
@@ -406,7 +414,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
 
             except disnake.HTTPException as he:
                 await log_error(he)
-                self.log.exception("An HTTP error happened while trying to know whether {user} owns this bot: ", e)
+                self.log.exception("An HTTP error happened while trying to know whether {user} owns this bot: ", he)
                 raise
             except Exception as e:
 
