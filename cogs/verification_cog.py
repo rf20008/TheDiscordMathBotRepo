@@ -42,7 +42,8 @@ ONE_WEEK = datetime.timedelta(weeks=1).total_seconds()
 # TODO: add stuff to my TOS about verification codes
 
 class VerificationCog(HelperCog):
-    def __init__(self, bot):
+    bot: TheDiscordMathProblemBot
+    def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
 
     @commands.slash_command(
@@ -260,8 +261,33 @@ class VerificationCog(HelperCog):
         """/vcode_denylist [user: User] [reason] (duration: float=inf)
         Denylist someone from the verification code system!
         ONLY for admins!"""
+        # part 1: recheck
+        if not self.bot.is_trusted(inter.author):
+            await inter.send(embed=ErrorEmbed("You are not allowed to perform this action!"))
+            return
+        # step 2: recheck the status
+        status: problems_module.UserData = self.bot.cache.get_user_data(user.id, default=problems_module.UserData.default(user.id))
+        if status.verification_code_denylist.is_denylisted():
+
         raise NotImplementedError
 
-
+    @commands.slash_command(
+        name="vcode_undenylist",
+        description="Remove the denylist of someone from the verification code system (for trusted users only)",
+        options=[
+            disnake.Option(
+                name="user",
+                description="The user of which to remove the denylist",
+                type=disnake.OptionType.user,
+                required=True,
+            )
+        ]
+    )
+    @helpful_modules.checks.trusted_users_only()
+    async def vcode_undenylist(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User):
+        """/vcode_undenylist [user: User] [reason] (duration: float=inf)
+        Remove someone's denylist from the verification code system
+        ONLY for admins!"""
+        raise NotImplementedError
 def setup(bot: TheDiscordMathProblemBot):
     bot.add_cog(VerificationCog(bot))

@@ -24,6 +24,7 @@ If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 from .FileDictionaryReader import AsyncFileDict
 import time
+import orjson
 import aiofiles
 import asyncio
 import math
@@ -32,6 +33,10 @@ frac = lambda x: x - math.floor(x)
 
 # that is from ChatGPT
 async def read_last_n_lines(filename, n):
+    if n < 0:
+        async with aiofiles.open(filename, "rb") as f:
+            lines = await f.readlines()
+        return lines
     async with aiofiles.open(filename, 'rb') as f:
         # Move to the end of the file
         await f.seek(0, 2)
@@ -141,3 +146,74 @@ class FileDictLog:
         old_dict.update(dict(self.buffer))  # Update the old dictionary with the new logs
         await self.log.update_my_file()  # Ensure this method is defined in AsyncFileDict
         self.buffer.clear()  # Clear the buffer after updating
+
+
+
+class AppendingFileLog:
+    def __init__(self, filename: str, overwrite: bool = False, max_buffer_size = 1):
+        self.buffer = []
+        self.max_buffer_size = max_buffer_size
+        self.filename = filename
+        if overwrite:
+            with open(filename, "w"):
+                pass
+
+    @staticmethod
+    def encode_log_entry(log_entry: str) -> str:
+        return log_entry.replace("\\", "\\\\").replace("\n", "\\n").replace("\t", "\\t")
+    @staticmethod
+    def decode_log_entry(encoded_entry: str) -> str:
+        return encoded_entry.replace("\\t", "\t").replace("\\n", "\n").replace("\\\\", "\\")
+    async def read_last_n_lines(self, n: int = -1) -> list[str]:
+        return await read_last_n_lines(self.filename, n)
+
+    def format_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+        timestamp = time.asctime(time.localtime())
+        if extra_info is None:
+            parsed_extra_info = "{}"
+        else:
+            parsed_extra_info = orjson.dumps(extra_info)
+        encoded_extra_info = self.encode_log_entry(parsed_extra_info)
+        return f"{timestamp} | {priority} | {self.encode_log_entry(log_entry)} | {encoded_extra_info}"
+    def parse_entry(self, entry: str) -> tuple[time.struct_time, int, str, dict]
+        # step 1: extract timestamp
+        first_pipe = entry.find("|")
+        timestamp = time.strptime(entry[:first_pipe-1]) # the space!!
+        if first_pipe == -1:
+            raise ValueError("Malformed log entry -- log entries must have at least 2 pipe characters")
+        # step 2: extract priority
+        second_pipe = entry.find("|", first_pipe+1)
+        if second_pipe == -1:
+            raise ValueError("Malformed log entry. Log entries must have at least 2 pipes")
+        priority = int(entry[first_pipe+1:second_pipe])
+        # step 3: extract log entry
+        # step 3a: find where log_entry ends!
+        third_pipe = self.find_unescaped_pipe(entry, second_pipe+1)
+        log_entry = self.decode_log_entry(entry[second_pipe+1:third_pipe-1])
+        extra_info = orjson.dumps(entry[third_pipe+1:])
+        return timestamp, priority, log_entry, extra_info
+    @staticmethod
+    def find_unescaped_pipe(string: str, start: int = 0):
+        if start >= len(string):
+            return -1
+        if string[start]=='|':
+            return start
+
+        i = start
+        while i<len(string):
+            i+=1
+            if string[i]=='|' and string[i-1] != "\\":
+                return i
+        return -1
+    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+        self.buffer.append(self.format_entry(log_entry=log_entry, priority=priority, extra_info=extra_info))
+
+    async def clear_buffer(self):
+        to_add = "\n".join(self.buffer)
+        async with open(self.filename, 'a') as file:
+            file.write(to_add)
+        self.buffer.clear()
+    async def add_log_entry_with_clear(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+        self.add_log_entry(log_entry, priority, extra_info)
+        if len(self.buffer) >= self.max_buffer_size:
+            await self.clear_buffer()
