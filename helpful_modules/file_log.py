@@ -190,7 +190,7 @@ class AppendingFileLog:
         # step 3a: find where log_entry ends!
         third_pipe = self.find_unescaped_pipe(entry, second_pipe+1)
         log_entry = self.decode_log_entry(entry[second_pipe+1:third_pipe-1])
-        extra_info = orjson.dumps(entry[third_pipe+1:])
+        extra_info = orjson.dumps(self.decode_log_entry([third_pipe+1:]))
         return timestamp, priority, log_entry, extra_info
     @staticmethod
     def find_unescaped_pipe(string: str, start: int = 0):
