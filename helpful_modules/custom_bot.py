@@ -38,7 +38,7 @@ from helpful_modules.problems_module import GuildData, AppealQuestion
 from helpful_modules.problems_module import MathProblemCache, RedisCache
 from helpful_modules.restart_the_bot import RestartTheBot
 from helpful_modules.save_files import FileSaver
-from helpful_modules.file_log import FileLog
+from helpful_modules.file_log import AuditLog
 
 from ._error_logging import log_error
 from .errors import (
@@ -69,8 +69,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     _on_ready_func: typing.Callable
     cache: MathProblemCache | RedisCache
     constants: BotConstants
-    verification_audit_log: FileLog
-
+    audit_log: AuditLog
     restart: RestartTheBot
     time_started: float
     total_stats: CommandStats | None
@@ -82,6 +81,7 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
         self.file_saver = None
         self.appeal_questions = {}
         self.tasks = kwargs.pop("tasks")
+        self.audit_log = kwargs.pop("audit_log")
         self.config_json = AsyncFileDict("config.json")
         self.storer = kwargs.pop("storer")
         self.trusted_users = kwargs.pop("trusted_users")

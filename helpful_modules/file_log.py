@@ -23,13 +23,18 @@ If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 from .FileDictionaryReader import AsyncFileDict
+import abc
 import time
 import orjson
 import aiofiles
 import asyncio
 import math
 import farmhash
-frac = lambda x: x - math.floor(x)
+
+
+def frac(x):
+    return x - math.floor(x)
+
 
 # that is from ChatGPT
 async def read_last_n_lines(filename, n):
@@ -67,35 +72,73 @@ async def read_last_n_lines(filename, n):
         return lines[::-1][:n]
 
 
-class FileLog:
+class AuditLog:
+    buffer: list
+    max_buffer_size: int
+
+    @abc.abstractmethod
+    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+        if extra_info is None:
+            extra_info = dict()
+        if not isinstance(extra_info, dict):
+            raise TypeError("extra info is not a dict")
+        if not isinstance(priority, int):
+            raise TypeError("Priority is not an int")
+        if not isinstance(log_entry, str):
+            raise TypeError("Log entry is not a string")
+        raise NotImplementedError("Subclasses must implement this method!")
+
+    @abc.abstractmethod
+    async def clear_buffer(self):
+        pass
+
+    @abc.abstractmethod
+    async def read_from_log(self, n: int = -1):
+        pass
+
+    async def add_log_entry_with_clear(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+        self.add_log_entry(log_entry, priority, extra_info)
+        if len(self.buffer) >= self.max_buffer_size:
+            await self.clear_buffer()
+
+
+class FileLog(AuditLog):
     log: AsyncFileDict
+
     def __init__(self, filename: str, max_buffer_size: int = 200, overwrite: bool = False):
         if overwrite:
-            with open(filename, "w") as file:
+            with open(filename, "w") as _:
                 pass
         self.filename = filename
         self.buffer = []
         self.max_buffer_size = max_buffer_size
         self.lock = asyncio.Lock()
 
-    def add_log_entry(self, log_entry: str):
+    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+        if extra_info is None:
+            extra_info = dict()
+        if not isinstance(extra_info, dict):
+            raise TypeError("extra info is not a dict")
+        if not isinstance(priority, int):
+            raise TypeError("Priority is not an int")
         if not isinstance(log_entry, str):
             raise TypeError("Log entry is not a string")
         if '\n' in log_entry:
             raise ValueError("Log entries must not contain newlines")
+        if '|' in log_entry:
+            raise ValueError("Log entries must not contain pipe characters")
         cur_time = time.asctime(time.localtime())
-        self.buffer.append((cur_time, log_entry))
+        self.buffer.append((cur_time, log_entry, priority, extra_info))
 
-    async def add_log_entry_with_buffer_clear(self, log_entry: str):
-        self.add_log_entry(log_entry)
-        if len(self.buffer) > self.max_buffer_size:
-            await self.clear_buffer()
     async def clear_buffer(self):
         async with self.lock:
-            things = "\n".join([f"[{cur_time}]: {log_entry}" for cur_time, log_entry in self.buffer])
+            things = "\n".join(
+                [f"[{cur_time} | {priority}]: {log_entry} | {extra_info}" for cur_time, log_entry, priority, extra_info
+                 in self.buffer])
             async with aiofiles.open(self.filename, "a") as file:
                 await file.write(f"{things}\n")
             self.buffer.clear()
+
     async def read_from_log(self, num_last_lines: int = -1):
 
         if num_last_lines == -1:
@@ -108,7 +151,8 @@ class FileLog:
         async for line in read_last_n_lines(self.filename, num_last_lines):
             yield line
 
-class FileDictLog:
+
+class FileDictLog(AuditLog):
     log: AsyncFileDict
 
     def __init__(self, filename: str, overwrite: bool = False, max_buffer_size: int = 200):
@@ -116,7 +160,7 @@ class FileDictLog:
         self.buffer = []  # Initialize the buffer
         self.max_buffer_size = max_buffer_size
 
-    async def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
+    def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
         if extra_info is None:
             extra_info = {}
         if not isinstance(extra_info, dict):
@@ -134,9 +178,6 @@ class FileDictLog:
             "extra_info": extra_info
         }))
 
-        if len(self.buffer) > self.max_buffer_size:
-            await self.clear_buffer()
-
     async def clear_buffer(self):
         if not self.buffer:  # Check if buffer is empty
             return
@@ -147,10 +188,22 @@ class FileDictLog:
         await self.log.update_my_file()  # Ensure this method is defined in AsyncFileDict
         self.buffer.clear()  # Clear the buffer after updating
 
+    async def read_from_log(self, n: int = -1):
+        # read the entire file
+        await self.log.update_my_file()
+        await self.log.read_from_file()
+        entries = []
+        if n == -1:
+            n = len(self.log.items()) + 1
+        for key, value in self.log.items():
+            entries.append(value)
+        cur_time = time.time()
+        entries.sort(key=lambda entry: cur_time - time.mktime(time.strptime(entry["timestamp"])))  # type: ignore
+        return entries[:n]
 
 
-class AppendingFileLog:
-    def __init__(self, filename: str, overwrite: bool = False, max_buffer_size = 1):
+class AppendingFileLog(AuditLog):
+    def __init__(self, filename: str, overwrite: bool = False, max_buffer_size=1):
         self.buffer = []
         self.max_buffer_size = max_buffer_size
         self.filename = filename
@@ -161,9 +214,11 @@ class AppendingFileLog:
     @staticmethod
     def encode_log_entry(log_entry: str) -> str:
         return log_entry.replace("\\", "\\\\").replace("\n", "\\n").replace("\t", "\\t")
+
     @staticmethod
     def decode_log_entry(encoded_entry: str) -> str:
         return encoded_entry.replace("\\t", "\t").replace("\\n", "\n").replace("\\\\", "\\")
+
     async def read_last_n_lines(self, n: int = -1) -> list[str]:
         return await read_last_n_lines(self.filename, n)
 
@@ -175,36 +230,39 @@ class AppendingFileLog:
             parsed_extra_info = orjson.dumps(extra_info)
         encoded_extra_info = self.encode_log_entry(parsed_extra_info)
         return f"{timestamp} | {priority} | {self.encode_log_entry(log_entry)} | {encoded_extra_info}"
-    def parse_entry(self, entry: str) -> tuple[time.struct_time, int, str, dict]
+
+    def parse_entry(self, entry: str) -> tuple[time.struct_time, int, str, dict]:
         # step 1: extract timestamp
         first_pipe = entry.find("|")
-        timestamp = time.strptime(entry[:first_pipe-1]) # the space!!
+        timestamp: time.struct_time = time.strptime(entry[:first_pipe - 1])  # type: ignore # the space!!
         if first_pipe == -1:
             raise ValueError("Malformed log entry -- log entries must have at least 2 pipe characters")
         # step 2: extract priority
-        second_pipe = entry.find("|", first_pipe+1)
+        second_pipe = entry.find("|", first_pipe + 1)
         if second_pipe == -1:
             raise ValueError("Malformed log entry. Log entries must have at least 2 pipes")
-        priority = int(entry[first_pipe+1:second_pipe])
+        priority = int(entry[first_pipe + 1:second_pipe])
         # step 3: extract log entry
         # step 3a: find where log_entry ends!
-        third_pipe = self.find_unescaped_pipe(entry, second_pipe+1)
-        log_entry = self.decode_log_entry(entry[second_pipe+1:third_pipe-1])
-        extra_info = orjson.dumps(self.decode_log_entry([third_pipe+1:]))
+        third_pipe = self.find_unescaped_pipe(entry, second_pipe + 1)
+        log_entry = self.decode_log_entry(entry[second_pipe + 1:third_pipe - 1])
+        extra_info = orjson.loads(self.decode_log_entry(entry[third_pipe + 1:]))
         return timestamp, priority, log_entry, extra_info
+
     @staticmethod
     def find_unescaped_pipe(string: str, start: int = 0):
         if start >= len(string):
             return -1
-        if string[start]=='|':
+        if string[start] == '|':
             return start
 
         i = start
-        while i<len(string):
-            i+=1
-            if string[i]=='|' and string[i-1] != "\\":
+        while i < len(string):
+            i += 1
+            if string[i] == '|' and string[i - 1] != "\\":
                 return i
         return -1
+
     def add_log_entry(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
         self.buffer.append(self.format_entry(log_entry=log_entry, priority=priority, extra_info=extra_info))
 
@@ -213,7 +271,12 @@ class AppendingFileLog:
         async with open(self.filename, 'a') as file:
             file.write(to_add)
         self.buffer.clear()
+
     async def add_log_entry_with_clear(self, log_entry: str, priority: int = 3, extra_info: dict | None = None):
         self.add_log_entry(log_entry, priority, extra_info)
         if len(self.buffer) >= self.max_buffer_size:
             await self.clear_buffer()
+
+    async def read_from_log(self, n: int = -1):
+        last_n_lines = await read_last_n_lines(self.filename, n)
+        return list(map(self.decode_log_entry, last_n_lines))

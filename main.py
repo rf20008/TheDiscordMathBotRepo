@@ -36,7 +36,7 @@ from asyncio import sleep as asyncio_sleep
 from copy import copy
 from sys import argv, exc_info, exit, stderr, stdout
 from time import sleep
-
+import subprocess
 # Imports - 3rd party
 from disnake.ext import commands
 
@@ -52,6 +52,7 @@ from helpful_modules import (
 from helpful_modules._error_logging import log_error, log_error_to_file
 from helpful_modules.base_on_error import base_on_error
 from helpful_modules.constants_loader import *
+from helpful_modules.file_log import AppendingFileLog
 from helpful_modules.custom_bot import SUPPORT_SERVER_GUILD_ID, TheDiscordMathProblemBot
 from helpful_modules.StatsTrack import StreamWrapperStorer
 from helpful_modules.threads_or_useful_funcs import *
@@ -233,6 +234,7 @@ asyncio.set_event_loop(asyncio.new_event_loop())  # Otherwise, weird errors will
 my_amazing_storer = StreamWrapperStorer(
     open("storer.json", "w"), reading=open("storer_old.json", "r")
 )
+audit_log = AppendingFileLog("audit_log.txt")
 bot = TheDiscordMathProblemBot(
     storer=my_amazing_storer,
     intents=return_intents.return_intents(),

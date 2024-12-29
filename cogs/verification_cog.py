@@ -24,9 +24,11 @@ Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
 import datetime
+import time
 
 import disnake
 import cryptography
+from disnake import ApplicationCommandInteraction
 from disnake.ext import commands
 
 import helpful_modules.checks
@@ -36,6 +38,8 @@ from helpful_modules.custom_embeds import SuccessEmbed, SimpleEmbed, ErrorEmbed
 from .helper_cog import HelperCog
 
 ONE_WEEK = datetime.timedelta(weeks=1).total_seconds()
+
+
 # TODO: add the /verification_codes info command
 # TODO: add the /verification_codes check command
 # TODO: add the /verification_codes delete command
@@ -43,6 +47,7 @@ ONE_WEEK = datetime.timedelta(weeks=1).total_seconds()
 
 class VerificationCog(HelperCog):
     bot: TheDiscordMathProblemBot
+
     def __init__(self, bot: TheDiscordMathProblemBot):
         super().__init__(bot)
 
@@ -69,14 +74,15 @@ class VerificationCog(HelperCog):
             ),
             disnake.Option(
                 name="here",
-                description="Whether to send your code here (ephmermally) or into your DMs",
+                description="Whether to send your code here (ephemerally) or into your DMs",
                 type=disnake.OptionType.boolean,
                 required=False,
             )
         ]
         # TODO: add a WHERE option
     )
-    async def generate(self, inter: disnake.ApplicationCommandInteraction, duration: float = ONE_WEEK, here: bool = True):
+    async def generate(self, inter: disnake.ApplicationCommandInteraction, duration: float = ONE_WEEK,
+                       here: bool = True):
         """/verification_codes generate [duration: float = 604800] [here: bool = True]
         Generate a verification code, valid for `duration` seconds.
         Your code will be sent as an ephemeral message if `here` is true; otherwise, it will be sent to your DMs.
@@ -120,8 +126,29 @@ class VerificationCog(HelperCog):
         ]
     )
     async def info(self, inter: disnake.ApplicationCommandInteraction, detailed: bool):
-        # Give them remaining duration, total duration, R, N, P, 
-        raise NotImplementedError("I didn't impelment this yet. TODO: implement this")
+        """/verification_codes info [detailed: bool = False]
+        Get info about your verification code (if you have one)"""
+        # Give them remaining duration, total duration, expiry, and
+        try:
+            vcode_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(inter.id)
+        except problems_module.VerificationCodeInfoNotFound:
+            await inter.send("You don't have a verification code! Try using /verification_codes generate.")
+            return
+        embed = SuccessEmbed(title='Your verification code info')
+        embed.add_field("User id", inter.author.id)
+        embed.add_field("Created at", disnake.utils.format_dt(vcode_info.created_at, 'F'))
+        embed.add_field(
+            name="Expiry status",
+            value=f"{'Expired' if vcode_info.is_expired else 'Valid'} (expire{'d' if vcode_info.is_expired else ''} at {disnake.utils.format_dt(vcode_info.expiry, 'F')}"
+        )
+        if detailed:
+            embed.add_field("Scrypt N", vcode_info.scrypt_parameters.scrypt_n)
+            embed.add_field("Scrypt P", vcode_info.scrypt_parameters.scrypt_p)
+            embed.add_field("Scrypt R", vcode_info.scrypt_parameters.scrypt_r)
+            embed.add_field("Scrypt len", vcode_info.scrypt_parameters.scrypt_len)
+        await inter.send(embed=embed)
+        return
+
 
     @commands.cooldown(2, 15.0, type=commands.BucketType.user)
     @verification_codes.sub_command(
@@ -151,7 +178,9 @@ class VerificationCog(HelperCog):
 
         # only owners can set `person`
         if person is not None and not await self.bot.is_owner(inter.author):
-            await inter.send(embed=ErrorEmbed("You can only check your own verification codes because you don't own the bot"), ephemeral=True)
+            await inter.send(
+                embed=ErrorEmbed("You can only check your own verification codes because you don't own the bot"),
+                ephemeral=True)
             return
         # who's the target?
         target = inter.author.id
@@ -161,12 +190,16 @@ class VerificationCog(HelperCog):
 
         # get the code
         try:
-            code_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(user_id=target)
+            code_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(
+                user_id=target)
         except problems_module.VerificationCodeInfoNotFound:
             if person != inter.author.id and person is not None:
-                await inter.send(embed=ErrorEmbed(f"The user with user id {person} does not have a verification code set."), ephemeral=True)
+                await inter.send(
+                    embed=ErrorEmbed(f"The user with user id {person} does not have a verification code set."),
+                    ephemeral=True)
             else:
-                await inter.send(embed=ErrorEmbed("You don't have a verification code set. Try setting one!"), ephemeral=True)
+                await inter.send(embed=ErrorEmbed("You don't have a verification code set. Try setting one!"),
+                                 ephemeral=True)
 
             # try to remove their code
             await self.bot.cache.delete_verification_code_info(user_id=target)
@@ -181,42 +214,50 @@ class VerificationCog(HelperCog):
 
         except problems_module.VerificationCodeExpiredException:
             # the code is expired
-            if person is not None: # is it for someone else?
-                await inter.send(embed=ErrorEmbed(f"The user with user id {person}'s verification code has expired."), ephemeral=True)
+            if person is not None:  # is it for someone else?
+                await inter.send(embed=ErrorEmbed(f"The user with user id {person}'s verification code has expired."),
+                                 ephemeral=True)
             else:
-                await inter.send(embed=ErrorEmbed("Your verification code has expired. Please generate a new one"), ephemeral=True)
+                await inter.send(embed=ErrorEmbed("Your verification code has expired. Please generate a new one"),
+                                 ephemeral=True)
             return
         except cryptography.exceptions.InvalidKey:
             await inter.send(f"Your verification code is NOT {possible_code}. Keep this a secret")
             return
+
     @verification_codes.sub_command(
         name="delete",
         description="Delete your verification code information",
         options=[disnake.Option(
-                name="person",
-                description="Who to check this code for (for owners only) (provide a USER ID)",
-                required=False,
-                type=disnake.OptionType.integer
-            )]
+            name="person",
+            description="Who to check this code for (for owners only) (provide a USER ID)",
+            required=False,
+            type=disnake.OptionType.integer
+        )]
     )
     async def delete(self, inter: disnake.ApplicationCommandInteraction, person: int | None = None):
         """/verification_codes
         Delete your (or someone else's) verification code.
         If you don't own this bot, you can only delete your own verification code!"""
         if person is not None and not await self.bot.is_owner(inter.author):
-            await inter.send(embed=ErrorEmbed("You can only delete your own verification codes if you aren't the owner!"), ephemeral=True)
-
+            await inter.send(
+                embed=ErrorEmbed("You can only delete your own verification codes if you aren't the owner!"),
+                ephemeral=True)
 
         # target
         target = inter.author.id if person is None else person
         # do they even have a code?
         try:
-            code_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(user_id=target)
+            code_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(
+                user_id=target)
         except problems_module.VerificationCodeInfoNotFound:
             if person is not None:
-                await inter.send(embed=ErrorEmbed(f"The user with user id {person} does not have a verification code set."), ephemeral=True)
+                await inter.send(
+                    embed=ErrorEmbed(f"The user with user id {person} does not have a verification code set."),
+                    ephemeral=True)
             else:
-                await inter.send(embed=ErrorEmbed("You don't have a verification code set. Try setting one!"), ephemeral=True)
+                await inter.send(embed=ErrorEmbed("You don't have a verification code set. Try setting one!"),
+                                 ephemeral=True)
             return
 
         # actually delete
@@ -224,13 +265,15 @@ class VerificationCog(HelperCog):
 
         # and tell them
         if person:
-            await inter.send(embed=SuccessEmbed(f"I successfully deleted the verification code of the user whose user id is {person}. "
-                                                f"However, they have not been notified."
-                                                f"You should notify them (I won't notify them, because of the Discord TOS)"), ephemeral=True)
+            await inter.send(embed=SuccessEmbed(
+                f"I successfully deleted the verification code of the user whose user id is {person}. "
+                f"However, they have not been notified."
+                f"You should notify them (I won't notify them, because of the Discord TOS)"), ephemeral=True)
         else:
             await inter.send(embed=SuccessEmbed("I successfully deleted your verification code!"))
 
         return
+
     @commands.slash_command(
         name="vcode_denylist",
         description="Denylist someone from the verification code system (for trusted users only)",
@@ -257,19 +300,28 @@ class VerificationCog(HelperCog):
         ]
     )
     @helpful_modules.checks.trusted_users_only()
-    async def vcode_denylist(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, reason: str, duration: float = float('inf')):
+    async def vcode_denylist(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, reason: str,
+                             duration: float = float('inf')):
         """/vcode_denylist [user: User] [reason] (duration: float=inf)
         Denylist someone from the verification code system!
         ONLY for admins!"""
         # part 1: recheck
         if not self.bot.is_trusted(inter.author):
-            await inter.send(embed=ErrorEmbed("You are not allowed to perform this action!"))
+            await inter.send(embed=ErrorEmbed("You are not allowed to perform this action!"), ephemeral=True)
             return
         # step 2: recheck the status
-        status: problems_module.UserData = self.bot.cache.get_user_data(user.id, default=problems_module.UserData.default(user.id))
-        if status.verification_code_denylist.is_denylisted():
-
-        raise NotImplementedError
+        status: problems_module.UserData = await self.bot.cache.get_user_data(user.id,
+                                                                              default=problems_module.UserData.default(
+                                                                                  user.id))
+        # even if they're denylisted we'll overwrite
+        status.verification_code_denylist.denylisted = True
+        status.verification_code_denylist.denylist_expiry = time.time() + duration
+        status.verification_code_denylist.denylist_reason = reason
+        await self.bot.cache.set_user_data(user_id=user.id, new=status)
+        await inter.send(embed=SuccessEmbed(
+            f"{user.display_name} has been successfully added to the denylist of the verification code system!"),
+            ephemeral=True)
+        return
 
     @commands.slash_command(
         name="vcode_undenylist",
@@ -288,6 +340,44 @@ class VerificationCog(HelperCog):
         """/vcode_undenylist [user: User] [reason] (duration: float=inf)
         Remove someone's denylist from the verification code system
         ONLY for admins!"""
-        raise NotImplementedError
+        if not self.bot.is_trusted(inter.author):
+            await inter.send(embed=ErrorEmbed("You are not allowed to perform this action!"), ephemeral=True)
+            return
+        # step 2: recheck the status
+        status: problems_module.UserData = await self.bot.cache.get_user_data(user.id,
+                                                                              default=problems_module.UserData.default(
+                                                                                  user.id))
+        # even if they're denylisted we'll overwrite
+        status.verification_code_denylist.denylisted = False
+        status.verification_code_denylist.denylist_expiry = time.time() - 1.0
+        status.verification_code_denylist.denylist_reason = ""
+        await self.bot.cache.set_user_data(user_id=user.id, new=status)
+        await inter.send(embed=SuccessEmbed(
+            f"{user.display_name} has been successfully removed from the denylist of the verification code system!"),
+            ephemeral=True)
+        return
+
+    async def cog_slash_command_check(self, inter: ApplicationCommandInteraction) -> bool:
+        """Check that someone is not denylisted from the verification code denylist system!"""
+        status: problems_module.UserData = await self.bot.cache.get_user_data(inter.author.id)
+        if not hasattr(status, "verification_code_denylist"):
+            return True
+        deny = status.verification_code_denylist.is_denylisted()
+        if not deny:
+            return True
+        if status.verification_code_denylist.denylist_expiry == float('inf'):
+            until_str = 'never'
+        else:
+            if status.verification_code_denylist.denylist_expiry < time.time():
+                until_str = f"{disnake.utils.format_dt(status.verification_code_denylist.denylist_expiry, 'R')} ago"
+            else:
+                until_str = f'in {disnake.utils.format_dt(status.verification_code_denylist.denylist_expiry, "R")}'
+        msg = f"""You are denylisted from the bot! To appeal, you must use /appeal. Note that appeals are seen very rarely...,
+        The reason you've been denylisted is {status.denylist_reason}. This ban expires {until_str}"""
+        raise helpful_modules.checks.DenylistedException(
+            msg
+        )
+
+
 def setup(bot: TheDiscordMathProblemBot):
     bot.add_cog(VerificationCog(bot))
