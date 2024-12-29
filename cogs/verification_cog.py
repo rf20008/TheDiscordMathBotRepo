@@ -23,8 +23,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
 
+import asyncio
 import datetime
 import time
+import traceback
 
 import disnake
 import cryptography
@@ -125,10 +127,11 @@ class VerificationCog(HelperCog):
             )
         ]
     )
-    async def info(self, inter: disnake.ApplicationCommandInteraction, detailed: bool):
+    async def info(self, inter: disnake.ApplicationCommandInteraction, detailed: bool = False):
         """/verification_codes info [detailed: bool = False]
         Get info about your verification code (if you have one)"""
         # Give them remaining duration, total duration, expiry, and
+        print("HEHE!")
         try:
             vcode_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(inter.id)
         except problems_module.VerificationCodeInfoNotFound:
@@ -175,7 +178,6 @@ class VerificationCog(HelperCog):
         Rate limit: 2 times per 15.0 seconds.
         You can only set `person` if you own this bot.
         person is the user_id of the person you want to check."""
-
         # only owners can set `person`
         if person is not None and not await self.bot.is_owner(inter.author):
             await inter.send(
@@ -306,6 +308,7 @@ class VerificationCog(HelperCog):
         Denylist someone from the verification code system!
         ONLY for admins!"""
         # part 1: recheck
+        print("NO")
         if not self.bot.is_trusted(inter.author):
             await inter.send(embed=ErrorEmbed("You are not allowed to perform this action!"), ephemeral=True)
             return
@@ -359,12 +362,21 @@ class VerificationCog(HelperCog):
 
     async def cog_slash_command_check(self, inter: ApplicationCommandInteraction) -> bool:
         """Check that someone is not denylisted from the verification code denylist system!"""
-        status: problems_module.UserData = await self.bot.cache.get_user_data(inter.author.id)
+        print("HELP!")
+        try:
+            status: problems_module.UserData = await asyncio.wait_for(self.bot.cache.get_user_data(inter.author.id), timeout=0.1)
+        except asyncio.TimeoutError as error:
+            print("NO")
+            print(traceback.format_exception(error))
+            return False
+        print("Bro!")
         if not hasattr(status, "verification_code_denylist"):
             return True
+        print("TEST")
         deny = status.verification_code_denylist.is_denylisted()
         if not deny:
             return True
+        print("HA")
         if status.verification_code_denylist.denylist_expiry == float('inf'):
             until_str = 'never'
         else:

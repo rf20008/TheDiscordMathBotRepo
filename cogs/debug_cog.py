@@ -401,7 +401,7 @@ class DebugCog(HelperCog):
             disnake.Option(
                 name="delay",
                 description="How long to wait before stopping the bot",
-                type=disnake.OptionType.float,
+                type=disnake.OptionType.number,
                 min_value=0.0,
                 max_value=float('inf'),
                 required=False

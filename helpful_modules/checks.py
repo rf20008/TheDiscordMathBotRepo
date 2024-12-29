@@ -24,6 +24,7 @@ from disnake.ext import commands
 from .custom_bot import TheDiscordMathProblemBot
 from .problems_module.user_data import UserData
 from .StatsTrack import CommandStats, CommandUsage, StreamWrapperStorer
+from .file_log import AuditLog
 
 bot = None
 MAX_LIMIT = 120_000  # Nothing longer than 120,000 characters
@@ -286,7 +287,25 @@ def cmds_cnt():
 
     return commands.check(predicate)
 
-
+def audit_command_usage_check():
+    async def predicate(inter: disnake.ApplicationCommandInteraction):
+        print("HEHE!")
+        try:
+            if not isinstance(inter.bot, TheDiscordMathProblemBot):
+                raise TypeError
+            if not hasattr(inter.bot, 'audit_log'):
+                raise AttributeError
+            if not isinstance(inter.bot.audit_log, AuditLog):
+                raise TypeError
+            inter.bot.audit_log.add_to_log(
+                log_entry = f"Command {inter.application_command.qualified_name} has been run in a guild with ID {inter.guild_id} by a user with ID {inter.author.id}",
+                priority=0,
+                extra_info={}
+            )
+            return True
+        except:
+            exit()
+    return commands.check(predicate)
 async def always_succeeding_check_unwrapped(inter, *args, **kwargs):
     if callable(inter):
         raise ValueError(

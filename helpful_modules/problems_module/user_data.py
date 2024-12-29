@@ -72,7 +72,7 @@ class UserData(Denylistable):
             denylisted=dict["denylisted"],
             denylist_expiry=dict["denylist_expiry"],
             denylist_reason=dict["denylist_reason"],
-            verification_code_denylist=dict["verification_code_denylist"]
+            verification_code_denylist=dict.get("verification_code_denylist", None)
         )
 
     def to_dict(self) -> dict:

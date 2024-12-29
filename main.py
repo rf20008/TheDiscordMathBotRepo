@@ -236,6 +236,7 @@ my_amazing_storer = StreamWrapperStorer(
 )
 audit_log = AppendingFileLog("audit_log.txt")
 bot = TheDiscordMathProblemBot(
+    audit_log=audit_log,
     storer=my_amazing_storer,
     intents=return_intents.return_intents(),
     application_id=845751152901750824,
@@ -265,6 +266,7 @@ bot.add_check(
         embed_links=True,
     )
 )
+bot.add_app_command_check(checks.audit_command_usage_check(), slash_commands=True, call_once=True,message_commands=True)
 _the_daemon_file_saver = threading.Thread(
     target=the_daemon_file_saver,
     name="The File Saver",
