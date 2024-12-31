@@ -133,8 +133,9 @@ class VerificationCog(HelperCog):
         # Give them remaining duration, total duration, expiry, and
         print("HEHE!")
         try:
-            vcode_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(inter.id)
-        except problems_module.VerificationCodeInfoNotFound:
+            vcode_info: problems_module.VerificationCodeInfo = await self.bot.cache.get_verification_code_info(inter.author.id)
+        except problems_module.VerificationCodeInfoNotFound as e:
+            print(e)
             await inter.send("You don't have a verification code! Try using /verification_codes generate.")
             return
         embed = SuccessEmbed(title='Your verification code info')
@@ -142,7 +143,7 @@ class VerificationCog(HelperCog):
         embed.add_field("Created at", disnake.utils.format_dt(vcode_info.created_at, 'F'))
         embed.add_field(
             name="Expiry status",
-            value=f"{'Expired' if vcode_info.is_expired else 'Valid'} (expire{'d' if vcode_info.is_expired else ''} at {disnake.utils.format_dt(vcode_info.expiry, 'F')}"
+            value=f"{'Expired' if vcode_info.is_expired else 'Valid'} (expire{'d' if vcode_info.is_expired else 's'} at {disnake.utils.format_dt(vcode_info.expiry, 'F')}"
         )
         if detailed:
             embed.add_field("Scrypt N", vcode_info.scrypt_parameters.scrypt_n)
@@ -309,7 +310,7 @@ class VerificationCog(HelperCog):
         ONLY for admins!"""
         # part 1: recheck
         print("NO")
-        if not self.bot.is_trusted(inter.author):
+        if not await self.bot.is_trusted(inter.author):
             await inter.send(embed=ErrorEmbed("You are not allowed to perform this action!"), ephemeral=True)
             return
         # step 2: recheck the status
@@ -343,7 +344,7 @@ class VerificationCog(HelperCog):
         """/vcode_undenylist [user: User] [reason] (duration: float=inf)
         Remove someone's denylist from the verification code system
         ONLY for admins!"""
-        if not self.bot.is_trusted(inter.author):
+        if not await self.bot.is_trusted(inter.author):
             await inter.send(embed=ErrorEmbed("You are not allowed to perform this action!"), ephemeral=True)
             return
         # step 2: recheck the status
@@ -362,21 +363,15 @@ class VerificationCog(HelperCog):
 
     async def cog_slash_command_check(self, inter: ApplicationCommandInteraction) -> bool:
         """Check that someone is not denylisted from the verification code denylist system!"""
-        print("HELP!")
         try:
-            status: problems_module.UserData = await asyncio.wait_for(self.bot.cache.get_user_data(inter.author.id), timeout=0.1)
+            status: problems_module.UserData = await asyncio.wait_for(self.bot.cache.get_user_data(inter.author.id), timeout=1)
         except asyncio.TimeoutError as error:
-            print("NO")
-            print(traceback.format_exception(error))
             return False
-        print("Bro!")
         if not hasattr(status, "verification_code_denylist"):
             return True
-        print("TEST")
         deny = status.verification_code_denylist.is_denylisted()
         if not deny:
             return True
-        print("HA")
         if status.verification_code_denylist.denylist_expiry == float('inf'):
             until_str = 'never'
         else:
@@ -384,8 +379,8 @@ class VerificationCog(HelperCog):
                 until_str = f"{disnake.utils.format_dt(status.verification_code_denylist.denylist_expiry, 'R')} ago"
             else:
                 until_str = f'in {disnake.utils.format_dt(status.verification_code_denylist.denylist_expiry, "R")}'
-        msg = f"""You are denylisted from the bot! To appeal, you must use /appeal. Note that appeals are seen very rarely...,
-        The reason you've been denylisted is {status.denylist_reason}. This ban expires {until_str}"""
+        msg = f"""You are denylisted from the verification code system! To appeal, you must use /appeal. Note that appeals are seen very rarely...,
+        The reason you've been denylisted is {status.verification_code_denylist.denylist_reason}. This ban expires {until_str}"""
         raise helpful_modules.checks.DenylistedException(
             msg
         )

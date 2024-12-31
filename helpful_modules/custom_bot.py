@@ -29,6 +29,7 @@ from functools import partial, wraps
 from types import FunctionType
 
 import disnake
+import traceback
 from disnake.ext import commands, tasks
 
 import helpful_modules
@@ -228,13 +229,17 @@ class TheDiscordMathProblemBot(disnake.ext.commands.Bot):
     async def is_denylisted_from_verification_code_system(self, user: typing.Union[disnake.User, disnake.Member]):
         return await self.is_denylisted_from_verification_code_system_by_user_id(user.id)
     async def is_trusted_by_user_id(self, user_id: int) -> bool:
-
-        data = await self.cache.get_user_data(
-            user_id=user_id,
-            default=problems_module.UserData(
-                user_id=user_id, trusted=False, denylisted=False
-            ),
-        )
+        try:
+            data = await self.cache.get_user_data(
+                user_id=user_id,
+                default=problems_module.UserData(
+                    user_id=user_id, trusted=False, denylisted=False
+                ),
+            )
+        except Exception as e:
+            print("An error occured while trying to find whether someone was trusted:", "".join(traceback.format_exception(e)))
+            self.log.exception(e)
+            raise
         return data.trusted
 
     async def is_denylisted_by_user_id(self, user_id: int) -> bool:

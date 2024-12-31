@@ -34,6 +34,7 @@ from traceback import format_exception
 import disnake
 from disnake.ext import commands
 
+import helpful_modules
 from helpful_modules import checks
 from helpful_modules.custom_bot import TheDiscordMathProblemBot
 from helpful_modules.custom_embeds import SuccessEmbed, ErrorEmbed
@@ -408,7 +409,7 @@ class DebugCog(HelperCog):
             )
         ],
     )
-    async def check(self, inter: disnake.ApplicationCommandInteraction, delay: float = 0.0):
+    async def stop(self, inter: disnake.ApplicationCommandInteraction, delay: float = 0.0):
         if delay < 0.0 or math.isnan(delay):
             raise RuntimeError("Negative or NaN delay encountered")
         if not await self.bot.is_owner(inter.author):

@@ -31,6 +31,7 @@ from warnings import warn
 
 import aiosqlite
 
+
 from helpful_modules.dict_factory import dict_factory
 
 from ..appeal import Appeal, AppealViewInfo

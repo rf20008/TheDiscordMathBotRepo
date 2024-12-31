@@ -18,6 +18,7 @@ If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 import time
 
+import traceback
 import disnake
 from disnake.ext import commands
 
@@ -82,8 +83,15 @@ def trusted_users_only():
             raise CustomCheckFailure("Bot is None")
         if not isinstance(inter.bot, TheDiscordMathProblemBot):
             raise TypeError("Uh oh; inter.bot isn't TheDiscordMathProblemBot")
-        if await inter.bot.is_trusted(inter.author):
-            return True
+        try:
+            if await inter.bot.is_trusted(inter.author):
+                return True
+        except Exception as e:
+            print("An error occurred while trying to find whether someone was trusted:",
+                  "".join(traceback.format_exception(e)))
+            inter.bot.log.exception(e)
+
+            raise
         raise NotTrustedUser(
             f"You aren't a trusted user, {inter.author.mention}. Therefore, you do not have permission to run this command!"
         )

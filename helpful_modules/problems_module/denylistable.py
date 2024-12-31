@@ -83,8 +83,10 @@ class DenylistMetadata(Denylistable):
         if not isinstance(denylist_reason, str):
             raise TypeError("reason is not a str")
         self.denylist_reason=denylist_reason
+        if denylist_expiry is None:
+            denylist_expiry=0.0
         if not isinstance(denylist_expiry, float):
-            raise TypeError("denylist expiry is not a float")
+            raise TypeError(f"denylist expiry is not a float, but is {denylist_expiry} and is of type {denylist_expiry.__class__.__name__}")
         self.denylist_expiry=denylist_expiry
         if not isinstance(denylisting_moderator, str):
             raise TypeError("Denylisting_moderator is not a str!")
@@ -92,8 +94,10 @@ class DenylistMetadata(Denylistable):
         if not isinstance(denylist_type, DenylistType) and not isinstance(denylist_type, str):
             raise TypeError("Denylist type is not a DenylistType")
         if isinstance(denylist_type, str):
-            if denylist_type not in tuple(DenylistType):
-                raise ValueError("Unknown denylist type!")
+            try:
+                denylist_type = DenylistType[denylist_type]
+            except KeyError as err:
+                raise ValueError(f"Unknown denylist type! THe denylist type was {denylist_type}") from err
             denylist_type = DenylistType(denylist_type)
         self.denylist_type=denylist_type
 
@@ -102,7 +106,7 @@ class DenylistMetadata(Denylistable):
             'denylisted': self.denylisted,
             'denylist_reason': self.denylist_reason,
             'denylist_expiry': self.denylist_expiry,
-            'denylist_type': str(self.denylist_type),
+            'denylist_type': self.denylist_type.name,
             'denylisting_moderator': self.denylisting_moderator
         }
 
@@ -111,7 +115,7 @@ class DenylistMetadata(Denylistable):
         return cls(
             denylisted=data['denylisted'],
             denylist_reason=data['denylist_reason'],
-            denylist_expiry=data['denylisted_expiry'],
+            denylist_expiry=data['denylist_expiry'],
             denylist_type=data['denylist_type'],
             denylisting_moderator=data['denylisting_moderator']
         )

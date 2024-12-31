@@ -53,12 +53,14 @@ class HelpCog(HelperCog):
         self.cache = bot.cache
         self.cached_command_dict = {}
         self.precomputed_command_list_msg = ""
+        self.cached_command_dict_by_cog={}
 
     @tasks.loop(seconds=86400)
     async def task_update_cached_command_dict(self):
         self.update_cached_command_dict()
 
     def update_cached_command_dict(self):
+        new_cached_command_dict_by_cog = {}
         new_cached_command_dict = {
             "slash": {},
             "user": {},
@@ -78,20 +80,23 @@ class HelpCog(HelperCog):
                     f"I expected all of my commands to be instances of InvokableSlashCommand, InvokableMessageCommand, or InvokableUserCommand; "
                     "however, one my commands is {command} of type {command.__class__.__name__}."
                 )
-
+            new_cached_command_dict[TYPES_TO_NAMES[type(command)]][
+                command.qualified_name
+            ].append(command)
             try:
-                new_cached_command_dict[TYPES_TO_NAMES[type(command)]][
-                    command.cog.qualified_name
+                new_cached_command_dict_by_cog[TYPES_TO_NAMES[type(command)]][
+                    command.qualified_name
                 ].append(command)
             except KeyError:
-                new_cached_command_dict[TYPES_TO_NAMES[type(command)]][
-                    command.cog.qualified_name
-                ] = [command]
+                new_cached_command_dict_by_cog[TYPES_TO_NAMES[type(command)]][
+                    command.qualified_name
+                ] = command
         self.cached_command_dict = new_cached_command_dict
+        self.cached_command_dict_by_cog=new_cached_command_dict_by_cog
         msg = "`Your command was not found. Here is a list of my commands!\n```"
         for cmd_type in ["slash", "user", "message"]:
             msg += f"{cmd_type.title()} commands:\n"
-            for cogName, cogCommands in self.cached_command_dict[cmd_type].items():
+            for cogName, cogCommands in self.cached_command_dict_by_cog[cmd_type].items():
                 msg += f"    Cog {cogName}\n"
                 for command in cogCommands:
                     msg += (
@@ -130,7 +135,10 @@ class HelpCog(HelperCog):
             )
         command = None
         try:
+            self.update_cached_command_dict()
+            print(self.cached_command_dict[cmd_type])
             command = self.cached_command_dict[cmd_type][cmd]
+            print("Command:", command)
             return await inter.send(
                 embed=custom_embeds.SuccessEmbed(command.callback.__doc__)
             )

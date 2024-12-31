@@ -55,7 +55,7 @@ async def base_on_error(
     inter: disnake.ApplicationCommandInteraction, error: BaseException | Exception
 ):
     """The base on_error event. Call this and use the dictionary as keyword arguments to print to the user"""
-
+    print("OH NO AN ERROR OCCURED!!!!")
     if isinstance(error, BaseException) and not isinstance(error, Exception):
         # Errors that do not inherit from Exception are not meant to be caught
         await inter.bot.close()

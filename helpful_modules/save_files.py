@@ -161,8 +161,12 @@ class FileSaver:
             warnings.warn(category=DeprecationWarning,
                           message="storing MathProblems in a dict is deprecated and should be removed")
             json.dump(fp=file5, obj=math_problems_dict)
-        with open("appeal_questions.json", "w") as file6:
-            json.dump(fp=file6, obj={key: [question.to_dict for question in questionset] for key, questionset in questionnaire.items()})
+        try:
+            with open("appeal_questions.json", "w") as file6:
+                json.dump(fp=file6, obj={key: [question.to_dict for question in questionset] for key, questionset in questionnaire.items()})
+        except PermissionError as pe:
+            if printSuccessMessages or (printSuccessMessages is None and self.printSuccessMessagesByDefault):
+                print(f"Failure to update appeal questions! Error: {pe}")
 
         if (
             printSuccessMessages

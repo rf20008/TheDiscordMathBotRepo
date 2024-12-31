@@ -424,6 +424,7 @@ def handle_signal(signum):
 signal.signal(signal.SIGUSR1, handle_signal)
 
 if __name__ == "__main__":
+
     print("The bot has finished setting up and will now run.")
     for command in bot.global_slash_commands:
         # raise

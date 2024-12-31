@@ -31,6 +31,7 @@ from typing import *
 
 import aiosqlite
 import disnake
+import orjson
 
 from helpful_modules.dict_factory import dict_factory
 
@@ -122,7 +123,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                 cursor = await conn.cursor()
                 await cursor.execute(
                     "INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry, verification_code_denylist) VALUES (?, ?, ?, ?, ?, ?)",
-                    (user_id, denylisted_int, trusted_int, new.denylist_reason, new.denylist_expiry, new.verification_code_denylist),
+                    (user_id, denylisted_int, trusted_int, new.denylist_reason, new.denylist_expiry, orjson.dumps(new.verification_code_denylist.to_dict()).decode('utf-8')),
                 )
                 await conn.commit()
                 log.debug("Finished!")
@@ -137,7 +138,7 @@ class UserDataRelatedCache(QuizRelatedCache):
                 cursor = connection.cursor(dictionaries=True)
                 cursor.execute(
                     """INSERT OR REPLACE INTO user_data (user_id, denylisted, trusted, denylist_reason, denylist_expiry, verification_code_denylist) VALUES (%s, %s, %s, %s, %s, %s)""",
-                    (user_id, new.trusted, new.denylisted, new.denylist_reason, new.denylist_expiry, new.verification_code_denylist),
+                    (user_id, new.trusted, new.denylisted, new.denylist_reason, new.denylist_expiry, orjson.dumps(new.verification_code_denylist.to_dict()).decode('utf-8')),
                 )
                 connection.commit()
                 log.debug("Finished!")
@@ -177,8 +178,8 @@ class UserDataRelatedCache(QuizRelatedCache):
                         trusted INTEGER,
                         denylisted INTEGER,
                         denylist_reason TEXT,
-                        denylist_expiry DOUBLE
-                        verfication_code_denylist TEXT
+                        denylist_expiry DOUBLE,
+                        verification_code_denylist TEXT
                     )
                 """
                 )

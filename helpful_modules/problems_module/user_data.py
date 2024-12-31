@@ -18,6 +18,7 @@ If not, see <https://www.gnu.org/licenses/>.
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)"""
 
 import time
+import orjson
 from .denylistable import Denylistable, DenylistMetadata, DenylistType
 
 
@@ -57,8 +58,11 @@ class UserData(Denylistable):
                 denylisting_moderator="",
                 denylist_type=DenylistType.VERIFICATION_CODE_DENYLIST
             )
-        if isinstance(verification_code_denylist, dict):
+        if isinstance(verification_code_denylist, str):
+            verification_code_denylist = DenylistMetadata.from_dict(orjson.loads(verification_code_denylist))
+        elif isinstance(verification_code_denylist, dict):
             verification_code_denylist = DenylistMetadata.from_dict(verification_code_denylist)
+
         if not isinstance(verification_code_denylist, DenylistMetadata):
             raise TypeError("verification_code_denylist is not a DenylistMetadata")
         self.verification_code_denylist = verification_code_denylist

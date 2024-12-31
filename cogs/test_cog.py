@@ -39,7 +39,7 @@ class TestCog(HelperCog):
 
     @disnake.ext.commands.slash_command(
         name="_test",
-        description="A command that when executed, returns the string 'test' & takes no arguments",
+        description="A command that when executed, makes the bot say 'Test' & takes no arguments",
     )
     async def _test(
         self, inter: disnake.ApplicationCommandInteraction
@@ -49,7 +49,8 @@ class TestCog(HelperCog):
         """
         return await inter.send("Test")
 
-    @disnake.ext.commands.command(name="_test")
+    @disnake.ext.commands.command(name="test")
     async def test(self, ctx):
-        """Returns test & takes no arguments. Useful only for debugging purposes"""
+        """/test
+        Makes the bot say "test" & takes no arguments. Useful only for debugging purposes"""
         return await ctx.send("test")
