@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Samuel Guo (64931063+rf20008@users.noreply.github.com)
 """
-
+import traceback
 import typing
 
 import disnake
@@ -60,7 +60,11 @@ class HelpCog(HelperCog):
         self.update_cached_command_dict()
 
     def update_cached_command_dict(self):
-        new_cached_command_dict_by_cog = {}
+        new_cached_command_dict_by_cog = {
+            "slash": {},
+            "user": {},
+            "message": {},
+        }
         new_cached_command_dict = {
             "slash": {},
             "user": {},
@@ -80,17 +84,19 @@ class HelpCog(HelperCog):
                     f"I expected all of my commands to be instances of InvokableSlashCommand, InvokableMessageCommand, or InvokableUserCommand; "
                     "however, one my commands is {command} of type {command.__class__.__name__}."
                 )
+            if TYPES_TO_NAMES[type(command)] not in new_cached_command_dict:
+                new_cached_command_dict[TYPES_TO_NAMES[type(command)]] = {}
             new_cached_command_dict[TYPES_TO_NAMES[type(command)]][
                 command.qualified_name
-            ].append(command)
+            ] = command
             try:
                 new_cached_command_dict_by_cog[TYPES_TO_NAMES[type(command)]][
-                    command.qualified_name
+                    command.cog_name
                 ].append(command)
             except KeyError:
                 new_cached_command_dict_by_cog[TYPES_TO_NAMES[type(command)]][
-                    command.qualified_name
-                ] = command
+                    command.cog_name
+                ] = [command]
         self.cached_command_dict = new_cached_command_dict
         self.cached_command_dict_by_cog=new_cached_command_dict_by_cog
         msg = "`Your command was not found. Here is a list of my commands!\n```"
@@ -142,7 +148,8 @@ class HelpCog(HelperCog):
             return await inter.send(
                 embed=custom_embeds.SuccessEmbed(command.callback.__doc__)
             )
-        except KeyError:
+        except KeyError as ke:
+            print("".join(traceback.format_exception(ke)))
             try:
                 await inter.user.send(
                     embed=custom_embeds.SuccessEmbed(self.precomputed_command_list_msg)

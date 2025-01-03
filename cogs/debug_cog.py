@@ -253,7 +253,7 @@ class DebugCog(HelperCog):
     ):
         """/eval [code: str]
         Evaluate arbitrary python code.
-        Any instances of `\n` in code and stdin will be replaced with a newline character!
+        Any instances of `\\n` in code and stdin will be replaced with a newline character!
         This will happen even in strings. Therefore, be very careful!
         Only the owner can run this command!
         This requires both the owner and the bot to have the Administrator permission.
