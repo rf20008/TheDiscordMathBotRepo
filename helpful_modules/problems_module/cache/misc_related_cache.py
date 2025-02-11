@@ -358,7 +358,7 @@ class MiscRelatedCache(VerificationCodesRelatedCache):
                 )
                 await cursor.execute("DELETE FROM appeals WHERE user_id=?", (user_id,))
                 await cursor.execute(
-                    "DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,)
+                    "DELETE FROM appeal_view_info WHERE user_id=?", (user_id,)
                 )
                 await conn.commit()  # Otherwise, nothing happens and it rolls back!!
         else:
@@ -382,7 +382,7 @@ class MiscRelatedCache(VerificationCodesRelatedCache):
                 )
                 await cursor.execute("DELETE FROM appeals WHERE user_id=%s", (user_id,))
                 await cursor.execute(
-                    "DELETE FROM appeal_view_infos WHERE user_id=?", (user_id,)
+                    "DELETE FROM appeal_view_info WHERE user_id=?", (user_id,)
                 )
                 connection.commit()
 

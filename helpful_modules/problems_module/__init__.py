@@ -32,7 +32,7 @@ from .base_problem import BaseProblem
 from .cache import *
 from .cache_rewrite_with_redis import RedisCache
 from .computational_problem import ComputationalProblem
-from .denylistable import Denylistable
+from .denylistable import Denylistable, DenylistType, DenylistMetadata
 from .dict_convertible import DictConvertible
 from .errors import *
 from .GuildData import CheckForUserPassage, GuildData

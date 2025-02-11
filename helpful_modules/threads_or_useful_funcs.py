@@ -34,7 +34,7 @@ import traceback
 import types
 from functools import partial, wraps
 from logging import handlers
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 
 import aiofiles
 import disnake
@@ -273,3 +273,32 @@ async def async_wait_for_future(future: asyncio.Future | concurrent.futures.Futu
         if future.done():
             return future.result()
     raise TimeoutError(f"Future didn't complete within {timeout} seconds")
+
+def first_true(lo: int, hi: int, f: Callable[[int], bool]):
+
+    # bin search [lo, hi), where f(lo)=false, f(hi)=true
+    # We want the first L such that f(L)=true, but f(x)=false for all x<L
+    # assume f is monotonically increasing (f(x) = false implies f(y)=false for all y<x, and f(x)=true implies f(y)=true for all y>x)
+
+    # if f(mid) is true, then mid...hi is all true so hi=mid else it's false so lo..mid is all false, so lo=mid
+    hi += 1
+    while hi > lo:
+        mid = (lo + hi)//2
+        if f(mid):
+            hi = mid
+        else:
+            lo = mid+1
+    return lo
+def last_true(lo: int, hi: int, f: Callable[[int], bool]):
+
+    # bin search [lo, hi), where f(lo)=true, f(hi)=false
+    # We want the last R such that f(x)=true, and there exists no r>R s.t. f(r)=true
+    # assume f is monotonically decreasing (f(x) = false implies f(y)=false for all y>x, and f(x)=true implies f(y)=true for all y<x)
+    lo-=1
+    while hi > lo:
+        mid = (lo + hi)//2
+        if f(mid):
+            lo = mid
+        else:
+            hi = mid-1
+    return lo

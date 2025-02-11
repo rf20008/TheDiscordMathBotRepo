@@ -39,7 +39,6 @@ from time import sleep
 import subprocess
 # Imports - 3rd party
 from disnake.ext import commands
-
 from cogs import *
 from helpful_modules import (
     checks,
@@ -56,6 +55,7 @@ from helpful_modules.file_log import AppendingFileLog
 from helpful_modules.custom_bot import SUPPORT_SERVER_GUILD_ID, TheDiscordMathProblemBot
 from helpful_modules.StatsTrack import StreamWrapperStorer
 from helpful_modules.threads_or_useful_funcs import *
+from helpful_modules.rate_limit import rate_limit_check
 
 # Imports - My own files
 
@@ -259,13 +259,15 @@ bot._sync_commands_debug = True
 #    "custom_embeds": custom_embeds,
 #    "checks": checks,
 # }
-bot.add_check(
+bot.add_app_command_check(
     disnake.ext.commands.bot_has_permissions(
         send_messages=True,
         read_messages=True,
         embed_links=True,
     )
 )
+bot.add_app_command_check(rate_limit_check(), slash_commands=True, call_once=True, message_commands=True, user_commands=True)
+bot.add_check(rate_limit_check())
 bot.add_app_command_check(checks.audit_command_usage_check(), slash_commands=True, call_once=True,message_commands=True)
 _the_daemon_file_saver = threading.Thread(
     target=the_daemon_file_saver,
